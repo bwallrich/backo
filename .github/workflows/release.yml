@@ -1,0 +1,27 @@
+name: Build_Package
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10"]
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python3 -m pip install --upgrade build
+        python3 -m pip install --upgrade twine
+    - name: uploading package
+      run: |
+        python3 -m build
+        python3 -m twine upload --username ${{ secrets.PYPI_LOGIN }} --password ${{ secrets.PYPI_PASSWORD }} dist/*
