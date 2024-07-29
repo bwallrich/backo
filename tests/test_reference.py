@@ -4,20 +4,20 @@ test for References()
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code
 
 import sys
+
 sys.path.insert(1, "../stricto")
 
 import unittest
-import logging
 from backo import GenericDB
 from backo import DBYmlConnector
 from backo import App
 from backo import Ref, RefsList, DeleteStrategy, Error, log_system
 
 ### --- For development ---
-log_system.add_handler( log_system.set_streamhandler() )
+log_system.add_handler(log_system.set_streamhandler())
 log = log_system.get_or_create_logger("testing")
 
-from stricto import  String, Bool, Error as StrictoError
+from stricto import String, Bool, Error as StrictoError
 
 
 class TestReferences(unittest.TestCase):
@@ -40,7 +40,7 @@ class TestReferences(unittest.TestCase):
         # --- DB for sites
         self.yml_sites = DBYmlConnector(path="/tmp")
         self.yml_sites.generate_id = lambda o: "Site_" + o.name.get_value()
-        
+
         # --- DB for humans
         self.yml_humans = DBYmlConnector(path="/tmp")
         self.yml_humans.generate_id = lambda o: "Human_" + o.name.get_value()
@@ -213,12 +213,10 @@ class TestReferences(unittest.TestCase):
         u.reload()
         self.assertEqual(u.site, si._id)
 
-
         # -- Check if reverse is filled
         si.reload()
         self.assertEqual(len(si.users), 1)
         self.assertEqual(si.users[0], u._id)
-
 
         # -- delete site
         si.delete()
@@ -276,7 +274,10 @@ class TestReferences(unittest.TestCase):
         t_id = app.start_transaction()
         u.site._collection = "unknown_coll"
         with self.assertRaises(Error) as e:
-            u.create({"name": "bebert", "surname": "bebert", "site": "1234"}, transaction_id=t_id)
+            u.create(
+                {"name": "bebert", "surname": "bebert", "site": "1234"},
+                transaction_id=t_id,
+            )
         self.assertEqual(e.exception.message, 'Collection "unknown_coll" not found')
         app.rollback_transaction(t_id)
 
@@ -285,7 +286,10 @@ class TestReferences(unittest.TestCase):
         u.site._collection = "sites"
         u.site._reverse = "unknown_reverse"
         with self.assertRaises(Error) as e:
-            u.create({"name": "bebert", "surname": "bebert", "site": si._id}, transaction_id=t_id)
+            u.create(
+                {"name": "bebert", "surname": "bebert", "site": si._id},
+                transaction_id=t_id,
+            )
         self.assertEqual(
             e.exception.message, 'Collection "sites"."unknown_reverse" not found'
         )
@@ -295,7 +299,10 @@ class TestReferences(unittest.TestCase):
         # app.users.db.delete_by_id("User_bebert_bebert")
         u.site._reverse = "users"
         with self.assertRaises(Error) as e:
-            u.create({"name": "bebert", "surname": "bebert", "site": "no_ref"}, transaction_id=t_id)
+            u.create(
+                {"name": "bebert", "surname": "bebert", "site": "no_ref"},
+                transaction_id=t_id,
+            )
         self.assertEqual(e.exception.message, '_id "no_ref" not found')
         app.rollback_transaction(t_id)
 
@@ -369,7 +376,6 @@ class TestReferences(unittest.TestCase):
         self.assertEqual(len(si_mars.users), 1)
         self.assertEqual(si_mars.users[0], u._id)
 
-
     def test_references_many_to_one_modification(self):
         """
         creating an app with ref one to many
@@ -432,7 +438,7 @@ class TestReferences(unittest.TestCase):
         self.assertEqual(len(si_mars.users), 0)
 
         # -- Modify site
-        si_mars.users = [ ub._id ]
+        si_mars.users = [ub._id]
         si_mars.save()
         si_mars = app.sites.new()
         si_mars.load("Site_mars")
@@ -440,10 +446,10 @@ class TestReferences(unittest.TestCase):
 
         # -- Check if reverse is modified
         uj.reload()
-        self.assertEqual(uj.site, si_moon._id )
+        self.assertEqual(uj.site, si_moon._id)
 
         ub.reload()
-        self.assertEqual(ub.site, si_mars._id )
+        self.assertEqual(ub.site, si_mars._id)
 
         si_moon.reload()
         self.assertEqual(len(si_moon.users), 1)
@@ -485,42 +491,41 @@ class TestReferences(unittest.TestCase):
         app.animals.db.delete_by_id("Animal_spider")
         app.animals.db.delete_by_id("Animal_ant")
 
-        # create humans
+        # create humans
         up = app.humans.new()
-        up.create({"name": "parker", "surname": "peter" })
+        up.create({"name": "parker", "surname": "peter"})
         uh = app.humans.new()
-        uh.create({"name": "pym", "surname": "hank" })
+        uh.create({"name": "pym", "surname": "hank"})
 
         # ctreate animal totem related to humans
         asp = app.animals.new()
-        asp.create({"desc": "spider", "human" : up._id })
+        asp.create({"desc": "spider", "human": up._id})
         aa = app.animals.new()
-        aa.create({"desc": "ant", "human" : uh._id })
+        aa.create({"desc": "ant", "human": uh._id})
 
-        # check human link
+        # check human link
         up.reload()
-        self.assertEqual(up.totem, asp._id )
+        self.assertEqual(up.totem, asp._id)
         uh.reload()
-        self.assertEqual(uh.totem, aa._id )
+        self.assertEqual(uh.totem, aa._id)
 
         # change the totem
         up.totem = aa._id
         up.save()
 
         aa.reload()
-        self.assertEqual(aa.human, up._id )
+        self.assertEqual(aa.human, up._id)
 
         asp.reload()
-        self.assertEqual(asp.human, None )
+        self.assertEqual(asp.human, None)
 
         uh.reload()
-        self.assertEqual(uh.totem, None )
+        self.assertEqual(uh.totem, None)
 
         # Delete
         aa.delete()
         up.reload()
-        self.assertEqual(up.totem, None )
-
+        self.assertEqual(up.totem, None)
 
     def test_references_one_to_one_required(self):
         """
@@ -561,30 +566,27 @@ class TestReferences(unittest.TestCase):
 
         # ctreate animal totem related to humans
         asp = app.animals.new()
-        asp.create({"desc": "spider" })
+        asp.create({"desc": "spider"})
         aa = app.animals.new()
         aa.create({"desc": "ant"})
 
-        # create humans
+        # create humans
         up = app.humans.new()
-        up.create({"name": "parker", "surname": "peter", "totem" : asp._id })
+        up.create({"name": "parker", "surname": "peter", "totem": asp._id})
         uh = app.humans.new()
-        uh.create({"name": "pym", "surname": "hank", "totem" : aa._id })
+        uh.create({"name": "pym", "surname": "hank", "totem": aa._id})
 
-
-        # check human link
+        # check human link
         up.reload()
-        self.assertEqual(up.totem, asp._id )
+        self.assertEqual(up.totem, asp._id)
         uh.reload()
-        self.assertEqual(uh.totem, aa._id )
+        self.assertEqual(uh.totem, aa._id)
 
         # take pym's totem. impossible (pym will have no totem)
         up.totem = aa._id
         with self.assertRaises(StrictoError) as e:
             up.save()
-        self.assertEqual(e.exception.message, 'Cannot be empty')
-
-
+        self.assertEqual(e.exception.message, "Cannot be empty")
 
     def test_references_many_to_many_empty_empty(self):
         """
@@ -599,7 +601,11 @@ class TestReferences(unittest.TestCase):
                 {
                     "name": String(),
                     "surname": String(),
-                    "totems": RefsList(coll="animals", field="$.humans", ods=DeleteStrategy.MUST_BE_EMPTY),
+                    "totems": RefsList(
+                        coll="animals",
+                        field="$.humans",
+                        ods=DeleteStrategy.MUST_BE_EMPTY,
+                    ),
                 },
                 self.yml_humans,
             ),
@@ -611,7 +617,11 @@ class TestReferences(unittest.TestCase):
             GenericDB(
                 {
                     "desc": String(),
-                    "humans": RefsList(coll="humans", field="$.totems", ods=DeleteStrategy.MUST_BE_EMPTY),
+                    "humans": RefsList(
+                        coll="humans",
+                        field="$.totems",
+                        ods=DeleteStrategy.MUST_BE_EMPTY,
+                    ),
                 },
                 self.yml_animals,
             ),
@@ -625,42 +635,41 @@ class TestReferences(unittest.TestCase):
 
         # ctreate animal totem related to humans
         asp = app.animals.new()
-        asp.create({"desc": "spider" })
+        asp.create({"desc": "spider"})
         aa = app.animals.new()
         aa.create({"desc": "ant"})
 
-        # create humans
+        # create humans
         up = app.humans.new()
-        up.create({"name": "parker", "surname": "peter", "totems" : [asp._id, aa._id] })
+        up.create({"name": "parker", "surname": "peter", "totems": [asp._id, aa._id]})
         uh = app.humans.new()
-        uh.create({"name": "pym", "surname": "hank", "totems" : [aa._id] })
+        uh.create({"name": "pym", "surname": "hank", "totems": [aa._id]})
 
-        # check human links
+        # check human links
         up.reload()
-        self.assertEqual(len(up.totems), 2 )
+        self.assertEqual(len(up.totems), 2)
         uh.reload()
-        self.assertEqual(len(uh.totems), 1 )
-        #check animals links
+        self.assertEqual(len(uh.totems), 1)
+        # check animals links
         asp.reload()
-        self.assertEqual(len(asp.humans), 1 )
+        self.assertEqual(len(asp.humans), 1)
         aa.reload()
-        self.assertEqual(len(aa.humans), 2 )
+        self.assertEqual(len(aa.humans), 2)
 
-        # modify links
-        asp.humans=[]
+        # modify links
+        asp.humans = []
         asp.save()
 
         log.debug("----------------")
 
         up.reload()
-        self.assertEqual(len(up.totems), 1 )
+        self.assertEqual(len(up.totems), 1)
         up.totems.append(asp._id)
         up.save()
         asp.reload()
-        self.assertEqual(len(asp.humans), 1 )
-        
-        # check if must be embty error
+        self.assertEqual(len(asp.humans), 1)
+
+        # check if must be embty error
         with self.assertRaises(Error) as e:
             asp.delete()
         self.assertEqual(e.exception.message, 'Collection "humans" not empty')
-

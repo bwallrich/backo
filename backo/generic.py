@@ -5,7 +5,6 @@ Module providing the GenericDB() Class
 
 import sys
 import copy
-import logging
 from datetime import datetime
 from enum import Enum, auto
 from .error import Error, ErrorType
@@ -14,7 +13,7 @@ from .current_user import current_user
 from .transaction import OperatorType
 from .log import log_system
 
-log = log_system.get_or_create_logger("GenericDB" , logging.INFO)
+log = log_system.get_or_create_logger("GenericDB")
 
 sys.path.insert(1, "../../stricto")
 from stricto import Dict, Int, String
@@ -73,7 +72,7 @@ class GenericDB(Dict):  # pylint: disable=too-many-instance-attributes
         self.__dict__["_locked"] = True
         self._empty.__dict__["_locked"] = True
 
-    def can_modify_creation_meta(self, value, o): # pylint: disable=unused-argument
+    def can_modify_creation_meta(self, value, o):  # pylint: disable=unused-argument
         """
         ctime and created_by cannot be modified by user
         """
@@ -118,7 +117,8 @@ class GenericDB(Dict):  # pylint: disable=too-many-instance-attributes
 
         """
         if self._status != StatusType.UNSET:
-            log.error(f"Cannot load an non-unset object in {self._collection_name}")
+            log.error("Cannot load an non-unset object in %r", self._collection_name)
+
             raise Error(
                 ErrorType.UNSET_SAVE,
                 f"Cannot load an non-unset object in {self._collection_name}",
@@ -126,25 +126,25 @@ class GenericDB(Dict):  # pylint: disable=too-many-instance-attributes
         obj = self.db.get_by_id(_id)
         self.set(obj)
         self.__dict__["_status"] = StatusType.SAVED
-        self.__dict__['_loaded_object'] = copy.copy(self)
+        self.__dict__["_loaded_object"] = copy.copy(self)
 
-        if kwargs.get('m_path') is None:
-            kwargs['m_path'] = []
+        if kwargs.get("m_path") is None:
+            kwargs["m_path"] = []
 
-        self.trigg("loaded", id(self), **kwargs )
+        self.trigg("loaded", id(self), **kwargs)
 
         # print(f"Load {int(datetime.timestamp(datetime.now()))}", self)
 
     def reload(self, **kwargs):
         """
         Reload from DB the object
-        
+
         transaction_id : The id of the transaction (used for rollback )
         m_path : modification path, to avoid loop with references
 
         """
         if self._status != StatusType.SAVED:
-            log.error(f"Cannot reload an unset object in {self._collection_name}")
+            log.error("Cannot reload an unset object in %r", self._collection_name)
             raise Error(
                 ErrorType.RELOAD_UNSED,
                 f"Cannot reload an unset object in {self._collection_name}",
@@ -154,13 +154,12 @@ class GenericDB(Dict):  # pylint: disable=too-many-instance-attributes
         self.__dict__["_status"] = StatusType.UNSET
         self.set(obj)
         self.__dict__["_status"] = StatusType.SAVED
-        self.__dict__['_loaded_object'] = copy.copy(self)
+        self.__dict__["_loaded_object"] = copy.copy(self)
 
-        if kwargs.get('m_path') is None:
-            kwargs['m_path'] = []
+        if kwargs.get("m_path") is None:
+            kwargs["m_path"] = []
 
-        self.trigg("loaded", id(self), **kwargs )
-
+        self.trigg("loaded", id(self), **kwargs)
 
     def save(self, **kwargs):
         """
@@ -176,10 +175,15 @@ class GenericDB(Dict):  # pylint: disable=too-many-instance-attributes
                 f"Cannot save an unset object in {self._collection_name}",
             )
 
-        if kwargs.get('m_path') is None:
-            kwargs['m_path'] = []
+        if kwargs.get("m_path") is None:
+            kwargs["m_path"] = []
 
-        log.debug(f"try to save {self._collection_name}/{self._id} with transaction_id={kwargs.get('transaction_id')}")
+        log.debug(
+            "try to save %r/%r with transaction_id=%r",
+            self._collection_name,
+            self._id,
+            kwargs.get("transaction_id"),
+        )
 
         timestamp = int(datetime.timestamp(datetime.now()))
         self._meta.mtime = timestamp
@@ -187,30 +191,36 @@ class GenericDB(Dict):  # pylint: disable=too-many-instance-attributes
         self._meta.modified_by.login = current_user.login.copy()
 
         # Load the previous value in the DB (for transactions and comparison of values )
-        if self.__dict__['_loaded_object'] is None:
+        if self.__dict__["_loaded_object"] is None:
             a = copy.copy(self)
             a.__dict__["_status"] = StatusType.UNSET
             a.load(self._id.get_value())
-            self.__dict__['_loaded_object'] = a
+            self.__dict__["_loaded_object"] = a
 
-        kwargs['old_object'] = self.__dict__['_loaded_object']
+        kwargs["old_object"] = self.__dict__["_loaded_object"]
         self.trigg("before_save", id(self), **kwargs)
 
         # print(f"Save {int(datetime.timestamp(datetime.now()))}", self)
 
         self.db.save(self._id.get_value(), self.get_value())
 
-        log.info(f"{self._collection_name}/{self._id} modified by {current_user.user_id}/{current_user.login}")
+        log.info(
+            "%r/%r modified by %r/%r",
+            self._collection_name,
+            self._id,
+            current_user.user_id,
+            current_user.login,
+        )
 
         self.__dict__["_status"] = StatusType.SAVED
 
         # Record into the app translation
         self.app.record_transaction(
-            kwargs.get('transaction_id'),
+            kwargs.get("transaction_id"),
             self._collection_name,
             OperatorType.UPDATE,
             self._id.get_value(),
-            self.__dict__['_loaded_object'].get_value(),
+            self.__dict__["_loaded_object"].get_value(),
         )
 
         self.trigg("saved", id(self), **kwargs)
@@ -224,28 +234,39 @@ class GenericDB(Dict):  # pylint: disable=too-many-instance-attributes
 
         """
         if self._status == StatusType.UNSET:
-            log.error(f"Cannot delete an unset object in {self._collection_name}")
+            log.error("Cannot delete an unset object in %r", self._collection_name)
             raise Error(
                 ErrorType.UNSET_SAVE,
                 f"Cannot delete an unset object in {self._collection_name}",
             )
 
-        if kwargs.get('m_path') is None:
-            kwargs['m_path'] = []
+        if kwargs.get("m_path") is None:
+            kwargs["m_path"] = []
 
-        log.debug(f"try to delete {self._collection_name}/{self._id} with transaction_id={kwargs.get('transaction_id')}")
-        
+        log.debug(
+            "try to delete %r/%r with transaction_id=%r",
+            self._collection_name,
+            self._id,
+            kwargs.get("transaction_id"),
+        )
+
         # Send delete event before deletion to do  some stufs
         self.trigg("deletion", id(self), **kwargs)
         self.db.delete_by_id(self._id.get_value())
-        
-        log.info(f"{self._collection_name}/{self._id} deleted by {current_user.user_id}/{current_user.login}")
-        
+
+        log.info(
+            "%r/%r deleted by %r/%r",
+            self._collection_name,
+            self._id,
+            current_user.user_id,
+            current_user.login,
+        )
+
         self.__dict__["_status"] = StatusType.UNSET
 
         # Record into the app translation
         self.app.record_transaction(
-            kwargs.get('transaction_id'),
+            kwargs.get("transaction_id"),
             self._collection_name,
             OperatorType.DELETE,
             self._id.get_value(),
@@ -264,13 +285,17 @@ class GenericDB(Dict):  # pylint: disable=too-many-instance-attributes
     def create(self, obj: dict, **kwargs):
         """
         Create and save an object into the DB
-        
+
         transaction_id : The id of the transaction (used for rollback )
         m_path : modification path, to avoid loop with references
         """
         # Set the object
-        log.debug(f"try to create new object in {self._collection_name} with transaction_id={kwargs.get('transaction_id')}, obj={obj}")
-
+        log.debug(
+            "try to create new object in %r with transaction_id=%r, obj=%r",
+            self._collection_name,
+            kwargs.get("transaction_id"),
+            obj,
+        )
 
         self.set(obj)
         # Set _meta
@@ -293,15 +318,21 @@ class GenericDB(Dict):  # pylint: disable=too-many-instance-attributes
 
         # Record into the app translation
         self.app.record_transaction(
-            kwargs.get('transaction_id'),
+            kwargs.get("transaction_id"),
             self._collection_name,
             OperatorType.CREATE,
             self._id.get_value(),
             None,
         )
 
-        if kwargs.get('m_path') is None:
-            kwargs['m_path'] = []
+        if kwargs.get("m_path") is None:
+            kwargs["m_path"] = []
 
-        log.info(f"{self._collection_name}/{self._id} created by {current_user.user_id}/{current_user.login}")
+        log.info(
+            "%r/%r created by %r/%r",
+            self._collection_name,
+            self._id,
+            current_user.user_id,
+            current_user.login,
+        )
         self.trigg("created", id(self), **kwargs)

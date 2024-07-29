@@ -1,6 +1,7 @@
 """
 Module providing the Yml DB like
 """
+# pylint: disable=logging-fstring-interpolation
 import os
 import yaml
 from .db_connector import DBConnector
@@ -29,7 +30,7 @@ class DBYmlConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         """
         log.debug(f"save {_id} ")
         filename = os.path.join(self._path, _id + ".yml")
-        
+
         log.debug(f"try to save {filename}")
         with open(filename, mode="w", encoding="utf8") as outfile:
             yaml.dump(obj, outfile, default_flow_style=False)
@@ -39,7 +40,7 @@ class DBYmlConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         Create the object into the DB and return the _id
         """
         _id = o["_id"]
-        
+
         log.debug(f"create {_id} ")
         filename = os.path.join(self._path, _id + ".yml")
 

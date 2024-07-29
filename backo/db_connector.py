@@ -19,7 +19,6 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
         """
         return None
 
-
     def save(self, _id: str, obj: dict):  # pylint: disable=unused-argument
         """
         must be overwritten

@@ -1,11 +1,13 @@
 """
 The transaction module
 """
-import logging
+# pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code, logging-fstring-interpolation
+
 from enum import Enum, auto
 from .log import log_system
 
 log = log_system.get_or_create_logger("transaction")
+
 
 class OperatorType(Enum):
     """
@@ -19,7 +21,8 @@ class OperatorType(Enum):
     def __repr__(self):
         return self.name
 
-class Transaction: # pylint: disable=too-few-public-methods
+
+class Transaction:  # pylint: disable=too-few-public-methods
 
     """
     The Transaction Object

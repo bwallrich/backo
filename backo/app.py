@@ -1,12 +1,13 @@
 """
 The App module
 """
-import logging
+# pylint: disable=logging-fstring-interpolation
 from .generic import GenericDB
 from .transaction import Transaction
 from .log import log_system
 
 log = log_system.get_or_create_logger("app")
+
 
 class App:  # pylint: disable=too-many-instance-attributes
     """
@@ -66,7 +67,9 @@ class App:  # pylint: disable=too-many-instance-attributes
         An error occure, rollback objects
         """
         log.info(
-            f"Rollback transactions {transaction_id} with { len(self.transactions[transaction_id]) } actions"
+            "Rollback transactions %d with %d actions",
+            transaction_id,
+            len(self.transactions[transaction_id]),
         )
         while self.transactions[transaction_id]:
             t = self.transactions[transaction_id].pop()
