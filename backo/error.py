@@ -18,6 +18,7 @@ class ErrorType(Enum):
     FIELD_NOT_FOUND = auto()
     NOT_A_REF = auto()
     UNSET_SAVE = auto()
+    RELOAD_UNSED = auto()
     REFSLIST_NOT_EMPTY = auto()
 
     def __repr__(self):

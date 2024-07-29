@@ -198,8 +198,7 @@ This strategy oblige this RefList to be empty first. Otherwise, the delete wil b
 This strategy delete all reverse object too. can be dangerous.
 
 * ```DeleteStrategy.CLEAN_REVERSES```
-This strategy is often used in *many-to-many* links.
-this strategy erase this reference on the reverse object
+This strategy is often used in *many-to-many* links. This strategy erase this reference on the reverse object
 
 ## Transactions
 
@@ -211,5 +210,76 @@ Soon
 
 ## Logs
 
-Soon
+Log system is based on [logging](https://docs.python.org/3/library/logging.html)
 
+You must first design your logging system with handlers. Then write logs.
+
+### sample use
+
+```python
+import logging
+from backo import log_system
+
+# To write all file to stderr
+log_system.add_handler( log_system.set_streamhandler() )
+
+# To write in a file
+log_system.add_handler( log_system.set_filehandler("/var/log/mylog.log") )
+
+# Set the level 
+log_system.setLevel( logging.INFO )
+
+# create your own sub logger with its specific logging level
+log = log_system.get_or_create_logger("custom")
+log.setLevel(loggind.DEBUG)
+
+log.debug("hey this is my first debug message")
+
+```
+
+### advanced use
+
+You can select a specific ```logger``` and modify it by adding/removing handlers and and changing its level.
+
+```python
+log = log_system.get_or_create_logger("custom")
+log.setLevel(loggind.DEBUG)
+log.addHandler ( my_own_handler )
+# ...
+```
+
+### current loggers
+
+
+Current availables loggers are :
+
+| logger | description |
+| - | - |
+| app | The main App system |
+| GenericDB | The database itself (CRUD operations ) |
+| ref | Ref and RefsList objects |
+| transaction | transactions and roolback |
+| yml | yaml database connector |
+
+
+
+
+## Tests & co
+
+```bash
+# all tests
+python -m unittest tests
+# or for a specific test
+python -m unittest tests.TestDict.test_simple_type
+
+# reformat
+python -m black .
+
+# pylint
+pylint $(git ls-files '*.py')
+
+# coverage
+coverage run -m unittest tests
+coverage html # report under htmlcov/index.html
+
+```

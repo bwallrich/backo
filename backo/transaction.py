@@ -1,7 +1,11 @@
 """
 The transaction module
 """
+import logging
 from enum import Enum, auto
+from .log import log_system
+
+log = log_system.get_or_create_logger("transaction")
 
 class OperatorType(Enum):
     """
@@ -38,15 +42,18 @@ class Transaction: # pylint: disable=too-few-public-methods
 
         # delete the created obj
         if self.operation == OperatorType.CREATE:
+            log.debug(f"Rollback CREATION {self._id} -> delete {self._id}")
             c.db.delete_by_id(self._id)
             return
 
         # re-save the deleted obj
         if self.operation == OperatorType.DELETE:
+            log.debug(f"Rollback DELETE {self._id} -> re-populate it")
             c.db.save(self._id, self.obj)
             return
 
         # re-save the updated obj
         if self.operation == OperatorType.UPDATE:
+            log.debug(f"Rollback UPDATE {self._id} -> re-populate it")
             c.db.save(self._id, self.obj)
             return
