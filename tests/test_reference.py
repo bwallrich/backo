@@ -8,7 +8,7 @@ import sys
 sys.path.insert(1, "../stricto")
 
 import unittest
-from backo import GenericDB
+from backo import Item, Collection
 from backo import DBYmlConnector
 from backo import App
 from backo import Ref, RefsList, DeleteStrategy, Error, log_system
@@ -32,21 +32,21 @@ class TestReferences(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         # --- DB for user
-        self.yml_users = DBYmlConnector(path="/tmp")
+        self.yml_users = DBYmlConnector(path="/tmp/backo")
         self.yml_users.generate_id = (
             lambda o: "User_" + o.name.get_value() + "_" + o.surname.get_value()
         )
 
         # --- DB for sites
-        self.yml_sites = DBYmlConnector(path="/tmp")
+        self.yml_sites = DBYmlConnector(path="/tmp/backo")
         self.yml_sites.generate_id = lambda o: "Site_" + o.name.get_value()
 
         # --- DB for humans
-        self.yml_humans = DBYmlConnector(path="/tmp")
+        self.yml_humans = DBYmlConnector(path="/tmp/backo")
         self.yml_humans.generate_id = lambda o: "Human_" + o.name.get_value()
 
         # --- DB for animals
-        self.yml_animals = DBYmlConnector(path="/tmp")
+        self.yml_animals = DBYmlConnector(path="/tmp/backo")
         self.yml_animals.generate_id = lambda o: "Animal_" + o.desc.get_value()
 
     def test_references_one_to_many(self):
@@ -56,43 +56,38 @@ class TestReferences(unittest.TestCase):
         """
 
         app = App("myApp")
-        app.add_collection(
-            "users",
-            GenericDB(
-                {
+
+        app.register_collection(
+            Collection(
+                'users', 
+                Item({
                     "name": String(),
                     "surname": String(),
                     "site": Ref(coll="sites", field="$.users", required=True),
-                    "male": Bool(default=True),
-                },
-                self.yml_users,
-            ),
+                    "male": Bool(default=True),   
+                }),
+                self.yml_users)
         )
-
-        # --- DB for sites
-        app.add_collection(
-            "sites",
-            GenericDB(
-                {
+        app.register_collection(
+            Collection(
+                'sites', 
+                Item({
                     "name": String(),
                     "address": String(),
                     "users": RefsList(
                         coll="users", field="$.site", ods=DeleteStrategy.MUST_BE_EMPTY
                     ),
-                },
-                self.yml_sites,
-            ),
+                }),
+                self.yml_sites)
         )
 
         # Hard clean before tests
-        app.sites.db.delete_by_id("Site_moon")
-        app.users.db.delete_by_id("User_bebert_bebert")
+        self.yml_sites.delete_by_id("Site_moon")
+        self.yml_users.delete_by_id("User_bebert_bebert")
 
-        si = app.sites.new()
-        si.create({"name": "moon", "address": "far"})
+        si= app.sites.create({"name": "moon", "address": "far"})
 
-        u = app.users.new()
-        u.create({"name": "bebert", "surname": "bebert", "site": si._id})
+        u = app.users.create({"name": "bebert", "surname": "bebert", "site": si._id})
 
         # -- Check if reverse is filled
         si.reload()
@@ -114,43 +109,39 @@ class TestReferences(unittest.TestCase):
         """
 
         app = App("myApp")
-        app.add_collection(
-            "users",
-            GenericDB(
-                {
+        app.register_collection(
+            Collection(
+                'users', 
+                Item({
                     "name": String(),
                     "surname": String(),
                     "site": Ref(coll="sites", field="$.users"),
-                    "male": Bool(default=True),
-                },
-                self.yml_users,
-            ),
+                    "male": Bool(default=True),   
+                }),
+                self.yml_users)
         )
 
         # --- DB for sites
-        app.add_collection(
-            "sites",
-            GenericDB(
-                {
+        app.register_collection(
+            Collection(
+                'sites', 
+                Item({
                     "name": String(),
                     "address": String(),
                     "users": RefsList(
                         coll="users", field="$.site", ods=DeleteStrategy.CLEAN_REVERSES
                     ),
-                },
-                self.yml_sites,
-            ),
+                }),
+                self.yml_sites)
         )
 
         # Hard clean before tests
-        app.sites.db.delete_by_id("Site_moon")
-        app.users.db.delete_by_id("User_bebert_bebert")
+        self.yml_sites.delete_by_id("Site_moon")
+        self.yml_users.delete_by_id("User_bebert_bebert")
 
-        si = app.sites.new()
-        si.create({"name": "moon", "address": "far"})
+        si = app.sites.create({"name": "moon", "address": "far"})
 
-        u = app.users.new()
-        u.create({"name": "bebert", "surname": "bebert", "site": si._id})
+        u = app.users.create({"name": "bebert", "surname": "bebert", "site": si._id})
 
         # -- Check if reverse is filled
         si.reload()
@@ -170,45 +161,39 @@ class TestReferences(unittest.TestCase):
         """
 
         app = App("myApp")
-        app.add_collection(
-            "users",
-            GenericDB(
-                {
+        app.register_collection(
+            Collection(
+                'users', 
+                Item({
                     "name": String(),
                     "surname": String(),
                     "site": Ref(coll="sites", field="$.users"),
-                    "male": Bool(default=True),
-                },
-                self.yml_users,
-            ),
+                    "male": Bool(default=True),   
+                }),
+                self.yml_users)
         )
 
         # --- DB for sites
-        app.add_collection(
-            "sites",
-            GenericDB(
-                {
+        app.register_collection(
+            Collection(
+                'sites', 
+                Item({
                     "name": String(),
                     "address": String(),
                     "users": RefsList(
-                        coll="users",
-                        field="$.site",
-                        ods=DeleteStrategy.DELETE_REVERSES_TOO,
+                        coll="users", field="$.site", ods=DeleteStrategy.DELETE_REVERSES_TOO
                     ),
-                },
-                self.yml_sites,
-            ),
+                }),
+                self.yml_sites)
         )
 
         # Hard clean before tests
-        app.sites.db.delete_by_id("Site_moon")
-        app.users.db.delete_by_id("User_bebert_bebert")
+        self.yml_sites.delete_by_id("Site_moon")
+        self.yml_users.delete_by_id("User_bebert_bebert")
 
-        si = app.sites.new()
-        si.create({"name": "moon", "address": "far"})
+        si = app.sites.create({"name": "moon", "address": "far"})
 
-        u = app.users.new()
-        u.create({"name": "bebert", "surname": "bebert", "site": si._id})
+        u = app.users.create({"name": "bebert", "surname": "bebert", "site": si._id})
 
         u.reload()
         self.assertEqual(u.site, si._id)
@@ -231,39 +216,36 @@ class TestReferences(unittest.TestCase):
         """
 
         app = App("myApp")
-        app.add_collection(
-            "users",
-            GenericDB(
-                {
+
+        app.register_collection(
+            Collection(
+                'users', 
+                Item({
                     "name": String(),
                     "surname": String(),
                     "site": Ref(coll="sites", field="$.users"),
-                    "male": Bool(default=True),
-                },
-                self.yml_users,
-            ),
+                    "male": Bool(default=True),   
+                }),
+                self.yml_users)
         )
 
         # --- DB for sites
-        app.add_collection(
-            "sites",
-            GenericDB(
-                {
+        app.register_collection(
+            Collection(
+                'sites', 
+                Item({
                     "name": String(),
                     "address": String(),
                     "users": RefsList(
-                        coll="users",
-                        field="$.site",
-                        ods=DeleteStrategy.DELETE_REVERSES_TOO,
+                        coll="users", field="$.site", ods=DeleteStrategy.DELETE_REVERSES_TOO
                     ),
-                },
-                self.yml_sites,
-            ),
+                }),
+                self.yml_sites)
         )
 
         # Hard clean before tests
-        app.sites.db.delete_by_id("Site_moon")
-        app.users.db.delete_by_id("User_bebert_bebert")
+        self.yml_sites.delete_by_id("Site_moon")
+        self.yml_users.delete_by_id("User_bebert_bebert")
 
         si = app.sites.new()
         si.create({"name": "moon", "address": "far"})
@@ -282,7 +264,7 @@ class TestReferences(unittest.TestCase):
         app.rollback_transaction(t_id)
 
         t_id = app.start_transaction()
-        # app.users.db.delete_by_id("User_bebert_bebert")
+        # self.yml_users.delete_by_id("User_bebert_bebert")
         u.site._collection = "sites"
         u.site._reverse = "unknown_reverse"
         with self.assertRaises(Error) as e:
@@ -296,7 +278,7 @@ class TestReferences(unittest.TestCase):
         app.rollback_transaction(t_id)
 
         t_id = app.start_transaction()
-        # app.users.db.delete_by_id("User_bebert_bebert")
+        # self.yml_users.delete_by_id("User_bebert_bebert")
         u.site._reverse = "users"
         with self.assertRaises(Error) as e:
             u.create(
@@ -313,46 +295,41 @@ class TestReferences(unittest.TestCase):
         """
 
         app = App("myApp")
-        app.add_collection(
-            "users",
-            GenericDB(
-                {
+
+        app.register_collection(
+            Collection(
+                'users', 
+                Item({
                     "name": String(),
                     "surname": String(),
                     "site": Ref(coll="sites", field="$.users"),
-                    "male": Bool(default=True),
-                },
-                self.yml_users,
-            ),
+                    "male": Bool(default=True),   
+                }),
+                self.yml_users)
         )
 
         # --- DB for sites
-        app.add_collection(
-            "sites",
-            GenericDB(
-                {
+        app.register_collection(
+            Collection(
+                'sites', 
+                Item({
                     "name": String(),
                     "address": String(),
                     "users": RefsList(
-                        coll="users",
-                        field="$.site",
-                        ods=DeleteStrategy.DELETE_REVERSES_TOO,
+                        coll="users", field="$.site", ods=DeleteStrategy.DELETE_REVERSES_TOO
                     ),
-                },
-                self.yml_sites,
-            ),
+                }),
+                self.yml_sites)
         )
 
         # Hard clean before tests
-        app.sites.db.delete_by_id("Site_moon")
-        app.sites.db.delete_by_id("Site_mars")
-        app.users.db.delete_by_id("User_bebert_bebert")
+        self.yml_sites.delete_by_id("Site_moon")
+        self.yml_sites.delete_by_id("Site_mars")
+        self.yml_users.delete_by_id("User_bebert_bebert")
 
-        si_mars = app.sites.new()
-        si_mars.create({"name": "mars", "address": "very far"})
+        si_mars = app.sites.create({"name": "mars", "address": "very far"})
 
-        si_moon = app.sites.new()
-        si_moon.create({"name": "moon", "address": "far"})
+        si_moon = app.sites.create({"name": "moon", "address": "far"})
 
         u = app.users.new()
         u.create({"name": "bebert", "surname": "bebert", "site": si_moon._id})
@@ -383,53 +360,46 @@ class TestReferences(unittest.TestCase):
         """
 
         app = App("myApp")
-        app.add_collection(
-            "users",
-            GenericDB(
-                {
+
+        app.register_collection(
+            Collection(
+                'users', 
+                Item({
                     "name": String(),
                     "surname": String(),
                     "site": Ref(coll="sites", field="$.users"),
-                    "male": Bool(default=True),
-                },
-                self.yml_users,
-            ),
+                    "male": Bool(default=True),   
+                }),
+                self.yml_users)
         )
 
         # --- DB for sites
-        app.add_collection(
-            "sites",
-            GenericDB(
-                {
+        app.register_collection(
+            Collection(
+                'sites', 
+                Item({
                     "name": String(),
                     "address": String(),
                     "users": RefsList(
-                        coll="users",
-                        field="$.site",
-                        ods=DeleteStrategy.CLEAN_REVERSES,
+                        coll="users", field="$.site", ods=DeleteStrategy.CLEAN_REVERSES
                     ),
-                },
-                self.yml_sites,
-            ),
+                }),
+                self.yml_sites)
         )
 
         # Hard clean before tests
-        app.sites.db.delete_by_id("Site_moon")
-        app.sites.db.delete_by_id("Site_mars")
-        app.users.db.delete_by_id("User_bebert_bebert")
-        app.users.db.delete_by_id("User_john_john")
+        self.yml_sites.delete_by_id("Site_moon")
+        self.yml_sites.delete_by_id("Site_mars")
+        self.yml_users.delete_by_id("User_bebert_bebert")
+        self.yml_users.delete_by_id("User_john_john")
 
-        si_mars = app.sites.new()
-        si_mars.create({"name": "mars", "address": "very far"})
+        si_mars = app.sites.create({"name": "mars", "address": "very far"})
 
-        si_moon = app.sites.new()
-        si_moon.create({"name": "moon", "address": "far"})
+        si_moon = app.sites.create({"name": "moon", "address": "far"})
 
-        ub = app.users.new()
-        ub.create({"name": "bebert", "surname": "bebert", "site": si_moon._id})
+        ub = app.users.create({"name": "bebert", "surname": "bebert", "site": si_moon._id})
 
-        uj = app.users.new()
-        uj.create({"name": "john", "surname": "john", "site": si_moon._id})
+        uj = app.users.create({"name": "john", "surname": "john", "site": si_moon._id})
 
         # -- Check if reverse is filled
         si_moon.reload()
@@ -461,47 +431,42 @@ class TestReferences(unittest.TestCase):
         """
 
         app = App("myApp")
-        app.add_collection(
-            "humans",
-            GenericDB(
-                {
+
+        app.register_collection(
+            Collection(
+                'humans', 
+                Item({
                     "name": String(),
                     "surname": String(),
                     "totem": Ref(coll="animals", field="$.human"),
-                },
-                self.yml_humans,
-            ),
+                }),
+                self.yml_humans)
         )
 
         # --- DB for animal
-        app.add_collection(
-            "animals",
-            GenericDB(
-                {
+        app.register_collection(
+            Collection(
+                'animals', 
+                Item({
                     "desc": String(),
                     "human": Ref(coll="humans", field="$.totem"),
-                },
-                self.yml_animals,
-            ),
+                }),
+                self.yml_animals)
         )
 
         # Hard clean before tests
-        app.humans.db.delete_by_id("Human_parker")
-        app.humans.db.delete_by_id("Human_pym")
-        app.animals.db.delete_by_id("Animal_spider")
-        app.animals.db.delete_by_id("Animal_ant")
+        self.yml_humans.delete_by_id("Human_parker")
+        self.yml_humans.delete_by_id("Human_pym")
+        self.yml_animals.delete_by_id("Animal_spider")
+        self.yml_animals.delete_by_id("Animal_ant")
 
         # create humans
-        up = app.humans.new()
-        up.create({"name": "parker", "surname": "peter"})
-        uh = app.humans.new()
-        uh.create({"name": "pym", "surname": "hank"})
+        up = app.humans.create({"name": "parker", "surname": "peter"})
+        uh = app.humans.create({"name": "pym", "surname": "hank"})
 
         # ctreate animal totem related to humans
-        asp = app.animals.new()
-        asp.create({"desc": "spider", "human": up._id})
-        aa = app.animals.new()
-        aa.create({"desc": "ant", "human": uh._id})
+        asp = app.animals.create({"desc": "spider", "human": up._id})
+        aa = app.animals.create({"desc": "ant", "human": uh._id})
 
         # check human link
         up.reload()
@@ -534,47 +499,42 @@ class TestReferences(unittest.TestCase):
         """
 
         app = App("myApp")
-        app.add_collection(
-            "humans",
-            GenericDB(
-                {
+
+        app.register_collection(
+            Collection(
+                'humans', 
+                Item({
                     "name": String(),
                     "surname": String(),
                     "totem": Ref(coll="animals", field="$.human", required=True),
-                },
-                self.yml_humans,
-            ),
+                }),
+                self.yml_humans)
         )
 
         # --- DB for animal
-        app.add_collection(
-            "animals",
-            GenericDB(
-                {
+        app.register_collection(
+            Collection(
+                'animals', 
+                Item({
                     "desc": String(),
                     "human": Ref(coll="humans", field="$.totem"),
-                },
-                self.yml_animals,
-            ),
+                }),
+                self.yml_animals)
         )
 
         # Hard clean before tests
-        app.humans.db.delete_by_id("Human_parker")
-        app.humans.db.delete_by_id("Human_pym")
-        app.animals.db.delete_by_id("Animal_spider")
-        app.animals.db.delete_by_id("Animal_ant")
+        self.yml_humans.delete_by_id("Human_parker")
+        self.yml_humans.delete_by_id("Human_pym")
+        self.yml_animals.delete_by_id("Animal_spider")
+        self.yml_animals.delete_by_id("Animal_ant")
 
         # ctreate animal totem related to humans
-        asp = app.animals.new()
-        asp.create({"desc": "spider"})
-        aa = app.animals.new()
-        aa.create({"desc": "ant"})
+        asp = app.animals.create({"desc": "spider"})
+        aa = app.animals.create({"desc": "ant"})
 
         # create humans
-        up = app.humans.new()
-        up.create({"name": "parker", "surname": "peter", "totem": asp._id})
-        uh = app.humans.new()
-        uh.create({"name": "pym", "surname": "hank", "totem": aa._id})
+        up = app.humans.create({"name": "parker", "surname": "peter", "totem": asp._id})
+        uh = app.humans.create({"name": "pym", "surname": "hank", "totem": aa._id})
 
         # check human link
         up.reload()
@@ -595,10 +555,11 @@ class TestReferences(unittest.TestCase):
         """
 
         app = App("myApp")
-        app.add_collection(
-            "humans",
-            GenericDB(
-                {
+
+        app.register_collection(
+            Collection(
+                'humans', 
+                Item({
                     "name": String(),
                     "surname": String(),
                     "totems": RefsList(
@@ -606,44 +567,38 @@ class TestReferences(unittest.TestCase):
                         field="$.humans",
                         ods=DeleteStrategy.MUST_BE_EMPTY,
                     ),
-                },
-                self.yml_humans,
-            ),
+                }),
+                self.yml_humans)
         )
 
         # --- DB for animal
-        app.add_collection(
-            "animals",
-            GenericDB(
-                {
+        app.register_collection(
+            Collection(
+                'animals', 
+                Item({
                     "desc": String(),
                     "humans": RefsList(
                         coll="humans",
                         field="$.totems",
                         ods=DeleteStrategy.MUST_BE_EMPTY,
                     ),
-                },
-                self.yml_animals,
-            ),
+                }),
+                self.yml_animals)
         )
 
         # Hard clean before tests
-        app.humans.db.delete_by_id("Human_parker")
-        app.humans.db.delete_by_id("Human_pym")
-        app.animals.db.delete_by_id("Animal_spider")
-        app.animals.db.delete_by_id("Animal_ant")
+        self.yml_humans.delete_by_id("Human_parker")
+        self.yml_humans.delete_by_id("Human_pym")
+        self.yml_animals.delete_by_id("Animal_spider")
+        self.yml_animals.delete_by_id("Animal_ant")
 
         # ctreate animal totem related to humans
-        asp = app.animals.new()
-        asp.create({"desc": "spider"})
-        aa = app.animals.new()
-        aa.create({"desc": "ant"})
+        asp = app.animals.create({"desc": "spider"})
+        aa = app.animals.create({"desc": "ant"})
 
         # create humans
-        up = app.humans.new()
-        up.create({"name": "parker", "surname": "peter", "totems": [asp._id, aa._id]})
-        uh = app.humans.new()
-        uh.create({"name": "pym", "surname": "hank", "totems": [aa._id]})
+        up = app.humans.create({"name": "parker", "surname": "peter", "totems": [asp._id, aa._id]})
+        uh = app.humans.create({"name": "pym", "surname": "hank", "totems": [aa._id]})
 
         # check human links
         up.reload()

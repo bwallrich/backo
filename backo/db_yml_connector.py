@@ -24,7 +24,15 @@ class DBYmlConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
         DBConnector.__init__(self, **kwargs)
 
-    def save(self, _id: str, obj: dict):
+        if not os.path.exists( self._path ):
+            os.mkdir(self._path)
+
+        if not os.path.isdir( self._path ):
+            raise Error(ErrorType.NOT_DIR, f'Yaml path "{self._path}" is not a directory.')
+   
+
+
+    def save(self, _id: str, o: dict):
         """
         Save the object
         """
@@ -33,7 +41,7 @@ class DBYmlConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
         log.debug(f"try to save {filename}")
         with open(filename, mode="w", encoding="utf8") as outfile:
-            yaml.dump(obj, outfile, default_flow_style=False)
+            yaml.dump(o, outfile, default_flow_style=False)
 
     def create(self, o: dict):
         """
@@ -69,8 +77,11 @@ class DBYmlConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
     def delete_by_id(self, _id: str):
         """
         Delete data by Id
+        return True if deleted, or False if not found
         """
         log.debug(f"delete {_id}")
         filename = os.path.join(self._path, _id + ".yml")
         if os.path.isfile(filename):
             os.remove(filename)
+            return True
+        return False

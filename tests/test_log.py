@@ -5,7 +5,7 @@ test for CRUD()
 
 import sys
 
-sys.path.insert(1, "/home/wallrich/stricto")
+sys.path.insert(1, "../../stricto")
 
 import unittest
 import logging

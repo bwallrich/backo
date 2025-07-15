@@ -91,9 +91,9 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
             **kwargs,
         )
 
-    def set_coll_ref(self, root, me):
+    def set_collection_reference(self, root, me):
         """
-        Set the reference to the GenericDB object to the collection referenced.
+        Set the reference to the Item object to the collection referenced.
         """
         # Already set
         if me._coll_ref is not None:
@@ -101,16 +101,14 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
 
         if root is None:
             raise Error(ErrorType.NOAPP, "No root found. WTF")
-        if root.app is None:
-            raise Error(
-                ErrorType.NOAPP, "No app found. A GenericDB not related to an App"
-            )
-        if me._collection not in root.app.collections:
+        
+        me._coll_ref = root._collection.get_other_collection( me._collection )
+        if not me._coll_ref:
             raise Error(
                 ErrorType.COLLECTION_NOT_FOUND,
                 f'Collection "{me._collection}" not found',
             )
-        me._coll_ref = root.app.collections[me._collection]
+
 
     def on_before_save(
         self, event_name, root, me, **kwargs
@@ -121,7 +119,7 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         """
         log.debug(
             "%r/%r save. Check for changes in Ref %r",
-            root._collection_name,
+            root._collection.name,
             root._id,
             me.path_name(),
         )
@@ -129,7 +127,7 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         # loop in references modifications
         path_to_find = (
             "from",
-            root._collection_name,
+            root._collection.name,
             root._id.get_value(),
             me.path_name(),
         )
@@ -161,7 +159,7 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
 
         log.debug(
             "%r/%r %r change %r->%r",
-            root._collection_name,
+            root._collection.name,
             root._id,
             me.path_name(),
             old_me,
@@ -181,7 +179,7 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         check for the reverse field and modify it
         """
         log.debug(
-            "Creation %r/%r.%r=%r ", root._collection_name, root._id, me.path_name(), me
+            "Creation %r/%r.%r=%r ", root._collection.name, root._id, me.path_name(), me
         )
 
         if not me._reverse:
@@ -191,10 +189,10 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         if target_id is None:
             return
 
-        path = ("from", root._collection_name, root._id.get_value(), me.path_name())
+        path = ("from", root._collection.name, root._id.get_value(), me.path_name())
 
         # set the _coll_ref (in case of)
-        me.set_coll_ref(root, me)
+        me.set_collection_reference(root, me)
         # try to load the coresponding field
         other = me._coll_ref.new()
         other.load(target_id)
@@ -253,11 +251,11 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
             return
 
         log.debug(
-            "Delete %r/%r %r=%r ", root._collection_name, root._id, me.path_name(), me
+            "Delete %r/%r %r=%r ", root._collection.name, root._id, me.path_name(), me
         )
 
         # set the _coll_ref (in case of)
-        me.set_coll_ref(root, me)
+        me.set_collection_reference(root, me)
         # try to load the coresponding field
         other = me._coll_ref.new()
         other.load(me.get_value())
@@ -276,7 +274,7 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
                 reverse_field.set(None)
                 path = (
                     "from",
-                    root._collection_name,
+                    root._collection.name,
                     root._id.get_value(),
                     me.path_name(),
                 )
@@ -297,7 +295,7 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
                 reverse_field.remove(root._id.get_value())
                 path = (
                     "from",
-                    root._collection_name,
+                    root._collection.name,
                     root._id.get_value(),
                     me.path_name(),
                 )
@@ -383,9 +381,9 @@ class RefsList(List):
             self, String(default=DEFAULT_ID, required=True), on=on, default=[], **kwargs
         )
 
-    def set_coll_ref(self, root, me):
+    def set_collection_reference(self, root, me):
         """
-        Set the reference to the GenericDB object to the collection referenced.
+        Set the reference to the Item object to the collection referenced.
         """
         # Already set
         if me._coll_ref is not None:
@@ -393,16 +391,17 @@ class RefsList(List):
 
         if root is None:
             raise Error(ErrorType.NOAPP, "No root found. WTF")
-        if root.app is None:
+        if root._collection.app is None:
             raise Error(
-                ErrorType.NOAPP, "No app found. A GenericDB not related to an App"
+                ErrorType.COLLECTION_NOT_REGISTERED, "Collection not registered"
             )
-        if me._collection not in root.app.collections:
+        if me._collection not in root._collection.app.collections:
             raise Error(
                 ErrorType.COLLECTION_NOT_FOUND,
                 f'Collection "{me._collection}" not found',
             )
-        me._coll_ref = root.app.collections[me._collection]
+        me._coll_ref = root._collection.app.collections[me._collection]
+
 
     def on_delete_must_by_empty(
         self, event_name, root, me, **kwargs
@@ -413,17 +412,25 @@ class RefsList(List):
         """
         log.debug(
             "%r/%r deleted with RefsList %r=%r and must be empty",
-            root._collection_name,
+            root._collection.name,
             root._id,
             me.path_name(),
             me,
         )
+        # With fill strategy, just chek if the list is empty
+        if self._fill_strategy == FillStrategy.FILL:
+            if len(me) != 0:
+                raise Error(
+                    ErrorType.REFSLIST_NOT_EMPTY,
+                    f'Collection "{self._collection}" not empty',
+                )
+            
+        # With not fill strategy, must select all where target_id is me
+        # and check if we find them
+        if self._fill_strategy == FillStrategy.NOT_FILL:
+            return
 
-        if len(me) != 0:
-            raise Error(
-                ErrorType.REFSLIST_NOT_EMPTY,
-                f'Collection "{self._collection}" not empty',
-            )
+
 
     def on_delete_with_reverse(
         self, event_name, root, me, **kwargs
@@ -434,20 +441,20 @@ class RefsList(List):
         """
         log.debug(
             "%r/%r deleted with RefsList %r=%r and delete reverses too",
-            root._collection_name,
+            root._collection.name,
             root._id,
             me.path_name(),
             me,
         )
 
         # set the _coll_ref (in case of)
-        me.set_coll_ref(root, me)
+        me.set_collection_reference(root, me)
 
         # try to load the coresponding field
         for reference in me:
             other = me._coll_ref.new()
             other.load(reference.get_value(), **kwargs)
-            path = ("from", root._collection_name, root._id.get_value(), me.path_name())
+            path = ("from", root._collection.name, root._id.get_value(), me.path_name())
             if path not in kwargs["m_path"]:
                 kwargs["m_path"].append(path)
             other.delete(**kwargs)
@@ -460,7 +467,7 @@ class RefsList(List):
         """
         log.debug(
             "%r/%r deleted with RefsList %r=%r and clean reverses",
-            root._collection_name,
+            root._collection.name,
             root._id,
             me.path_name(),
             me,
@@ -477,12 +484,12 @@ class RefsList(List):
         """
 
         # set the _coll_ref (in case of)
-        me.set_coll_ref(root, me)
+        me.set_collection_reference(root, me)
 
         # loop in references modifications
         path_to_find = (
             "from",
-            root._collection_name,
+            root._collection.name,
             root._id.get_value(),
             me.path_name(),
         )
@@ -520,7 +527,7 @@ class RefsList(List):
 
             path_to_find = (
                 "from",
-                other._collection_name,
+                other._collection.name,
                 reference.get_value(),
                 reverse_field.path_name(),
             )
@@ -577,7 +584,7 @@ class RefsList(List):
             if other_modified_flag:
                 path = (
                     "from",
-                    root._collection_name,
+                    root._collection.name,
                     root._id.get_value(),
                     me.path_name(),
                 )
@@ -593,7 +600,7 @@ class RefsList(List):
         """
         log.debug(
             "%r/%r created with RefsList %r=%r",
-            root._collection_name,
+            root._collection.name,
             root._id,
             me.path_name(),
             me,
@@ -618,7 +625,7 @@ class RefsList(List):
 
         log.debug(
             "%r/%r change %r=%r->%r",
-            root._collection_name,
+            root._collection.name,
             root._id,
             me.path_name(),
             old_me,
@@ -626,7 +633,7 @@ class RefsList(List):
         )
 
         # set the _coll_ref (in case of)
-        me.set_coll_ref(root, me)
+        me.set_collection_reference(root, me)
 
         # modify ref to me to the new one
         l = []

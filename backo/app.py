@@ -2,8 +2,9 @@
 The App module
 """
 # pylint: disable=logging-fstring-interpolation
-from .generic import GenericDB
+from .item import Item
 from .transaction import Transaction
+from .collection import Collection
 from .log import log_system
 
 log = log_system.get_or_create_logger("app")
@@ -23,25 +24,32 @@ class App:  # pylint: disable=too-many-instance-attributes
         self.transaction_id_reference = 1
         self.transactions = {}
 
-    def add_collection(self, name: str, coll: GenericDB):
+    def register_collection(self, coll: Collection):
         """
-        Add a collection into the app
+        Register a collection into this app
         """
-        self.collections[name] = coll
-        coll.set_app(self, name)
-        setattr(self, name, coll)
+        self.collections[coll.name] = coll
+        coll.app = self
+        setattr(self, coll.name, coll)
 
-    def new(self, name: str):
+
+    def add_collection(self, coll: Collection):
+        """
+        Register a collection into the app
+        """
+        return self.register_collection( coll )
+
+    def new1(self, name: str):
         """
         Return an new Object collection
         """
-        return self.collections[name].copy()
+        return self.collections[name].new()
 
     def start_transaction(self):
         """
         Chose an Id and start the transaction structure
         """
-        self.transaction_id_reference = self.transaction_id_reference + 1
+        self.transaction_id_reference += 1
         my_id = self.transaction_id_reference
         self.transactions[my_id] = []
         return my_id

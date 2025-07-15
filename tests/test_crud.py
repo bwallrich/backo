@@ -5,14 +5,14 @@ test for CRUD()
 
 import sys
 
-sys.path.insert(1, "/home/wallrich/stricto")
+sys.path.insert(1, "../../stricto")
 
 
 import unittest
 import time
 
 
-from backo import GenericDB
+from backo import Item, Collection
 from backo import DBYmlConnector
 from backo import App, Error, current_user
 
@@ -31,13 +31,13 @@ class TestCRUD(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         # --- DB for user
-        self.yml_users = DBYmlConnector(path="/tmp")
+        self.yml_users = DBYmlConnector(path="/tmp/backo")
         self.yml_users.generate_id = (
             lambda o: "User_" + o.name.get_value() + "_" + o.surname.get_value()
         )
 
         # --- DB for sites
-        self.yml_sites = DBYmlConnector(path="/tmp")
+        self.yml_sites = DBYmlConnector(path="/tmp/backo")
         self.yml_sites.generate_id = lambda o: "Site_" + o.name.get_value()
 
     def test_errors_on_create_delete(self):
@@ -47,12 +47,14 @@ class TestCRUD(unittest.TestCase):
         """
 
         app = App("myApp")
-        app.add_collection(
-            "users",
-            GenericDB(
-                {"name": String(), "surname": String(), "male": Bool(default=True)},
-                self.yml_users,
-            ),
+        
+        app.register_collection(
+            Collection(
+                'users', 
+                Item(
+                    {"name": String(), "surname": String(), "male": Bool(default=True)}
+                ),
+                self.yml_users)
         )
 
         self.yml_users.delete_by_id("User_bebert_bebert")
@@ -78,12 +80,14 @@ class TestCRUD(unittest.TestCase):
         """
 
         app = App("myApp")
-        app.add_collection(
-            "users",
-            GenericDB(
-                {"name": String(), "surname": String(), "male": Bool(default=True)},
-                self.yml_users,
-            ),
+        
+        app.register_collection(
+            Collection(
+                'users', 
+                Item(
+                    {"name": String(), "surname": String(), "male": Bool(default=True)}
+                ),
+                self.yml_users)
         )
 
         self.yml_users.delete_by_id("User_bebert_bebert")
@@ -92,8 +96,7 @@ class TestCRUD(unittest.TestCase):
         current_user.user_id = "1234"
 
         # -- creation
-        u = app.new("users")
-        u.create({"name": "bebert", "surname": "bebert"})
+        u = app.users.create({"name": "bebert", "surname": "bebert"})
         v = app.users.new()
         v.load(u._id.get_value())
         self.assertEqual(v, u)
@@ -135,12 +138,14 @@ class TestCRUD(unittest.TestCase):
         """
 
         app = App("myApp")
-        app.add_collection(
-            "users",
-            GenericDB(
-                {"name": String(), "surname": String(), "male": Bool(default=True)},
-                self.yml_users,
-            ),
+        
+        app.register_collection(
+            Collection(
+                'users', 
+                Item(
+                    {"name": String(), "surname": String(), "male": Bool(default=True)}
+                ),
+                self.yml_users)
         )
 
         self.yml_users.delete_by_id("User_bebert_bebert")
@@ -159,3 +164,38 @@ class TestCRUD(unittest.TestCase):
         with self.assertRaises(StrictoError) as e:
             v._meta.ctime = 12
         self.assertEqual(e.exception.message, "cannot modify value")
+
+    def test_crud_no_meta(self):
+        """
+        create
+        and delete
+        """
+
+        app = App("myApp")
+        
+        app.register_collection(
+            Collection(
+                'users', 
+                Item(
+                    {"name": String(), "surname": String(), "male": Bool(default=True)},
+                    meta_data_handler = None
+                ),
+                self.yml_users)
+        )
+
+        self.yml_users.delete_by_id("User_bebert_bebert")
+
+        # -- creation
+        u = app.users.new()
+        u.create({"name": "bebert", "surname": "bebert"})
+        self.assertEqual(u._id, "User_bebert_bebert")
+        u.surname = "foo"
+        u.save()
+
+        v = app.users.new()
+        v.load(u._id.get_value())
+        self.assertEqual(v.surname, "foo")
+
+        with self.assertRaises(AttributeError) as e:
+            print(v._meta)
+        self.assertEqual(e.exception.args[0], "'Item' object has no attribute '_meta'")

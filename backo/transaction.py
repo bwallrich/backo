@@ -41,22 +41,22 @@ class Transaction:  # pylint: disable=too-few-public-methods
         """
         Do a rollback on this action
         """
-        c = app.new(self.collection_name)
+        collection = app.collections.get(self.collection_name)
 
         # delete the created obj
         if self.operation == OperatorType.CREATE:
             log.debug(f"Rollback CREATION {self._id} -> delete {self._id}")
-            c.db.delete_by_id(self._id)
+            collection.db_handler.delete_by_id(self._id)
             return
 
         # re-save the deleted obj
         if self.operation == OperatorType.DELETE:
             log.debug(f"Rollback DELETE {self._id} -> re-populate it")
-            c.db.save(self._id, self.obj)
+            collection.db_handler.save(self._id, self.obj)
             return
 
         # re-save the updated obj
         if self.operation == OperatorType.UPDATE:
             log.debug(f"Rollback UPDATE {self._id} -> re-populate it")
-            c.db.save(self._id, self.obj)
+            collection.db_handler.save(self._id, self.obj)
             return

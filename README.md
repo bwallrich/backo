@@ -43,7 +43,7 @@ erDiagram
 Becomes in python with backo
 
 ```python
-from backo import GenericDB, DBYmlConnector, App
+from backo import Item, DBYmlConnector, App
 from backo import Ref, RefsList, DeleteStrategy
 
 # --- Storage for user
@@ -59,7 +59,7 @@ yml_addr.generate_id = lambda o: "Site_" + o.name.get_value()
 app = App("myApp")
 app.add_collection(
     "users",
-    GenericDB(
+    Item(
         {
             "name": String(),
             "surname": String(),
@@ -72,7 +72,7 @@ app.add_collection(
 # --- DB for adresses
 app.add_collection(
     "addrs",
-    GenericDB(
+    Item(
         {
             "name": String(),
             "address": String(),
@@ -89,16 +89,16 @@ Then usage :
 
 ```python
 # Create a site, save it in the DB
-addr = app.addrs.new() # A empty new object addr
+an_address = app.addrs.new() # A empty new object addr
 
 # fill this object, save it in the "db", get a Id back
-addr.create({"name": "moon", "address": "far"})
+an_address.create({"name": "moon", "address": "far"})
 
-# Create a user in the site
-u = app.users.new() # A empty new object user
+# or more shorter
+# an_address = app.addrs.create({"name": "moon", "address": "far"})
 
-# fill this object, save it in the "db", get a Id back
-u.create({"name": "bebert", "surname": "bebert", "addr": si._id})
+# Create a user with thos adress
+u = app.users.create({"name": "bebert", "surname": "bebert", "addr": an_address._id})
 ```
 
 ### What happened ?
@@ -114,28 +114,29 @@ Please see [stricto](https://github.com/bwallrich/stricto).
 
 [backo](https://github.com/bwallrich/backo) use [stricto](https://github.com/bwallrich/stricto) for structured description language.
 
-### GenericDB
+### Item
 
-```GenericDB```is the main object in backo. It describe an object in the DB with all methodes for CRUD (CReate, Update, Delete)
+```Item```is the main object in backo. It describe an object in the DB with all methodes for CRUD (CReate, Update, Delete)
 
 A generic object is a [stricto](https://github.com/bwallrich/stricto) ```Dict()``` object.
 
-```GenericDB( description object , db connector )```
+```Item( description object , db connector )```
 
 example :
 
 ```python
 # Describe what is a 'cat'
-cat = GenericDB(
+cat = Item(
         {
             "name": String( required=True, default='Felix'),
             "address": String(),
             "age" : Int()
         },
-        db_connector,
+        db_connector_for_cat)
 
 # Add the cat object into the app object
 app.add_collection( "cats", cat )
+# similar : app.register_collection( "cats", cat )
 ```
 
 > [!IMPORTANT]  
@@ -161,13 +162,13 @@ this is an example with *books* and *authors*
 
 ```python
 # Authors write books
-author = GenericDB({
+author = Item({
     'name' : String(),
     'books' : RefsList( coll='book', field="$.autor" )
 }, db_connector)
 
 # A book is written by on author
-book = GenericDB({
+book = Item({
     ... # Some attibutes
     # one or zero to many
     author = Ref( coll='author', field="$.books" )
@@ -256,7 +257,7 @@ Current availables loggers are :
 | logger | description |
 | - | - |
 | app | The main App system |
-| GenericDB | The database itself (CRUD operations ) |
+| Item | The database itself (CRUD operations ) |
 | ref | Ref and RefsList objects |
 | transaction | transactions and roolback |
 | yml | yaml database connector |

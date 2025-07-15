@@ -15,11 +15,18 @@ class ErrorType(Enum):
     NOTFOUND = auto()
     NOAPP = auto()
     COLLECTION_NOT_FOUND = auto()
+    COLLECTION_NOT_REGISTERED = auto()
     FIELD_NOT_FOUND = auto()
     NOT_A_REF = auto()
     UNSET_SAVE = auto()
     RELOAD_UNSED = auto()
     REFSLIST_NOT_EMPTY = auto()
+    NOT_IMPLEMENTED = auto()
+    MONGO_CONNECT_ERROR = auto()
+    SELECT_ERROR = auto()
+    ACTION_NOT_AVAILABLE = auto()
+    ACTION_FORBIDDEN = auto()
+    NOT_DIR = auto()
 
     def __repr__(self):
         return PREFIX + self.name
