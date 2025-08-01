@@ -1,19 +1,20 @@
 """
 Module providing the action
 """
+
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, attribute-defined-outside-init
+
 
 import sys
 
-from datetime import datetime
-from .current_user import current_user
+sys.path.insert(1, "../../stricto")
+from stricto import Dict
+
 from .log import log_system
 from .error import Error, ErrorType
+from .item import Item
 
-log = log_system.get_or_create_logger("Action")
-
-sys.path.insert(1, "../../stricto")
-from stricto import Dict, Int, String
+log = log_system.get_or_create_logger("action")
 
 
 class Action(Dict):  # pylint: disable=too-many-instance-attributes
@@ -28,43 +29,49 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
         self.app = None
         self.name = None
         self.collection = None
-        execute = kwargs.pop('can_execute', kwargs.pop('exec', True))
-        availability = kwargs.pop('availability', kwargs.pop('doable', True))
         self.on_trig = on_trig
+
+        # Add default right
+        if "can_execute" not in kwargs:
+            kwargs["can_execute"] = True
+        if "can_see" not in kwargs:
+            kwargs["can_see"] = True
+        kwargs["can_read"] = True
+        kwargs["can_modify"] = True
+        kwargs["exists"] = True
+
         Dict.__init__(self, schema, **kwargs)
-        self._params['execute'] = execute
-        self._params['availability'] = availability
 
-
-    def check_params(self, param_name, o):
+    def check_params(self, param_name, o: Item) -> bool:
         """
         Check if can execute the action
         """
         p = self._params.get(param_name, False)
         if not callable(p):
             return bool(p)
-        return bool(p( self.app, self.collection, self, o))
+        return bool(p(self.app, self.collection, self, o))
 
-    def can_execute( self, o):
+    def can_see(self, o: Item) -> bool:
+        """
+        Check if this action exists for running
+        """
+        return self._rights.has_right("see", self, o)
+
+    def can_execute(self, o: Item) -> bool:
         """
         Check if can execute the action
+        object can be a Dict, a array of Dict, or None, depends ont the target for this actopn
         """
-        return self.check_params( 'execute', o)
+        return self._rights.has_right("execute", self, o)
 
-    def is_available( self, o):
-        """
-        Check if this action is doable
-        """
-        return self.check_params( 'availability', o)
-
-    def go(self, o):
+    def go(self, o: Item) -> None:
         """
         Launch the action
-        
-        o is the object (if exists)
+
+        objeoct is the object (if exists)
         """
 
-        if not self.is_available(o):
+        if not self.can_see(o):
             log.error("Try to launch non available action %r", self.name)
             raise Error(
                 ErrorType.ACTION_NOT_AVAILABLE,
@@ -79,4 +86,4 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
             )
 
         log.debug("Execute action %r", self.name)
-        return self.on_trig( self.app, self.collection, self, o )
+        return self.on_trig(self, o)

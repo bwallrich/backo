@@ -1,15 +1,12 @@
 """
 test for CRUD()
 """
+
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code
-
-import sys
-
-sys.path.insert(1, "../../stricto")
-
 
 import unittest
 import time
+from datetime import datetime
 
 
 from backo import Item, Collection
@@ -17,6 +14,8 @@ from backo import DBYmlConnector
 from backo import App, Error, current_user
 
 from stricto import String, Bool, Error as StrictoError
+
+YML_DIR = "/tmp/backo_tests_crud"
 
 
 class TestCRUD(unittest.TestCase):
@@ -31,13 +30,13 @@ class TestCRUD(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         # --- DB for user
-        self.yml_users = DBYmlConnector(path="/tmp/backo")
+        self.yml_users = DBYmlConnector(path=YML_DIR)
         self.yml_users.generate_id = (
             lambda o: "User_" + o.name.get_value() + "_" + o.surname.get_value()
         )
 
         # --- DB for sites
-        self.yml_sites = DBYmlConnector(path="/tmp/backo")
+        self.yml_sites = DBYmlConnector(path=YML_DIR)
         self.yml_sites.generate_id = lambda o: "Site_" + o.name.get_value()
 
     def test_errors_on_create_delete(self):
@@ -47,17 +46,18 @@ class TestCRUD(unittest.TestCase):
         """
 
         app = App("myApp")
-        
+
         app.register_collection(
             Collection(
-                'users', 
+                "users",
                 Item(
                     {"name": String(), "surname": String(), "male": Bool(default=True)}
                 ),
-                self.yml_users)
+                self.yml_users,
+            )
         )
 
-        self.yml_users.delete_by_id("User_bebert_bebert")
+        self.yml_users.drop()
 
         v = app.users.new()
         with self.assertRaises(Error) as e:
@@ -80,17 +80,18 @@ class TestCRUD(unittest.TestCase):
         """
 
         app = App("myApp")
-        
+
         app.register_collection(
             Collection(
-                'users', 
+                "users",
                 Item(
                     {"name": String(), "surname": String(), "male": Bool(default=True)}
                 ),
-                self.yml_users)
+                self.yml_users,
+            )
         )
 
-        self.yml_users.delete_by_id("User_bebert_bebert")
+        self.yml_users.drop()
 
         current_user.login = "Roger"
         current_user.user_id = "1234"
@@ -138,17 +139,18 @@ class TestCRUD(unittest.TestCase):
         """
 
         app = App("myApp")
-        
+
         app.register_collection(
             Collection(
-                'users', 
+                "users",
                 Item(
                     {"name": String(), "surname": String(), "male": Bool(default=True)}
                 ),
-                self.yml_users)
+                self.yml_users,
+            )
         )
 
-        self.yml_users.delete_by_id("User_bebert_bebert")
+        self.yml_users.drop()
 
         # -- creation
         u = app.users.new()
@@ -162,7 +164,7 @@ class TestCRUD(unittest.TestCase):
         self.assertEqual(v.surname, "foo")
 
         with self.assertRaises(StrictoError) as e:
-            v._meta.ctime = 12
+            v._meta.ctime = datetime.now()
         self.assertEqual(e.exception.message, "cannot modify value")
 
     def test_crud_no_meta(self):
@@ -172,18 +174,19 @@ class TestCRUD(unittest.TestCase):
         """
 
         app = App("myApp")
-        
+
         app.register_collection(
             Collection(
-                'users', 
+                "users",
                 Item(
                     {"name": String(), "surname": String(), "male": Bool(default=True)},
-                    meta_data_handler = None
+                    meta_data_handler=None,
                 ),
-                self.yml_users)
+                self.yml_users,
+            )
         )
 
-        self.yml_users.delete_by_id("User_bebert_bebert")
+        self.yml_users.drop()
 
         # -- creation
         u = app.users.new()

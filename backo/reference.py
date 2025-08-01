@@ -1,15 +1,17 @@
 """
 Ref and RefsLink class definition
 """
+
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code, logging-fstring-interpolation
 
 import sys
 import logging
+import re
+from enum import Enum, auto
 
 sys.path.insert(1, "../../stricto")
-
 from stricto import String, List
-from enum import Enum, auto
+
 from .error import Error, ErrorType
 from .log import log_system
 
@@ -91,24 +93,22 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
             **kwargs,
         )
 
-    def set_collection_reference(self, root, me):
+    def set_collection_reference(self):
         """
         Set the reference to the Item object to the collection referenced.
         """
         # Already set
-        if me._coll_ref is not None:
+        if self._coll_ref is not None:
             return
 
-        if root is None:
-            raise Error(ErrorType.NOAPP, "No root found. WTF")
-        
-        me._coll_ref = root._collection.get_other_collection( me._collection )
-        if not me._coll_ref:
+        root1 = self.get_root()._collection
+        self._coll_ref = root1.get_other_collection(self._collection)
+        if not self._coll_ref:
             raise Error(
                 ErrorType.COLLECTION_NOT_FOUND,
-                f'Collection "{me._collection}" not found',
+                f'Collection "{self._collection}" not found',
             )
-
+        return
 
     def on_before_save(
         self, event_name, root, me, **kwargs
@@ -192,7 +192,7 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         path = ("from", root._collection.name, root._id.get_value(), me.path_name())
 
         # set the _coll_ref (in case of)
-        me.set_collection_reference(root, me)
+        me.set_collection_reference()
         # try to load the coresponding field
         other = me._coll_ref.new()
         other.load(target_id)
@@ -255,7 +255,7 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         )
 
         # set the _coll_ref (in case of)
-        me.set_collection_reference(root, me)
+        me.set_collection_reference()
         # try to load the coresponding field
         other = me._coll_ref.new()
         other.load(me.get_value())
@@ -309,6 +309,33 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
             ErrorType.NOT_A_REF,
             f'Collection "{self._collection}"."{me._reverse}" is not a Ref or a RefsList',
         )
+
+    def get_selectors(self, sel_filter, selectors_as_list):
+        """
+        rewrite get_selector to populate the sub-object and continue
+        """
+        # Return the _id itself
+        if not selectors_as_list:
+            return String.get_selectors(self, sel_filter, selectors_as_list)
+
+        # Load the other to continue
+
+        # set the _coll_ref (in case of)
+        self.set_collection_reference()
+        # try to load the coresponding field
+        other = self._coll_ref.new()
+        try:
+            other.load(self.get_value())
+        except Error:
+            pass
+        return other.get_selectors(sel_filter, selectors_as_list)
+
+    def get_view(self, view_name, final=True):  # pylint: disable=protected-access
+        """
+        Return all elements belonging to view_name
+        tue return is a subset of this Dict
+        """
+        return String.get_view(self, view_name, final)
 
 
 class RefsList(List):
@@ -381,27 +408,22 @@ class RefsList(List):
             self, String(default=DEFAULT_ID, required=True), on=on, default=[], **kwargs
         )
 
-    def set_collection_reference(self, root, me):
+    def set_collection_reference(self):
         """
         Set the reference to the Item object to the collection referenced.
         """
         # Already set
-        if me._coll_ref is not None:
+        if self._coll_ref is not None:
             return
 
-        if root is None:
-            raise Error(ErrorType.NOAPP, "No root found. WTF")
-        if root._collection.app is None:
-            raise Error(
-                ErrorType.COLLECTION_NOT_REGISTERED, "Collection not registered"
-            )
-        if me._collection not in root._collection.app.collections:
+        root1 = self.get_root()._collection
+        self._coll_ref = root1.get_other_collection(self._collection)
+        if not self._coll_ref:
             raise Error(
                 ErrorType.COLLECTION_NOT_FOUND,
-                f'Collection "{me._collection}" not found',
+                f'Collection "{self._collection}" not found',
             )
-        me._coll_ref = root._collection.app.collections[me._collection]
-
+        return
 
     def on_delete_must_by_empty(
         self, event_name, root, me, **kwargs
@@ -424,13 +446,12 @@ class RefsList(List):
                     ErrorType.REFSLIST_NOT_EMPTY,
                     f'Collection "{self._collection}" not empty',
                 )
-            
+
         # With not fill strategy, must select all where target_id is me
-        # and check if we find them
-        if self._fill_strategy == FillStrategy.NOT_FILL:
-            return
-
-
+        # and check if we find them
+        # To do : implement strategy NO_FILL
+        # if self._fill_strategy == FillStrategy.NOT_FILL:
+        #    return
 
     def on_delete_with_reverse(
         self, event_name, root, me, **kwargs
@@ -448,7 +469,7 @@ class RefsList(List):
         )
 
         # set the _coll_ref (in case of)
-        me.set_collection_reference(root, me)
+        me.set_collection_reference()
 
         # try to load the coresponding field
         for reference in me:
@@ -484,7 +505,7 @@ class RefsList(List):
         """
 
         # set the _coll_ref (in case of)
-        me.set_collection_reference(root, me)
+        me.set_collection_reference()
 
         # loop in references modifications
         path_to_find = (
@@ -633,7 +654,7 @@ class RefsList(List):
         )
 
         # set the _coll_ref (in case of)
-        me.set_collection_reference(root, me)
+        me.set_collection_reference()
 
         # modify ref to me to the new one
         l = []
@@ -654,3 +675,41 @@ class RefsList(List):
         if l:
             log.debug(f"Must change {me._collection}/{me._reverse} for {l} to {None}")
             self.change_others_ref_to(root, me, l, None, **kwargs)
+
+    def get_selectors(self, sel_filter, selectors_as_list):
+        """
+        rewrite get_selector to populate the sub-object and continue
+        """
+        # Return the _id itself
+        if not selectors_as_list:
+            return String.get_selectors(self, sel_filter, selectors_as_list)
+
+        # Load others to continue
+
+        # set the _coll_ref (in case of)
+        self.set_collection_reference()
+        # try to load the coresponding field
+
+        if sel_filter is None:
+            a = []
+            for v in self._value:
+                other = self._coll_ref.new()
+                other.load(v)
+                if not other:
+                    continue
+                result = other.get_selectors(None, selectors_as_list.copy())
+                if result is not None:
+                    a.append(result)
+            return a
+
+        if re.match("^-*[0-9]+$", sel_filter):
+            try:
+                v = self._value[int(sel_filter)]
+            except IndexError:
+                return None
+            other = self._coll_ref.new()
+            other.load(v)
+            if other:
+                return other.get_selectors(None, selectors_as_list)
+
+        return None

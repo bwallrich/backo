@@ -1,4 +1,5 @@
 """Module providing Error management"""
+
 from enum import Enum, auto
 
 PREFIX = "MODEL_"
@@ -26,7 +27,11 @@ class ErrorType(Enum):
     SELECT_ERROR = auto()
     ACTION_NOT_AVAILABLE = auto()
     ACTION_FORBIDDEN = auto()
+    UNAUTHORIZED = auto()
     NOT_DIR = auto()
+    SELECTOR_NOT_FOUND = auto()
+    DEVELOPPER = auto()
+    RIGHT = auto()
 
     def __repr__(self):
         return PREFIX + self.name

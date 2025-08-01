@@ -1,6 +1,7 @@
 """
 Module providing the Generic() Class for connection on DB
 """
+
 import uuid
 from .error import Error, ErrorType
 
@@ -13,9 +14,13 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
     def __init__(self, **kwargs):
         """
         available arguments
+
+        restriction -> a function that must produce a filter (or None).
         """
 
-    def drop(self):
+        self.restriction_filter = kwargs.pop("restriction", None)
+
+    def drop(self):  # pylint: disable=unused-argument
         """
         Drop the collection
         (used in test)
@@ -25,11 +30,11 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
             f"drop is not implemented for {type(self)}",
         )
 
-    def generate_id( self, o: dict ):
+    def generate_id(self, o: dict):  # pylint: disable=unused-argument
         """
         generate an id:
         """
-        return (uuid.uuid4().int>>64).__str__()
+        return str(uuid.uuid4().int >> 64)
 
     def create(self, o: dict):  # pylint: disable=unused-argument
         """
@@ -67,10 +72,17 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
             f"delete_by_id is not implemented for {type(self)}",
         )
 
-    def select( self, select_filter, projection = {}, page_size = 0, num_of_element_to_skip = 0, sort_object = {} ):
+    def select(
+        self,
+        select_filter,
+        projection={},
+        page_size=0,
+        num_of_element_to_skip=0,
+        sort_object={},
+    ):  # pylint: disable=unused-argument
         """
         Select and return a list of dicts
-        
+
         select_filter : The fiter
         projection : Fields whe want
         """

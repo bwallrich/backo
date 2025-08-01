@@ -1,6 +1,7 @@
 """
 The transaction module
 """
+
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code, logging-fstring-interpolation
 
 from enum import Enum, auto
@@ -23,7 +24,6 @@ class OperatorType(Enum):
 
 
 class Transaction:  # pylint: disable=too-few-public-methods
-
     """
     The Transaction Object
     """

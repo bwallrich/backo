@@ -1,11 +1,8 @@
 """
 test for References()
 """
+
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code
-
-import sys
-
-sys.path.insert(1, "../stricto")
 
 import unittest
 from backo import Item, Collection
@@ -18,6 +15,8 @@ log_system.add_handler(log_system.set_streamhandler())
 log = log_system.get_or_create_logger("testing")
 
 from stricto import String, Bool, Error as StrictoError
+
+YML_DIR = "/tmp/backo_tests_references"
 
 
 class TestReferences(unittest.TestCase):
@@ -32,21 +31,21 @@ class TestReferences(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         # --- DB for user
-        self.yml_users = DBYmlConnector(path="/tmp/backo")
+        self.yml_users = DBYmlConnector(path=YML_DIR)
         self.yml_users.generate_id = (
             lambda o: "User_" + o.name.get_value() + "_" + o.surname.get_value()
         )
 
         # --- DB for sites
-        self.yml_sites = DBYmlConnector(path="/tmp/backo")
+        self.yml_sites = DBYmlConnector(path=YML_DIR)
         self.yml_sites.generate_id = lambda o: "Site_" + o.name.get_value()
 
         # --- DB for humans
-        self.yml_humans = DBYmlConnector(path="/tmp/backo")
+        self.yml_humans = DBYmlConnector(path=YML_DIR)
         self.yml_humans.generate_id = lambda o: "Human_" + o.name.get_value()
 
         # --- DB for animals
-        self.yml_animals = DBYmlConnector(path="/tmp/backo")
+        self.yml_animals = DBYmlConnector(path=YML_DIR)
         self.yml_animals.generate_id = lambda o: "Animal_" + o.desc.get_value()
 
     def test_references_one_to_many(self):
@@ -59,33 +58,41 @@ class TestReferences(unittest.TestCase):
 
         app.register_collection(
             Collection(
-                'users', 
-                Item({
-                    "name": String(),
-                    "surname": String(),
-                    "site": Ref(coll="sites", field="$.users", required=True),
-                    "male": Bool(default=True),   
-                }),
-                self.yml_users)
+                "users",
+                Item(
+                    {
+                        "name": String(),
+                        "surname": String(),
+                        "site": Ref(coll="sites", field="$.users", required=True),
+                        "male": Bool(default=True),
+                    }
+                ),
+                self.yml_users,
+            )
         )
         app.register_collection(
             Collection(
-                'sites', 
-                Item({
-                    "name": String(),
-                    "address": String(),
-                    "users": RefsList(
-                        coll="users", field="$.site", ods=DeleteStrategy.MUST_BE_EMPTY
-                    ),
-                }),
-                self.yml_sites)
+                "sites",
+                Item(
+                    {
+                        "name": String(),
+                        "address": String(),
+                        "users": RefsList(
+                            coll="users",
+                            field="$.site",
+                            ods=DeleteStrategy.MUST_BE_EMPTY,
+                        ),
+                    }
+                ),
+                self.yml_sites,
+            )
         )
 
         # Hard clean before tests
         self.yml_sites.delete_by_id("Site_moon")
         self.yml_users.delete_by_id("User_bebert_bebert")
 
-        si= app.sites.create({"name": "moon", "address": "far"})
+        si = app.sites.create({"name": "moon", "address": "far"})
 
         u = app.users.create({"name": "bebert", "surname": "bebert", "site": si._id})
 
@@ -111,28 +118,36 @@ class TestReferences(unittest.TestCase):
         app = App("myApp")
         app.register_collection(
             Collection(
-                'users', 
-                Item({
-                    "name": String(),
-                    "surname": String(),
-                    "site": Ref(coll="sites", field="$.users"),
-                    "male": Bool(default=True),   
-                }),
-                self.yml_users)
+                "users",
+                Item(
+                    {
+                        "name": String(),
+                        "surname": String(),
+                        "site": Ref(coll="sites", field="$.users"),
+                        "male": Bool(default=True),
+                    }
+                ),
+                self.yml_users,
+            )
         )
 
         # --- DB for sites
         app.register_collection(
             Collection(
-                'sites', 
-                Item({
-                    "name": String(),
-                    "address": String(),
-                    "users": RefsList(
-                        coll="users", field="$.site", ods=DeleteStrategy.CLEAN_REVERSES
-                    ),
-                }),
-                self.yml_sites)
+                "sites",
+                Item(
+                    {
+                        "name": String(),
+                        "address": String(),
+                        "users": RefsList(
+                            coll="users",
+                            field="$.site",
+                            ods=DeleteStrategy.CLEAN_REVERSES,
+                        ),
+                    }
+                ),
+                self.yml_sites,
+            )
         )
 
         # Hard clean before tests
@@ -163,28 +178,36 @@ class TestReferences(unittest.TestCase):
         app = App("myApp")
         app.register_collection(
             Collection(
-                'users', 
-                Item({
-                    "name": String(),
-                    "surname": String(),
-                    "site": Ref(coll="sites", field="$.users"),
-                    "male": Bool(default=True),   
-                }),
-                self.yml_users)
+                "users",
+                Item(
+                    {
+                        "name": String(),
+                        "surname": String(),
+                        "site": Ref(coll="sites", field="$.users"),
+                        "male": Bool(default=True),
+                    }
+                ),
+                self.yml_users,
+            )
         )
 
         # --- DB for sites
         app.register_collection(
             Collection(
-                'sites', 
-                Item({
-                    "name": String(),
-                    "address": String(),
-                    "users": RefsList(
-                        coll="users", field="$.site", ods=DeleteStrategy.DELETE_REVERSES_TOO
-                    ),
-                }),
-                self.yml_sites)
+                "sites",
+                Item(
+                    {
+                        "name": String(),
+                        "address": String(),
+                        "users": RefsList(
+                            coll="users",
+                            field="$.site",
+                            ods=DeleteStrategy.DELETE_REVERSES_TOO,
+                        ),
+                    }
+                ),
+                self.yml_sites,
+            )
         )
 
         # Hard clean before tests
@@ -219,28 +242,36 @@ class TestReferences(unittest.TestCase):
 
         app.register_collection(
             Collection(
-                'users', 
-                Item({
-                    "name": String(),
-                    "surname": String(),
-                    "site": Ref(coll="sites", field="$.users"),
-                    "male": Bool(default=True),   
-                }),
-                self.yml_users)
+                "users",
+                Item(
+                    {
+                        "name": String(),
+                        "surname": String(),
+                        "site": Ref(coll="sites", field="$.users"),
+                        "male": Bool(default=True),
+                    }
+                ),
+                self.yml_users,
+            )
         )
 
         # --- DB for sites
         app.register_collection(
             Collection(
-                'sites', 
-                Item({
-                    "name": String(),
-                    "address": String(),
-                    "users": RefsList(
-                        coll="users", field="$.site", ods=DeleteStrategy.DELETE_REVERSES_TOO
-                    ),
-                }),
-                self.yml_sites)
+                "sites",
+                Item(
+                    {
+                        "name": String(),
+                        "address": String(),
+                        "users": RefsList(
+                            coll="users",
+                            field="$.site",
+                            ods=DeleteStrategy.DELETE_REVERSES_TOO,
+                        ),
+                    }
+                ),
+                self.yml_sites,
+            )
         )
 
         # Hard clean before tests
@@ -265,6 +296,7 @@ class TestReferences(unittest.TestCase):
 
         t_id = app.start_transaction()
         # self.yml_users.delete_by_id("User_bebert_bebert")
+        u = app.users.new()
         u.site._collection = "sites"
         u.site._reverse = "unknown_reverse"
         with self.assertRaises(Error) as e:
@@ -279,9 +311,10 @@ class TestReferences(unittest.TestCase):
 
         t_id = app.start_transaction()
         # self.yml_users.delete_by_id("User_bebert_bebert")
+        u = app.users.new()
         u.site._reverse = "users"
         with self.assertRaises(Error) as e:
-            u.create(
+            app.users.create(
                 {"name": "bebert", "surname": "bebert", "site": "no_ref"},
                 transaction_id=t_id,
             )
@@ -298,28 +331,36 @@ class TestReferences(unittest.TestCase):
 
         app.register_collection(
             Collection(
-                'users', 
-                Item({
-                    "name": String(),
-                    "surname": String(),
-                    "site": Ref(coll="sites", field="$.users"),
-                    "male": Bool(default=True),   
-                }),
-                self.yml_users)
+                "users",
+                Item(
+                    {
+                        "name": String(),
+                        "surname": String(),
+                        "site": Ref(coll="sites", field="$.users"),
+                        "male": Bool(default=True),
+                    }
+                ),
+                self.yml_users,
+            )
         )
 
         # --- DB for sites
         app.register_collection(
             Collection(
-                'sites', 
-                Item({
-                    "name": String(),
-                    "address": String(),
-                    "users": RefsList(
-                        coll="users", field="$.site", ods=DeleteStrategy.DELETE_REVERSES_TOO
-                    ),
-                }),
-                self.yml_sites)
+                "sites",
+                Item(
+                    {
+                        "name": String(),
+                        "address": String(),
+                        "users": RefsList(
+                            coll="users",
+                            field="$.site",
+                            ods=DeleteStrategy.DELETE_REVERSES_TOO,
+                        ),
+                    }
+                ),
+                self.yml_sites,
+            )
         )
 
         # Hard clean before tests
@@ -363,28 +404,36 @@ class TestReferences(unittest.TestCase):
 
         app.register_collection(
             Collection(
-                'users', 
-                Item({
-                    "name": String(),
-                    "surname": String(),
-                    "site": Ref(coll="sites", field="$.users"),
-                    "male": Bool(default=True),   
-                }),
-                self.yml_users)
+                "users",
+                Item(
+                    {
+                        "name": String(),
+                        "surname": String(),
+                        "site": Ref(coll="sites", field="$.users"),
+                        "male": Bool(default=True),
+                    }
+                ),
+                self.yml_users,
+            )
         )
 
         # --- DB for sites
         app.register_collection(
             Collection(
-                'sites', 
-                Item({
-                    "name": String(),
-                    "address": String(),
-                    "users": RefsList(
-                        coll="users", field="$.site", ods=DeleteStrategy.CLEAN_REVERSES
-                    ),
-                }),
-                self.yml_sites)
+                "sites",
+                Item(
+                    {
+                        "name": String(),
+                        "address": String(),
+                        "users": RefsList(
+                            coll="users",
+                            field="$.site",
+                            ods=DeleteStrategy.CLEAN_REVERSES,
+                        ),
+                    }
+                ),
+                self.yml_sites,
+            )
         )
 
         # Hard clean before tests
@@ -397,7 +446,9 @@ class TestReferences(unittest.TestCase):
 
         si_moon = app.sites.create({"name": "moon", "address": "far"})
 
-        ub = app.users.create({"name": "bebert", "surname": "bebert", "site": si_moon._id})
+        ub = app.users.create(
+            {"name": "bebert", "surname": "bebert", "site": si_moon._id}
+        )
 
         uj = app.users.create({"name": "john", "surname": "john", "site": si_moon._id})
 
@@ -434,24 +485,30 @@ class TestReferences(unittest.TestCase):
 
         app.register_collection(
             Collection(
-                'humans', 
-                Item({
-                    "name": String(),
-                    "surname": String(),
-                    "totem": Ref(coll="animals", field="$.human"),
-                }),
-                self.yml_humans)
+                "humans",
+                Item(
+                    {
+                        "name": String(),
+                        "surname": String(),
+                        "totem": Ref(coll="animals", field="$.human"),
+                    }
+                ),
+                self.yml_humans,
+            )
         )
 
         # --- DB for animal
         app.register_collection(
             Collection(
-                'animals', 
-                Item({
-                    "desc": String(),
-                    "human": Ref(coll="humans", field="$.totem"),
-                }),
-                self.yml_animals)
+                "animals",
+                Item(
+                    {
+                        "desc": String(),
+                        "human": Ref(coll="humans", field="$.totem"),
+                    }
+                ),
+                self.yml_animals,
+            )
         )
 
         # Hard clean before tests
@@ -502,24 +559,30 @@ class TestReferences(unittest.TestCase):
 
         app.register_collection(
             Collection(
-                'humans', 
-                Item({
-                    "name": String(),
-                    "surname": String(),
-                    "totem": Ref(coll="animals", field="$.human", required=True),
-                }),
-                self.yml_humans)
+                "humans",
+                Item(
+                    {
+                        "name": String(),
+                        "surname": String(),
+                        "totem": Ref(coll="animals", field="$.human", required=True),
+                    }
+                ),
+                self.yml_humans,
+            )
         )
 
         # --- DB for animal
         app.register_collection(
             Collection(
-                'animals', 
-                Item({
-                    "desc": String(),
-                    "human": Ref(coll="humans", field="$.totem"),
-                }),
-                self.yml_animals)
+                "animals",
+                Item(
+                    {
+                        "desc": String(),
+                        "human": Ref(coll="humans", field="$.totem"),
+                    }
+                ),
+                self.yml_animals,
+            )
         )
 
         # Hard clean before tests
@@ -558,32 +621,38 @@ class TestReferences(unittest.TestCase):
 
         app.register_collection(
             Collection(
-                'humans', 
-                Item({
-                    "name": String(),
-                    "surname": String(),
-                    "totems": RefsList(
-                        coll="animals",
-                        field="$.humans",
-                        ods=DeleteStrategy.MUST_BE_EMPTY,
-                    ),
-                }),
-                self.yml_humans)
+                "humans",
+                Item(
+                    {
+                        "name": String(),
+                        "surname": String(),
+                        "totems": RefsList(
+                            coll="animals",
+                            field="$.humans",
+                            ods=DeleteStrategy.MUST_BE_EMPTY,
+                        ),
+                    }
+                ),
+                self.yml_humans,
+            )
         )
 
         # --- DB for animal
         app.register_collection(
             Collection(
-                'animals', 
-                Item({
-                    "desc": String(),
-                    "humans": RefsList(
-                        coll="humans",
-                        field="$.totems",
-                        ods=DeleteStrategy.MUST_BE_EMPTY,
-                    ),
-                }),
-                self.yml_animals)
+                "animals",
+                Item(
+                    {
+                        "desc": String(),
+                        "humans": RefsList(
+                            coll="humans",
+                            field="$.totems",
+                            ods=DeleteStrategy.MUST_BE_EMPTY,
+                        ),
+                    }
+                ),
+                self.yml_animals,
+            )
         )
 
         # Hard clean before tests
@@ -597,7 +666,9 @@ class TestReferences(unittest.TestCase):
         aa = app.animals.create({"desc": "ant"})
 
         # create humans
-        up = app.humans.create({"name": "parker", "surname": "peter", "totems": [asp._id, aa._id]})
+        up = app.humans.create(
+            {"name": "parker", "surname": "peter", "totems": [asp._id, aa._id]}
+        )
         uh = app.humans.create({"name": "pym", "surname": "hank", "totems": [aa._id]})
 
         # check human links
@@ -628,3 +699,70 @@ class TestReferences(unittest.TestCase):
         with self.assertRaises(Error) as e:
             asp.delete()
         self.assertEqual(e.exception.message, 'Collection "humans" not empty')
+
+    def test_references_selector(self):
+        """
+        creating an app with ref one to many
+        and use selectors to cross
+        """
+
+        app = App("myApp")
+
+        app.register_collection(
+            Collection(
+                "users",
+                Item(
+                    {
+                        "name": String(),
+                        "surname": String(),
+                        "site": Ref(coll="sites", field="$.users"),
+                        "male": Bool(default=True),
+                    }
+                ),
+                self.yml_users,
+            )
+        )
+
+        # --- DB for sites
+        app.register_collection(
+            Collection(
+                "sites",
+                Item(
+                    {
+                        "name": String(),
+                        "address": String(),
+                        "users": RefsList(
+                            coll="users",
+                            field="$.site",
+                            ods=DeleteStrategy.CLEAN_REVERSES,
+                        ),
+                    }
+                ),
+                self.yml_sites,
+            )
+        )
+
+        # Hard clean before tests
+        self.yml_sites.delete_by_id("Site_moon")
+        self.yml_sites.delete_by_id("Site_mars")
+        self.yml_users.delete_by_id("User_bebert_bebert")
+        self.yml_users.delete_by_id("User_john_john")
+
+        # si_mars = app.sites.create({"name": "mars", "address": "very far"})
+        si_moon = app.sites.create({"name": "moon", "address": "far"})
+
+        app.users.create(
+           {"name": "bebert", "surname": "bebert", "site": si_moon._id}
+        )
+        uj = app.users.create({"name": "john", "surname": "john", "site": si_moon._id})
+
+        # -- follow references in selectors
+        si_moon.reload()
+        self.assertEqual(uj.select("$.name"), "john")
+        self.assertEqual(uj.select("$.site"), "Site_moon")
+        self.assertEqual(uj.select("$.site.address"), "far")
+
+        self.assertEqual(si_moon.select("$.name"), "moon")
+        self.assertEqual(si_moon.select("$.users.name"), ["bebert", "john"])
+        self.assertEqual(si_moon.select("$.users[0].name"), "bebert")
+        self.assertEqual(si_moon.select("$.users[0].site.address"), "far")

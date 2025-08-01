@@ -282,5 +282,6 @@ pylint $(git ls-files '*.py')
 # coverage
 coverage run -m unittest tests
 coverage html # report under htmlcov/index.html
+firefox htmlcov/index.html
 
 ```

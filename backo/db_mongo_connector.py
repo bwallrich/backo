@@ -1,12 +1,12 @@
 """
 Module providing the mongo DB like
 """
+
 # pylint: disable=logging-fstring-interpolation
 import logging
 from pymongo import MongoClient
-from pymongo.errors import ServerSelectionTimeoutError
-from bson.objectid import ObjectId
 from pymongo.uri_parser import parse_uri
+from bson.objectid import ObjectId
 
 from .db_connector import DBConnector
 from .error import Error, ErrorType
@@ -64,7 +64,21 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
                 f"Mongo connection error while {self._collection_name}.drop() {self._connection_string}",
             ) from e
 
-    def generate_id(self, root):  # pylint: disable=unused-argument
+    def combine_with_restriction_filter(self, select):
+        """
+        Combine the filter with the restriction filter (if exists)
+        """
+        if self.restriction_filter is None:
+            return select
+
+        rfilter = (
+            self.restriction_filter()
+            if callable(self.restriction_filter)
+            else self.restriction_filter
+        )
+        return {"$and": [rfilter, select]}
+
+    def generate_id(self, o):  # pylint: disable=unused-argument
         """
         Do not create _id by ourself. mongo will do the job
         """
@@ -107,8 +121,9 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
         Read the corresponding file
         """
         log.debug(f"read {_id} ")
+        db_filter = self.combine_with_restriction_filter({"_id": ObjectId(_id)})
         try:
-            o = self._collection.find_one({"_id": ObjectId(_id)})
+            o = self._collection.find_one(db_filter)
         except Exception as e:
             raise Error(
                 ErrorType.MONGO_CONNECT_ERROR,
@@ -126,8 +141,9 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
         return True if deleted, or False if not found
         """
         log.debug("delete %r", _id)
+        db_filter = self.combine_with_restriction_filter({"_id": ObjectId(_id)})
         try:
-            result = self._collection.delete_one({"_id": ObjectId(_id)})
+            result = self._collection.delete_one(db_filter)
         except Exception as e:
             raise Error(
                 ErrorType.MONGO_CONNECT_ERROR,
@@ -137,54 +153,40 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
             return True
         return False
 
-    def select( self, select_filter, projection = {}, page_size = 0, num_of_element_to_skip = 0, sort_object = { '_id' : 1 } ):
+    def select(
+        self,
+        select_filter,
+        projection={},
+        page_size=0,
+        num_of_element_to_skip=0,
+        sort_object={"_id": 1},
+    ):
         """
         Select and return a list of dicts
-        
-        select_filter : The fiter
-        projection : Fields whe want
-        """
-        log.debug("select(%r, %r).sort(%r).skip(%r).limit(%r)",
-                  select_filter,
-                  projection,
-                  sort_object,
-                  num_of_element_to_skip,
-                  page_size)
-        try:
-            result_list = list(self._collection.find(select_filter, projection).sort(sort_object).skip(num_of_element_to_skip).limit(page_size))
-            result_count= self._collection.count_documents(select_filter, skip=num_of_element_to_skip)
-        except Exception as e:
-            raise Error(
-                ErrorType.MONGO_CONNECT_ERROR,
-                f"Mongo connection error while {self._collection_name}.find() {self._connection_string}",
-            ) from e
-        return {
-            "raw" : result_list,
-            "count" : result_count
-        }
 
-    def select_short( self, select_filter, short_name, page_size = 0, num_of_element_to_skip = 0, sort_object = { '_id' : 1 } ):
-        """
-        Select and return a list of dicts
-        
-        select_filter : The fiter
+        select_filter : The db_filter
         projection : Fields whe want
         """
-        log.debug("select_short(%r, %r).sort(%r).skip(%r).limit(%r)",
-                  select_filter,
-                  short_name,
-                  sort_object,
-                  num_of_element_to_skip,
-                  page_size)
+        log.debug(
+            "select(%r, %r).sort(%r).skip(%r).limit(%r)",
+            select_filter,
+            projection,
+            sort_object,
+            num_of_element_to_skip,
+            page_size,
+        )
+
+        db_filter = self.combine_with_restriction_filter(select_filter)
         try:
-            result_list = list(self._collection.find(select_filter, projection).sort(sort_object).skip(num_of_element_to_skip).limit(page_size))
-            result_count= self._collection.count_documents(select_filter, skip=num_of_element_to_skip)
+            result_list = list(
+                self._collection.find(db_filter, projection)
+                .sort(sort_object)
+                .skip(num_of_element_to_skip)
+                .limit(page_size)
+            )
         except Exception as e:
             raise Error(
                 ErrorType.MONGO_CONNECT_ERROR,
                 f"Mongo connection error while {self._collection_name}.find() {self._connection_string}",
             ) from e
-        return {
-            "raw" : result_list,
-            "count" : result_count
-        }
+        return result_list

@@ -1,7 +1,9 @@
 """
 Module providing the StatusType() Class
 """
+
 from enum import Enum, auto
+
 
 class StatusType(Enum):
     """

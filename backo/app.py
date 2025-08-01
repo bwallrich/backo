@@ -1,13 +1,16 @@
 """
 The App module
 """
-# pylint: disable=logging-fstring-interpolation
+
+import logging
+from flask import Flask
+
 from .item import Item
-from .transaction import Transaction
+from .transaction import Transaction, OperatorType
 from .collection import Collection
 from .log import log_system
 
-log = log_system.get_or_create_logger("app")
+log = log_system.get_or_create_logger("app", logging.DEBUG)
 
 
 class App:  # pylint: disable=too-many-instance-attributes
@@ -15,7 +18,7 @@ class App:  # pylint: disable=too-many-instance-attributes
     The main object, the aplication itself
     """
 
-    def __init__(self, name):
+    def __init__(self, name: str):
         """
         initialize the app with a name
         """
@@ -24,7 +27,7 @@ class App:  # pylint: disable=too-many-instance-attributes
         self.transaction_id_reference = 1
         self.transactions = {}
 
-    def register_collection(self, coll: Collection):
+    def register_collection(self, coll: Collection) -> None:
         """
         Register a collection into this app
         """
@@ -32,20 +35,13 @@ class App:  # pylint: disable=too-many-instance-attributes
         coll.app = self
         setattr(self, coll.name, coll)
 
-
-    def add_collection(self, coll: Collection):
+    def add_collection(self, coll: Collection) -> None:
         """
         Register a collection into the app
         """
-        return self.register_collection( coll )
+        return self.register_collection(coll)
 
-    def new1(self, name: str):
-        """
-        Return an new Object collection
-        """
-        return self.collections[name].new()
-
-    def start_transaction(self):
+    def start_transaction(self) -> int:
         """
         Chose an Id and start the transaction structure
         """
@@ -54,13 +50,20 @@ class App:  # pylint: disable=too-many-instance-attributes
         self.transactions[my_id] = []
         return my_id
 
-    def stop_transaction(self, transaction_id):
+    def stop_transaction(self, transaction_id: int) -> None:
         """
         Close the transaction structure
         """
         del self.transactions[transaction_id]
 
-    def record_transaction(self, transaction_id, collection, operation, _id, obj):
+    def record_transaction(
+        self,
+        transaction_id: int,
+        collection: Collection,
+        operation: OperatorType,
+        _id: str,
+        obj: Item,
+    ) -> None:
         """
         Append an object to the transaction
         """
@@ -70,7 +73,7 @@ class App:  # pylint: disable=too-many-instance-attributes
             Transaction(collection, operation, _id, obj)
         )
 
-    def rollback_transaction(self, transaction_id):
+    def rollback_transaction(self, transaction_id: int) -> None:
         """
         An error occure, rollback objects
         """
@@ -84,3 +87,18 @@ class App:  # pylint: disable=too-many-instance-attributes
             t.rollback(self)
 
         del self.transactions[transaction_id]
+
+    def add_routes(self, flask_app: Flask) -> None:
+        """
+        Add all routes to flask application
+        """
+        # flask_app.add_url_rule('/test/<string:name>', 'toto', methods=[ 'GET' ])
+        # flask_app.view_functions['toto'] = self.call_func
+
+        # flask_app.add_url_rule('/post', 'json', methods=[ 'POST' ])
+        # flask_app.view_functions['json'] = self.call_json
+
+        log.debug("Adding routes")
+
+        for collection in self.collections.values():
+            collection.flask_add_routes(flask_app)

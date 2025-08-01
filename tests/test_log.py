@@ -1,11 +1,8 @@
 """
 test for CRUD()
 """
+
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code
-
-import sys
-
-sys.path.insert(1, "../../stricto")
 
 import unittest
 import logging

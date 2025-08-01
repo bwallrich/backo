@@ -1,6 +1,7 @@
 """
 Module providing the Meta_data_manipulation
 """
+
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, attribute-defined-outside-init
 
 import sys
@@ -10,10 +11,10 @@ from .current_user import current_user
 from .status import StatusType
 
 sys.path.insert(1, "../../stricto")
-from stricto import Dict, Int, String
+from stricto import Dict, String, Datetime
 
 
-class GenericMetaDataHandler():  # pylint: disable=too-many-instance-attributes
+class GenericMetaDataHandler:  # pylint: disable=too-many-instance-attributes
     """
     A generic meta Data
     """
@@ -22,7 +23,6 @@ class GenericMetaDataHandler():  # pylint: disable=too-many-instance-attributes
         """
         Nothing to do
         """
-
 
     def set_on_create(self, o):
         """
@@ -40,7 +40,9 @@ class GenericMetaDataHandler():  # pylint: disable=too-many-instance-attributes
         """
 
 
-class StandardMetaDataHandler(GenericMetaDataHandler):  # pylint: disable=too-many-instance-attributes
+class StandardMetaDataHandler(
+    GenericMetaDataHandler
+):  # pylint: disable=too-many-instance-attributes
     """
     A Meta data class handle for _meta schema
     """
@@ -56,30 +58,25 @@ class StandardMetaDataHandler(GenericMetaDataHandler):  # pylint: disable=too-ma
         """
         if value is None:
             return {
-                'ctime' : 0,
-                'mtime' : 0,
-                'created_by' : {
-                    'user_id' : 0,
-                    'login' : "ANONYMOUS"
-                },
-                'modified_by' : {
-                    'user_id' : 0,
-                    'login' : "ANONYMOUS"
-                }
+                "ctime": 0,
+                "mtime": 0,
+                "created_by": {"user_id": 0, "login": "ANONYMOUS"},
+                "modified_by": {"user_id": 0, "login": "ANONYMOUS"},
             }
 
         return value
 
-
-    def can_modify_creation_meta(self, value, o):  # pylint: disable=unused-argument
+    def can_modify_creation_meta(
+        self, value, o, other=None
+    ):  # pylint: disable=unused-argument
         """
-        ctime and created_by cannot be modified by user
+        Used by "has_right" with read / modif. Depends on the status of the object
         """
         if o._status == StatusType.UNSET:
             return True
         return False
 
-    def set_on_create(self, o):
+    def set_on_create(self, o: Dict) -> None:
         """
         Modification of metadata when the object will be created
         """
@@ -88,21 +85,19 @@ class StandardMetaDataHandler(GenericMetaDataHandler):  # pylint: disable=too-ma
         o._meta.modified_by.user_id = current_user.user_id.copy()
         o._meta.modified_by.login = current_user.login.copy()
 
-        timestamp = int(datetime.timestamp(datetime.now()))
-        o._meta.ctime = timestamp
-        o._meta.mtime = timestamp
+        now = datetime.now()
+        o._meta.ctime = now
+        o._meta.mtime = now
 
-    def set_on_save(self, o):
+    def set_on_save(self, o: Dict) -> None:
         """
         Modification of metadata when the object will be created
         """
-        timestamp = int(datetime.timestamp(datetime.now()))
-        o._meta.mtime = timestamp
+        o._meta.mtime = datetime.now()
         o._meta.modified_by.user_id = current_user.user_id.copy()
         o._meta.modified_by.login = current_user.login.copy()
 
-
-    def append_schema(self, o):
+    def append_schema(self, o: Dict) -> None:
         """
         Add to the schema
         """
@@ -110,13 +105,14 @@ class StandardMetaDataHandler(GenericMetaDataHandler):  # pylint: disable=too-ma
             "_meta",
             Dict(
                 {
-                    "ctime": Int(can_modify=self.can_modify_creation_meta),
-                    "mtime": Int(),
+                    "ctime": Datetime(can_modify=self.can_modify_creation_meta),
+                    "mtime": Datetime(),
                     "created_by": Dict(
                         {"user_id": String(), "login": String()},
                         can_modify=self.can_modify_creation_meta,
                     ),
                     "modified_by": Dict({"user_id": String(), "login": String()}),
-                }, transform=self.on_set
-            )
+                },
+                transform=self.on_set,
+            ),
         )

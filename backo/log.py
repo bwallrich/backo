@@ -1,6 +1,7 @@
 """
 Logging file
 """
+
 import logging
 import logging.handlers
 import sys
@@ -87,9 +88,13 @@ class Logger:
         """
         Create a logger
         """
-        l = logging.getLogger(name)
+        if name in self.loggers:
+            l = self.loggers.get(name)
+        else:
+            l = logging.getLogger(name)
+            self.loggers[name] = l
+
         l.setLevel(level)
-        self.loggers[name] = l
         # Adding all previous handler
         for handler in self.handlers_for_all:
             l.addHandler(handler)

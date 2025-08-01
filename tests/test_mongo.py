@@ -1,12 +1,8 @@
 """
 test for CRUD()
 """
+
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code
-
-import sys
-
-sys.path.insert(1, "../../stricto")
-
 
 import unittest
 import time
@@ -16,7 +12,7 @@ from backo import Item, Collection
 from backo import DBMongoConnector
 from backo import App, Error, current_user
 
-from stricto import String, Bool, Error as StrictoError
+from stricto import String, Bool  # , Error as StrictoError
 
 
 class TestMongo(unittest.TestCase):
@@ -66,11 +62,10 @@ class TestMongo(unittest.TestCase):
 
         app = App("myApp")
         user_model = Item(
-                {"name": String(), "surname": String(), "male": Bool(default=True)}
-            )
-        coll_users = Collection( 'users', user_model, self.db_users)
+            {"name": String(), "surname": String(), "male": Bool(default=True)}
+        )
+        coll_users = Collection("users", user_model, self.db_users)
         app.register_collection(coll_users)
-
 
         coll_users.drop()
 
@@ -115,11 +110,12 @@ class TestMongo(unittest.TestCase):
 
         app.register_collection(
             Collection(
-                'users', 
+                "users",
                 Item(
                     {"name": String(), "surname": String(), "male": Bool(default=True)}
                 ),
-                self.db_users)
+                self.db_users,
+            )
         )
 
         app.users.drop()
@@ -161,7 +157,6 @@ class TestMongo(unittest.TestCase):
         # -- delete
         u.delete()
 
-
     def test_select(self):
         """
         select
@@ -170,11 +165,12 @@ class TestMongo(unittest.TestCase):
         app = App("myApp")
         app.register_collection(
             Collection(
-                'users', 
+                "users",
                 Item(
                     {"name": String(), "surname": String(), "male": Bool(default=True)}
                 ),
-                self.db_users)
+                self.db_users,
+            )
         )
 
         app.users.drop()
@@ -198,25 +194,25 @@ class TestMongo(unittest.TestCase):
         u = app.new("users")
         u.create({"name": "bebert7", "surname": "Al"})
 
-        result = app.users.select( { "surname" : "Al" } )
-        self.assertEqual(result['count'], 2)
-        self.assertEqual(len(result['result']), 2)
-        for o in result['result']:
+        result = app.users.select({"surname": "Al"})
+        self.assertEqual(result["count"], 2)
+        self.assertEqual(len(result["result"]), 2)
+        for o in result["result"]:
             self.assertEqual(type(o), Item)
             self.assertEqual(o.surname, "Al")
 
-        # check pagination
-        result = app.users.select( { "surname" : "Al" }, 1, 0)
-        self.assertEqual(result['count'], 2)
-        self.assertEqual(len(result['result']), 1)
-        for o in result['result']:
+        # check pagination
+        result = app.users.select({"surname": "Al"}, 1, 0)
+        self.assertEqual(result["count"], 2)
+        self.assertEqual(len(result["result"]), 1)
+        for o in result["result"]:
             self.assertEqual(type(o), Item)
             self.assertEqual(o.surname, "Al")
 
-        # check not found
-        result = app.users.select( { "surname_not_found" : "Al" })
-        self.assertEqual(result['count'], 0)
-        self.assertEqual(len(result['result']), 0)
-        result = app.users.select( { "surname" : "Al_not_found" })
-        self.assertEqual(result['count'], 0)
-        self.assertEqual(len(result['result']), 0)
+        # check not found
+        result = app.users.select({"surname_not_found": "Al"})
+        self.assertEqual(result["count"], 0)
+        self.assertEqual(len(result["result"]), 0)
+        result = app.users.select({"surname": "Al_not_found"})
+        self.assertEqual(result["count"], 0)
+        self.assertEqual(len(result["result"]), 0)
