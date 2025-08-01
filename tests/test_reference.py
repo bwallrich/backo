@@ -751,9 +751,7 @@ class TestReferences(unittest.TestCase):
         # si_mars = app.sites.create({"name": "mars", "address": "very far"})
         si_moon = app.sites.create({"name": "moon", "address": "far"})
 
-        app.users.create(
-           {"name": "bebert", "surname": "bebert", "site": si_moon._id}
-        )
+        app.users.create({"name": "bebert", "surname": "bebert", "site": si_moon._id})
         uj = app.users.create({"name": "john", "surname": "john", "site": si_moon._id})
 
         # -- follow references in selectors

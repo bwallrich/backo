@@ -3,6 +3,8 @@ init-hook='import sys; sys.path.append("../stricto")'
 
 [DESIGN]
 max-attributes=16
+max-args = 7
+max-positional-arguments = 7
 
 [FORMAT]
 max-line-length=240
@@ -26,4 +28,6 @@ ignore-imports=no
 [MESSAGES CONTROL]
 disable = 
     wrong-import-position,
-    dangerous-default-value
+    dangerous-default-value,
+    super-init-not-called, # Bug ?
+    protected-access # must be removed
