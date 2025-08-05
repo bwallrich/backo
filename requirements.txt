@@ -1,3 +1,4 @@
 yaml
 mongo
+flask
 stricto>=0.0.3
