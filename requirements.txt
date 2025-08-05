@@ -1,4 +1,4 @@
 pyyaml
 mongo
 flask
-stricto>=0.0.3
+stricto>=0.0.6
