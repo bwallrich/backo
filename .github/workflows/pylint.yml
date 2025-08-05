@@ -4,7 +4,7 @@ on: [ push, pull_request ]
 
 jobs:
   build:
-    if: ${{ false }}  # disable for now
+    if: ${{ true }}  # enable for now
     runs-on: ubuntu-latest
     strategy:
       matrix:
