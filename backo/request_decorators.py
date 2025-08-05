@@ -2,8 +2,13 @@
 The decortators used for flask routes
 """
 
+import sys
 from functools import wraps
 from flask import request
+
+sys.path.insert(1, "../../stricto")
+from stricto import Error as StrictoError
+from .error import Error as BackError, ErrorType as BackoErrorType
 
 
 def return_http_error(code, message):
@@ -23,6 +28,39 @@ def check_json(f):
         if request.content_type != "application/json":
             return return_http_error(415, "Unsuported Media Type")
         return f(*args, **kwargs)
+
+    return wrapper
+
+
+def error_to_http_handler(f):
+    """
+    return a http message depends on the error raised
+    """
+
+    @wraps(f)
+    def wrapper(*args, **kwargs):  # pylint: disable=too-many-return-statements
+        try:
+            return f(*args, **kwargs)
+        except BackError as e:
+            if e.error_code == BackoErrorType.UNAUTHORIZED:
+                return return_http_error(403, e.message)
+            if e.error_code == BackoErrorType.NOTFOUND:
+                return return_http_error(404, e.message)
+            if e.error_code == BackoErrorType.ACTION_NOT_AVAILABLE:
+                return return_http_error(424, e.message)
+            if e.error_code == BackoErrorType.ACTION_FORBIDDEN:
+                return return_http_error(403, e.message)
+            # default error
+            return return_http_error(500, e.message)
+        except StrictoError as e:
+            # default error. All errors are in fac a bad request
+            return return_http_error(400, e.message)
+        except AttributeError as e:
+            return return_http_error(400, str(e))
+        except TypeError as e:
+            return return_http_error(400, str(e))
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            return return_http_error(500, str(e))
 
     return wrapper
 

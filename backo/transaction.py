@@ -37,11 +37,13 @@ class Transaction:  # pylint: disable=too-few-public-methods
         self._id = _id
         self.obj = obj
 
-    def rollback(self, app):
+    def rollback(self, backoffice) -> None:
         """
         Do a rollback on this action
+
+        backoffice is the Backoffice Object
         """
-        collection = app.collections.get(self.collection_name)
+        collection = backoffice.collections.get(self.collection_name)
 
         # delete the created obj
         if self.operation == OperatorType.CREATE:

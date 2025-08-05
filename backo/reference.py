@@ -82,7 +82,7 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         # for events
         on = kwargs.pop("on", [])
         on.append(("created", self.on_created))
-        on.append(("deletion", self.on_delete))
+        on.append(("before_delete", self.on_delete))
         on.append(("before_save", self.on_before_save))
 
         String.__init__(
@@ -401,7 +401,7 @@ class RefsList(List):
         # for events
         on = kwargs.pop("on", [])
         on.append(("created", self.on_created))
-        on.append(("deletion", on_delete_strategy))
+        on.append(("before_delete", on_delete_strategy))
         on.append(("before_save", on_modify_strategy))
 
         List.__init__(

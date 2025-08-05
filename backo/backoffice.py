@@ -1,5 +1,5 @@
 """
-The App module
+The Backoffice module
 """
 
 import logging
@@ -10,17 +10,17 @@ from .transaction import Transaction, OperatorType
 from .collection import Collection
 from .log import log_system
 
-log = log_system.get_or_create_logger("app", logging.DEBUG)
+log = log_system.get_or_create_logger("backoffice", logging.DEBUG)
 
 
-class App:  # pylint: disable=too-many-instance-attributes
+class Backoffice:  # pylint: disable=too-many-instance-attributes
     """
     The main object, the aplication itself
     """
 
     def __init__(self, name: str):
         """
-        initialize the app with a name
+        initialize the backoffice with a name
         """
         self.name = name
         self.collections = {}
@@ -29,15 +29,15 @@ class App:  # pylint: disable=too-many-instance-attributes
 
     def register_collection(self, coll: Collection) -> None:
         """
-        Register a collection into this app
+        Register a collection into this backoffice
         """
         self.collections[coll.name] = coll
-        coll.app = self
+        coll.backoffice = self
         setattr(self, coll.name, coll)
 
     def add_collection(self, coll: Collection) -> None:
         """
-        Register a collection into the app
+        Register a collection into the backoffice
         """
         return self.register_collection(coll)
 
@@ -88,17 +88,13 @@ class App:  # pylint: disable=too-many-instance-attributes
 
         del self.transactions[transaction_id]
 
-    def add_routes(self, flask_app: Flask) -> None:
+    def add_routes(self, flask_app: Flask, prefix: str = "") -> None:
         """
         Add all routes to flask application
         """
-        # flask_app.add_url_rule('/test/<string:name>', 'toto', methods=[ 'GET' ])
-        # flask_app.view_functions['toto'] = self.call_func
 
-        # flask_app.add_url_rule('/post', 'json', methods=[ 'POST' ])
-        # flask_app.view_functions['json'] = self.call_json
-
-        log.debug("Adding routes")
+        my_path = f"/{prefix}/{self.name}/" if prefix else f"/{self.name}"
+        log.debug("Adding routes under %s", my_path)
 
         for collection in self.collections.values():
-            collection.flask_add_routes(flask_app)
+            collection.flask_add_routes(flask_app, my_path)

@@ -40,7 +40,13 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         self._loaded_object = None
         self._status = StatusType.UNSET
         self._collection = None
+
         Dict.__init__(self, schema, **kwargs)
+
+        # Append then change event to the item
+        if "change" not in self._events:
+            self._events["change"] = []
+        self._events["change"].append(self.on_change)
 
         # adding _id to the model
         self.add_to_model("_id", String())
@@ -64,6 +70,17 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         dhash.update(json.dumps(schema, sort_keys=True).encode())
         return dhash.hexdigest()
 
+    def on_change(
+        self, event_name, root, me, **kwargs
+    ):  # pylint: disable=unused-argument
+        """
+        some value has change into this Item, chang its status to UNSAVED
+        if it was previously SAVED
+        This is trigged by the "change" event
+        """
+        if me._status == StatusType.SAVED:
+            me.set_status_unsaved()
+
     def __copy__(self):
         """
         Make a copy of thos object
@@ -76,6 +93,24 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         result._loaded_object = self._loaded_object
         result.__dict__["_locked"] = True
         return result
+
+    def set_status_unsaved(self):
+        """
+        Set as StatusType.UNSAVED
+        """
+        self.__dict__["_status"] = StatusType.UNSAVED
+
+    def set_status_saved(self):
+        """
+        Set as StatusType.SAVED
+        """
+        self.__dict__["_status"] = StatusType.SAVED
+
+    def set_status_unset(self):
+        """
+        Set as StatusType.UNSET
+        """
+        self.__dict__["_status"] = StatusType.UNSET
 
     def load(self, _id: str, **kwargs) -> None:
         """
@@ -97,7 +132,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
         obj = self.db_handler.get_by_id(_id_to_load)
         self.set(obj)
-        self.__dict__["_status"] = StatusType.SAVED
+        self.set_status_saved()
         self.__dict__["_loaded_object"] = copy.copy(self)
 
         if kwargs.get("m_path") is None:
@@ -123,9 +158,10 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
             )
         obj = self.db_handler.get_by_id(self._id.get_value())
         # set as UNSET to be able to modify meta datas.
-        self.__dict__["_status"] = StatusType.UNSET
+        self.set_status_unset()
+
         self.set(obj)
-        self.__dict__["_status"] = StatusType.SAVED
+        self.set_status_saved()
         self.__dict__["_loaded_object"] = copy.copy(self)
 
         if kwargs.get("m_path") is None:
@@ -170,7 +206,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         # Load the previous value in the DB (for transactions and comparison of values )
         if self.__dict__["_loaded_object"] is None:
             a = copy.copy(self)
-            a.__dict__["_status"] = StatusType.UNSET
+            a.set_status_unset()
             a.load(self._id.get_value())
             self.__dict__["_loaded_object"] = a
 
@@ -190,10 +226,10 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
             current_user.login,
         )
 
-        self.__dict__["_status"] = StatusType.SAVED
+        self.set_status_saved()
 
-        # Record into the app translation
-        self._collection.app.record_transaction(
+        # Record into the backoffice translation
+        self._collection.backoffice.record_transaction(
             kwargs.get("transaction_id"),
             self._collection.name,
             OperatorType.UPDATE,
@@ -236,7 +272,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
             )
 
         # Send delete event before deletion to do  some stufs
-        self.trigg("deletion", id(self), **kwargs)
+        self.trigg("before_delete", id(self), **kwargs)
         self.db_handler.delete_by_id(self._id.get_value())
 
         log.info(
@@ -247,10 +283,10 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
             current_user.login,
         )
 
-        self.__dict__["_status"] = StatusType.UNSET
+        self.set_status_unset()
 
-        # Record into the app translation
-        self._collection.app.record_transaction(
+        # Record into the backoffice translation
+        self._collection.backoffice.record_transaction(
             kwargs.get("transaction_id"),
             self._collection.name,
             OperatorType.DELETE,
@@ -301,10 +337,10 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         dict_to_save = self.get_value()
         self._id = self.db_handler.create(dict_to_save)
 
-        self.__dict__["_status"] = StatusType.SAVED
+        self.set_status_saved()
 
-        # Record into the app translation
-        self._collection.app.record_transaction(
+        # Record into the backoffice translation
+        self._collection.backoffice.record_transaction(
             kwargs.get("transaction_id"),
             self._collection.name,
             OperatorType.CREATE,

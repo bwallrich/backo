@@ -10,7 +10,7 @@ from flask import Flask
 
 from backo import Item, Collection
 from backo import DBYmlConnector
-from backo import App
+from backo import Backoffice
 
 from stricto import String, Bool
 
@@ -30,15 +30,13 @@ class TestRoutes(unittest.TestCase):
 
         # --- DB for user
         self.yml_users = DBYmlConnector(path=YML_DIR)
-        self.yml_users.generate_id = (
-            lambda o: "User_" + o.name.get_value() + "_" + o.surname.get_value()
-        )
+        self.yml_users.generate_id = lambda o: f"User_{o.name}_{o.surname}"
 
         # --- DB for sites
         # self.yml_sites = DBYmlConnector(path=YML_DIR)
-        # self.yml_sites.generate_id = lambda o: "Site_" + o.name.get_value()
+        # self.yml_sites.generate_id = lambda o: f"Site_{o.name}"
 
-        self.backo = App("myApp")
+        self.backo = Backoffice("myApp")
 
         self.users_coll = Collection(
             "users",
@@ -70,14 +68,14 @@ class TestRoutes(unittest.TestCase):
         u = self.backo.users.create({"name": "bert2", "surname": "bert2"})
         self.assertEqual(u._id, "User_bert2_bert2")
 
-        # set the app route
-        self.app = Flask(__name__)
-        self.backo.add_routes(self.app)
+        # set the flask route
+        self.flask = Flask(__name__)
+        self.backo.add_routes(self.flask)
 
         # Set client for testing
-        self.ctx = self.app.app_context()
+        self.ctx = self.flask.app_context()
         self.ctx.push()
-        self.client = self.app.test_client()
+        self.client = self.flask.test_client()
 
     def test_select(self):
         """
@@ -106,15 +104,124 @@ class TestRoutes(unittest.TestCase):
 
     def test_get_by_id(self):
         """
-        add a user in the DB and get it
+        get by id
         """
 
-        response = self.client.get("/users/User_bebert_bebert")
+        response = self.client.get("/myApp/coll/users/User_bebert_bebert")
         self.assertEqual(response.status_code, 200)
 
         u = self.backo.users.new_item()
         u.set(json.loads(response.data))
         self.assertEqual(u.name, "bebert")
+
+    def test_create_modify_delete_post(self):
+        """
+        create an object with a post, modify with a put and delete it
+        """
+        # post error
+        response = self.client.post(
+            "/myApp/coll/users", json={"name": 23, "surname": "bert3"}
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(str(response.data, "utf-8"), "Must be a string")
+
+        response = self.client.post(
+            "/myApp/coll/users", json={"name": "bert3", "surname": "bert3"}
+        )
+        self.assertEqual(response.status_code, 200)
+
+        u = self.backo.users.new_item()
+        u.set(json.loads(response.data))
+        self.assertIsNotNone(u._id)
+        self.assertEqual(u.name, "bert3")
+        self.assertEqual(u.surname, "bert3")
+
+        response = self.client.put(
+            "/myApp/coll/users", json={"name": "bert3", "surname": "hector"}
+        )
+        self.assertEqual(response.status_code, 405)
+
+        response = self.client.put(
+            "/myApp/coll/users/idnotfound", json={"name": "bert3", "surname": "hector"}
+        )
+        self.assertEqual(response.status_code, 404)
+
+        response = self.client.put(
+            f"/myApp/coll/users/{u._id}", json={"name": "bert4", "surname": "hector"}
+        )
+        self.assertEqual(response.status_code, 200)
+
+        u = self.backo.users.new_item()
+        u.set(json.loads(response.data))
+        self.assertIsNotNone(u._id)
+        self.assertEqual(u.name, "bert4")
+        self.assertEqual(u.surname, "hector")
+
+        response = self.client.delete("/myApp/coll/users")
+        self.assertEqual(response.status_code, 405)
+
+        response = self.client.delete("/myApp/coll/users/idnotfound")
+        self.assertEqual(response.status_code, 404)
+
+        response = self.client.delete(f"/myApp/coll/users/{u._id}")
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get(f"/myApp/coll/users/{u._id}")
+        self.assertEqual(response.status_code, 404)
+
+    def test_patch(self):
+        """
+        create an object with a post, then patch it
+        """
+        # post error
+        response = self.client.post(
+            "/myApp/coll/users", json={"name": "bert5", "surname": "bert5"}
+        )
+        self.assertEqual(response.status_code, 200)
+        u = self.backo.users.new_item()
+        u.set(json.loads(response.data))
+        self.assertIsNotNone(u._id)
+        self.assertEqual(u.name, "bert5")
+        self.assertEqual(u.surname, "bert5")
+
+        response = self.client.patch(
+            f"/myApp/coll/users/{u._id}",
+            json={"op": "replace", "path": "$.name", "value": "toto"},
+        )
+        self.assertEqual(response.status_code, 200)
+        u = self.backo.users.new_item()
+        u.set(json.loads(response.data))
+        self.assertIsNotNone(u._id)
+        self.assertEqual(u.name, "toto")
+        self.assertEqual(u.surname, "bert5")
+
+        response = self.client.patch(
+            f"/myApp/coll/users/{u._id}",
+            json=[{"op": "replace", "path": "$.surname", "value": "zaza"}],
+        )
+        self.assertEqual(response.status_code, 200)
+        u = self.backo.users.new_item()
+        u.set(json.loads(response.data))
+        self.assertIsNotNone(u._id)
+        self.assertEqual(u.name, "toto")
+        self.assertEqual(u.surname, "zaza")
+
+        response = self.client.delete(f"/myApp/coll/users/{u._id}")
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_wrong_url(self):
+        """
+        wrong url
+        """
+
+        response = self.client.get("/myApp/coll/usnotexistcollers/User_bebert_bebert")
+        self.assertEqual(response.status_code, 404)
+
+        response = self.client.post("/myApp/coll/usnotexistcollers/User_bebert_bebert")
+        self.assertEqual(response.status_code, 404)
+
+        response = self.client.delete("/myApp/coll/users/")
+        self.assertEqual(response.status_code, 404)
 
     def test_get_by_id_view(self):
         """
@@ -122,7 +229,7 @@ class TestRoutes(unittest.TestCase):
         """
 
         response = self.client.get(
-            "/users/User_bebert_bebert?_view=surname_only&toto=1&toto=2"
+            "/myApp/coll/users/User_bebert_bebert?_view=surname_only&toto=1&toto=2"
         )
         self.assertEqual(response.status_code, 200)
 
@@ -135,14 +242,14 @@ class TestRoutes(unittest.TestCase):
         """
         add a user in the DB and get it
         """
-        response = self.client.get("/users/User_not_exists")
-        self.assertEqual(response.status_code, 204)
+        response = self.client.get("/myApp/coll/users/User_not_exists")
+        self.assertEqual(response.status_code, 404)
 
     def test_select_route(self):
         """
         do a select
         """
-        response = self.client.get("/users?_page=11")
+        response = self.client.get("/myApp/coll/users?_page=11")
         self.assertEqual(response.status_code, 200)
         results = json.loads(response.data)
         self.assertEqual(results["total"], 3)
@@ -154,7 +261,7 @@ class TestRoutes(unittest.TestCase):
         """
         do a select
         """
-        response = self.client.get("/users?name=bert1")
+        response = self.client.get("/myApp/coll/users?name=bert1")
         self.assertEqual(response.status_code, 200)
         results = json.loads(response.data)
         self.assertEqual(results["total"], 1)
@@ -166,7 +273,7 @@ class TestRoutes(unittest.TestCase):
         """
         do a select
         """
-        response = self.client.get("/users?name.$reg=b")
+        response = self.client.get("/myApp/coll/users?name.$reg=b")
         self.assertEqual(response.status_code, 200)
         results = json.loads(response.data)
         self.assertEqual(results["total"], 3)
@@ -174,7 +281,7 @@ class TestRoutes(unittest.TestCase):
         l = self.backo.users.set(results["result"])
         self.assertEqual(len(l), 3)
 
-        response = self.client.get("/users?name.$reg=b&_page=2")
+        response = self.client.get("/myApp/coll/users?name.$reg=b&_page=2")
         self.assertEqual(response.status_code, 200)
         results = json.loads(response.data)
         self.assertEqual(results["total"], 3)
@@ -182,7 +289,7 @@ class TestRoutes(unittest.TestCase):
         l = self.backo.users.set(results["result"])
         self.assertEqual(len(l), 2)
 
-        response = self.client.get("/users?name.$reg=b&_page=2&_skip=2")
+        response = self.client.get("/myApp/coll/users?name.$reg=b&_page=2&_skip=2")
         self.assertEqual(response.status_code, 200)
         results = json.loads(response.data)
         self.assertEqual(results["total"], 3)

@@ -26,7 +26,7 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
         """
         available arguments
         """
-        self.app = None
+        self.backoffice = None
         self.name = None
         self.collection = None
         self.on_trig = on_trig
@@ -49,7 +49,7 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
         p = self._params.get(param_name, False)
         if not callable(p):
             return bool(p)
-        return bool(p(self.app, self.collection, self, o))
+        return bool(p(self.backoffice, self.collection, self, o))
 
     def can_see(self, o: Item) -> bool:
         """

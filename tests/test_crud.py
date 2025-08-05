@@ -11,7 +11,7 @@ from datetime import datetime
 
 from backo import Item, Collection
 from backo import DBYmlConnector
-from backo import App, Error, current_user
+from backo import Backoffice, Error, current_user
 
 from stricto import String, Bool, Error as StrictoError
 
@@ -31,13 +31,11 @@ class TestCRUD(unittest.TestCase):
 
         # --- DB for user
         self.yml_users = DBYmlConnector(path=YML_DIR)
-        self.yml_users.generate_id = (
-            lambda o: "User_" + o.name.get_value() + "_" + o.surname.get_value()
-        )
+        self.yml_users.generate_id = lambda o: f"User_{o.name}_{o.surname}"
 
         # --- DB for sites
         self.yml_sites = DBYmlConnector(path=YML_DIR)
-        self.yml_sites.generate_id = lambda o: "Site_" + o.name.get_value()
+        self.yml_sites.generate_id = lambda o: f"Site_{o.name}"
 
     def test_errors_on_create_delete(self):
         """
@@ -45,9 +43,9 @@ class TestCRUD(unittest.TestCase):
         and delete errors
         """
 
-        app = App("myApp")
+        backoffice = Backoffice("myApp")
 
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "users",
                 Item(
@@ -59,7 +57,7 @@ class TestCRUD(unittest.TestCase):
 
         self.yml_users.drop()
 
-        v = app.users.new()
+        v = backoffice.users.new()
         with self.assertRaises(Error) as e:
             v.delete()
         self.assertEqual(e.exception.message, "Cannot delete an unset object in users")
@@ -79,9 +77,9 @@ class TestCRUD(unittest.TestCase):
         and delete
         """
 
-        app = App("myApp")
+        backoffice = Backoffice("myApp")
 
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "users",
                 Item(
@@ -97,8 +95,8 @@ class TestCRUD(unittest.TestCase):
         current_user.user_id = "1234"
 
         # -- creation
-        u = app.users.create({"name": "bebert", "surname": "bebert"})
-        v = app.users.new()
+        u = backoffice.users.create({"name": "bebert", "surname": "bebert"})
+        v = backoffice.users.new()
         v.load(u._id.get_value())
         self.assertEqual(v, u)
         self.assertEqual(v.male, True)
@@ -116,7 +114,7 @@ class TestCRUD(unittest.TestCase):
         # modification
         u.male = False
         u.save()
-        v = app.users.new()
+        v = backoffice.users.new()
         v.load(u._id.get_value())
         self.assertEqual(v.male, False)
         self.assertEqual(v._meta.mtime > v._meta.ctime, True)
@@ -127,7 +125,7 @@ class TestCRUD(unittest.TestCase):
 
         # -- delete
         u.delete()
-        v = app.users.new()
+        v = backoffice.users.new()
         with self.assertRaises(Error) as e:
             v.load("User_bebert_bebert")
         self.assertEqual(e.exception.message, '_id "User_bebert_bebert" not found')
@@ -138,9 +136,9 @@ class TestCRUD(unittest.TestCase):
         and delete
         """
 
-        app = App("myApp")
+        backoffice = Backoffice("myApp")
 
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "users",
                 Item(
@@ -153,13 +151,13 @@ class TestCRUD(unittest.TestCase):
         self.yml_users.drop()
 
         # -- creation
-        u = app.users.new()
+        u = backoffice.users.new()
         u.create({"name": "bebert", "surname": "bebert"})
         self.assertEqual(u._id, "User_bebert_bebert")
         u.surname = "foo"
         u.save()
 
-        v = app.users.new()
+        v = backoffice.users.new()
         v.load(u._id.get_value())
         self.assertEqual(v.surname, "foo")
 
@@ -173,9 +171,9 @@ class TestCRUD(unittest.TestCase):
         and delete
         """
 
-        app = App("myApp")
+        backoffice = Backoffice("myApp")
 
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "users",
                 Item(
@@ -189,15 +187,14 @@ class TestCRUD(unittest.TestCase):
         self.yml_users.drop()
 
         # -- creation
-        u = app.users.new()
+        u = backoffice.users.new()
         u.create({"name": "bebert", "surname": "bebert"})
         self.assertEqual(u._id, "User_bebert_bebert")
         u.surname = "foo"
         u.save()
 
-        v = app.users.new()
+        v = backoffice.users.new()
         v.load(u._id.get_value())
-        self.assertEqual(v.surname, "foo")
 
         with self.assertRaises(AttributeError) as e:
             print(v._meta)

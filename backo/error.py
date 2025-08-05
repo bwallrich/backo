@@ -31,7 +31,6 @@ class ErrorType(Enum):
     NOT_DIR = auto()
     SELECTOR_NOT_FOUND = auto()
     DEVELOPPER = auto()
-    RIGHT = auto()
 
     def __repr__(self):
         return PREFIX + self.name

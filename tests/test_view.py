@@ -7,7 +7,7 @@ test for References()
 import unittest
 from backo import Item, Collection, View
 from backo import DBYmlConnector
-from backo import App
+from backo import Backoffice
 from backo import Ref, RefsList, DeleteStrategy
 
 ### --- For development ---
@@ -40,7 +40,7 @@ class TestViews(unittest.TestCase):
         self.yml_sites = DBYmlConnector(path=YML_DIR)
         self.yml_sites.generate_id = lambda o: "Site_" + o.name.get_value()
 
-        self.app = App("myApp")
+        self.backoffice = Backoffice("myApp")
         self.users = Collection(
             "users",
             Item(
@@ -68,12 +68,12 @@ class TestViews(unittest.TestCase):
             ),
             self.yml_sites,
         )
-        self.app.register_collection(self.users)
-        self.app.register_collection(self.sites)
+        self.backoffice.register_collection(self.users)
+        self.backoffice.register_collection(self.sites)
 
     def test_ref_view(self):
         """
-        creating an app with ref one to many
+        creating an backoffice with ref one to many
         and use selectors to cross
         """
 

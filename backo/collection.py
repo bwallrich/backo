@@ -8,7 +8,7 @@ import logging
 import re
 import sys
 
-from flask import request, session
+from flask import Flask, request, session
 
 sys.path.insert(1, "../../stricto")
 from stricto import StrictoEncoder, Rights
@@ -18,10 +18,9 @@ from .item import Item
 from .action import Action
 from .error import Error, ErrorType
 from .log import log_system
-from .request_decorators import (
-    return_http_error,
-)
+from .request_decorators import error_to_http_handler
 from .api_toolbox import multidict_to_filter
+from .patch import Patch
 
 
 log = log_system.get_or_create_logger("collection", logging.DEBUG)
@@ -54,7 +53,7 @@ class Collection:
 
         # For actions (aka some element work with datas)
         self._actions = {}
-        self.app = None
+        self.backoffice = None
 
         # For views
         self._views = {}
@@ -113,7 +112,7 @@ class Collection:
 
         if self._rights.has_right("create", None) is not True:
             raise Error(
-                ErrorType.RIGHT,
+                ErrorType.UNAUTHORIZED,
                 f"No rights to create in collection {self.name}.",
             )
 
@@ -125,12 +124,12 @@ class Collection:
         """
         Return another collection (ised by Ref and RefsList)
         """
-        if self.app is None:
+        if self.backoffice is None:
             raise Error(
                 ErrorType.COLLECTION_NOT_REGISTERED,
-                f"collection {self.name} not registered into an app",
+                f"collection {self.name} not registered into an backoffice",
             )
-        return self.app.collections.get(name)
+        return self.backoffice.collections.get(name)
 
     def register_action(self, name: str, action: Action):
         """
@@ -138,7 +137,7 @@ class Collection:
         this action will be related to an object
         """
         self._actions[name] = action
-        action.__dict__["app"] = self.app
+        action.__dict__["backoffice"] = self.backoffice
         action.__dict__["name"] = name
         action.__dict__["collection"] = self
 
@@ -162,7 +161,7 @@ class Collection:
 
         if self._rights.has_right("read", None) is not True:
             raise Error(
-                ErrorType.RIGHT,
+                ErrorType.UNAUTHORIZED,
                 f"No rights to create in collection {self.name}.",
             )
 
@@ -191,7 +190,7 @@ class Collection:
 
         if self._rights.has_right("read", None) is not True:
             raise Error(
-                ErrorType.RIGHT,
+                ErrorType.UNAUTHORIZED,
                 f"No rights to read the entire collection {self.name}.",
             )
 
@@ -205,9 +204,9 @@ class Collection:
         result = {
             "result": [],
             "total": 0,
-            "view": view,
-            "skip": num_of_element_to_skip,
-            "page_size": page_size,
+            "_view": view,
+            "_skip": num_of_element_to_skip,
+            "_page": page_size,
         }
 
         # Get the restriction filter
@@ -222,6 +221,7 @@ class Collection:
             obj["_id"] = str(obj["_id"])
             o = self.new_item()
             o.set(obj)
+            o.set_status_saved()
             # Do the post match filtering
 
             # Ignore all elements matched by the refuse filter
@@ -241,32 +241,79 @@ class Collection:
         result["total"] = index
         return result
 
-    def flask_add_routes(self, flask_app, prefix=""):
+    def flask_add_routes(self, flask_app: Flask, my_path: str = "") -> None:
         """
         Add CRUD routes and add axtions routes
         """
 
+        # read datas
         if self._rights.get_strict_right("read") is not False:
             # GET /<_id>
+            log.debug(f"Add routes GET {my_path}/coll/{self.name}/<string:_id>")
+
             flask_app.add_url_rule(
-                f"{prefix}/{self.name}/<string:_id>",
+                f"{my_path}/coll/{self.name}/<string:_id>",
                 f"get_{self.name}",
                 methods=["GET"],
             )
             flask_app.view_functions[f"get_{self.name}"] = self.http_get_by_id
 
             # GET / - The selection
+            log.debug(f"Add routes GET {my_path}/coll/{self.name}")
             flask_app.add_url_rule(
-                f"{prefix}/{self.name}", f"select_{self.name}", methods=["GET"]
+                f"{my_path}/coll/{self.name}", f"select_{self.name}", methods=["GET"]
             )
             flask_app.view_functions[f"select_{self.name}"] = self.filtering
 
-            # POST / The creation
+        # POST / Create data
+        if self._rights.get_strict_right("create") is not False:
+            log.debug(f"Add routes POST {my_path}/coll/{self.name}")
             flask_app.add_url_rule(
-                f"{prefix}/{self.name}", f"create_{self.name}", methods=["POST"]
+                f"{my_path}/coll/{self.name}", f"create_{self.name}", methods=["POST"]
             )
             flask_app.view_functions[f"create_{self.name}"] = self.http_create
 
+        # PUT /<_id> Modify Data
+        if self._rights.get_strict_right("modify") is not False:
+            log.debug(f"Add routes PUT {my_path}/coll/{self.name}/<string:_id>")
+            flask_app.add_url_rule(
+                f"{my_path}/coll/{self.name}/<string:_id>",
+                f"put_{self.name}",
+                methods=["PUT"],
+            )
+            flask_app.view_functions[f"put_{self.name}"] = self.http_modify
+
+        # PATCH /<_id> Modify Data
+        if self._rights.get_strict_right("modify") is not False:
+            log.debug(f"Add routes PATCH {my_path}/coll/{self.name}/<string:_id>")
+            flask_app.add_url_rule(
+                f"{my_path}/coll/{self.name}/<string:_id>",
+                f"patch_one_{self.name}",
+                methods=["PATCH"],
+            )
+            flask_app.view_functions[f"patch_one_{self.name}"] = self.http_patch_one
+
+        # DELETE /<_id> Delete Data
+        if self._rights.get_strict_right("delete") is not False:
+            log.debug(f"Add routes DELETE {my_path}/coll/{self.name}/<string:_id>")
+            flask_app.add_url_rule(
+                f"{my_path}/coll/{self.name}/<string:_id>",
+                f"delete_{self.name}",
+                methods=["DELETE"],
+            )
+            flask_app.view_functions[f"delete_{self.name}"] = self.http_delete
+
+        # CHECK /<_id> Check values
+        if self._rights.get_strict_right("read") is not False:
+            log.debug(f"Add routes POST {my_path}/check/{self.name}/<string:_id>")
+            flask_app.add_url_rule(
+                f"{my_path}/coll/{self.name}/<string:_id>",
+                f"delete_{self.name}",
+                methods=["DELETE"],
+            )
+            flask_app.view_functions[f"delete_{self.name}"] = self.http_delete
+
+    @error_to_http_handler
     def http_get_by_id(self, _id: str):
         """
         GET HTTP
@@ -274,24 +321,13 @@ class Collection:
         query = request.args
         _view = query.get("_view", "client")
 
-        log.debug(f"session {session.keys()}")
-
         obj = self.new_item()
-
-        try:
-            obj.load(_id)
-        except Error as e:
-            if e.error_code == ErrorType.NOTFOUND:
-                return return_http_error(204, "No content")
-            if e.error_code == ErrorType.UNAUTHORIZED:
-                return return_http_error(401, "Unauthorized")
-
-            log.debug(f"get by _id {_id} in {self.name} return error {e}")
-            return return_http_error(500, f"Internal Server Error : {e}")
+        obj.load(_id)
 
         log.debug(f"get by _id {_id} in {self.name} in view {_view}")
         return (json.dumps(obj.get_view(_view), cls=StrictoEncoder), 200)
 
+    @error_to_http_handler
     def filtering(self):
         """
         SELECT HTTP
@@ -312,9 +348,24 @@ class Collection:
 
         return (json.dumps(result, cls=StrictoEncoder), 200)
 
-    def http_create(self, _id: str):
+    @error_to_http_handler
+    def http_create(self):
         """
         POST HTTP -> creation
+        """
+        query = request.args
+        _view = query.get("_view", "client")
+
+        log.debug(f"post {type(request.json)} {request.json}")
+        obj = self.create(request.json)
+
+        log.debug(f"create {obj._id} in {self.name} in view {_view}")
+        return (json.dumps(obj.get_view(_view), cls=StrictoEncoder), 200)
+
+    @error_to_http_handler
+    def http_modify(self, _id: str):
+        """
+        PUT HTTP -> modification of an object
         """
         query = request.args
         _view = query.get("_view", "client")
@@ -322,13 +373,43 @@ class Collection:
         log.debug(f"session {session.keys()}")
 
         obj = self.new_item()
+        obj.load(_id)
+        obj.set(request.json)
+        obj.save()
 
-        try:
-            self.create(request.form)
-        except Error as e:
-            if e.error_code == ErrorType.RIGHT:
-                return return_http_error(401, "Unauthorized")
-            return return_http_error(500, f"Internal Server Error : {e}")
+        return (json.dumps(obj.get_view(_view), cls=StrictoEncoder), 200)
 
-        log.debug(f"create {obj._id} in {self.name} in view {_view}")
+    @error_to_http_handler
+    def http_delete(self, _id: str):
+        """
+        DELETE HTTP -> deletion
+        """
+
+        obj = self.new_item()
+        obj.load(_id)
+        obj.delete()
+
+        return ("deleted", 200)
+
+    @error_to_http_handler
+    def http_patch_one(self, _id: str):
+        """
+        PATCH HTTP -> patch of an object
+        """
+        query = request.args
+        _view = query.get("_view", "client")
+
+        patch_list = request.json if isinstance(request.json, list) else [request.json]
+
+        obj = self.new_item()
+        obj.load(_id)
+
+        # apply patches
+        for p in patch_list:
+            patch = Patch()
+            patch.set(p)
+            obj.patch(patch.op, patch.path, patch.value)
+
+        obj.save()
+
         return (json.dumps(obj.get_view(_view), cls=StrictoEncoder), 200)

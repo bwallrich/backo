@@ -10,7 +10,7 @@ import time
 
 from backo import Item, Collection
 from backo import DBMongoConnector
-from backo import App, Error, current_user
+from backo import Backoffice, Error, current_user
 
 from stricto import String, Bool  # , Error as StrictoError
 
@@ -60,12 +60,12 @@ class TestMongo(unittest.TestCase):
         and delete errors
         """
 
-        app = App("myApp")
+        backoffice = Backoffice("myApp")
         user_model = Item(
             {"name": String(), "surname": String(), "male": Bool(default=True)}
         )
         coll_users = Collection("users", user_model, self.db_users)
-        app.register_collection(coll_users)
+        backoffice.register_collection(coll_users)
 
         coll_users.drop()
 
@@ -91,11 +91,11 @@ class TestMongo(unittest.TestCase):
             e.exception.message, '_id "66a8ee2614c85110d75b9cf8" not found'
         )
 
-        v = app.users.new()
+        v = backoffice.users.new()
         v.create({"name": "bebert", "surname": "bebert"})
         self.assertNotEqual(v._id, None)
         self.assertNotEqual(v._meta, None)
-        u = app.users.new()
+        u = backoffice.users.new()
         u.load(v._id)
         self.assertEqual(v._id, u._id)
         self.assertEqual(v, u)
@@ -106,9 +106,9 @@ class TestMongo(unittest.TestCase):
         and delete
         """
 
-        app = App("myApp")
+        backoffice = Backoffice("myApp")
 
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "users",
                 Item(
@@ -118,15 +118,15 @@ class TestMongo(unittest.TestCase):
             )
         )
 
-        app.users.drop()
+        backoffice.users.drop()
 
         current_user.login = "Roger"
         current_user.user_id = "1234"
 
         # -- creation
-        u = app.new("users")
+        u = backoffice.new("users")
         u.create({"name": "bebert", "surname": "bebert"})
-        v = app.users.new()
+        v = backoffice.users.new()
 
         v.load(u._id)
         self.assertEqual(v, u)
@@ -145,7 +145,7 @@ class TestMongo(unittest.TestCase):
         # modification
         u.male = False
         u.save()
-        v = app.users.new()
+        v = backoffice.users.new()
         v.load(u._id)
         self.assertEqual(v.male, False)
         self.assertEqual(v._meta.mtime > v._meta.ctime, True)
@@ -162,8 +162,8 @@ class TestMongo(unittest.TestCase):
         select
         """
 
-        app = App("myApp")
-        app.register_collection(
+        backoffice = Backoffice("myApp")
+        backoffice.register_collection(
             Collection(
                 "users",
                 Item(
@@ -173,28 +173,28 @@ class TestMongo(unittest.TestCase):
             )
         )
 
-        app.users.drop()
+        backoffice.users.drop()
 
         current_user.login = "Roger"
         current_user.user_id = "1234"
 
         # -- creation
-        u = app.new("users")
+        u = backoffice.new("users")
         u.create({"name": "bebert1", "surname": "bebert"})
-        u = app.new("users")
+        u = backoffice.new("users")
         u.create({"name": "bebert2", "surname": "bebert"})
-        u = app.new("users")
+        u = backoffice.new("users")
         u.create({"name": "bebert3", "surname": "Joe"})
-        u = app.new("users")
+        u = backoffice.new("users")
         u.create({"name": "bebert4", "surname": "Joe"})
-        u = app.new("users")
+        u = backoffice.new("users")
         u.create({"name": "bebert5", "surname": "Joe"})
-        u = app.new("users")
+        u = backoffice.new("users")
         u.create({"name": "bebert6", "surname": "Al"})
-        u = app.new("users")
+        u = backoffice.new("users")
         u.create({"name": "bebert7", "surname": "Al"})
 
-        result = app.users.select({"surname": "Al"})
+        result = backoffice.users.select({"surname": "Al"})
         self.assertEqual(result["count"], 2)
         self.assertEqual(len(result["result"]), 2)
         for o in result["result"]:
@@ -202,7 +202,7 @@ class TestMongo(unittest.TestCase):
             self.assertEqual(o.surname, "Al")
 
         # check pagination
-        result = app.users.select({"surname": "Al"}, 1, 0)
+        result = backoffice.users.select({"surname": "Al"}, 1, 0)
         self.assertEqual(result["count"], 2)
         self.assertEqual(len(result["result"]), 1)
         for o in result["result"]:
@@ -210,9 +210,9 @@ class TestMongo(unittest.TestCase):
             self.assertEqual(o.surname, "Al")
 
         # check not found
-        result = app.users.select({"surname_not_found": "Al"})
+        result = backoffice.users.select({"surname_not_found": "Al"})
         self.assertEqual(result["count"], 0)
         self.assertEqual(len(result["result"]), 0)
-        result = app.users.select({"surname": "Al_not_found"})
+        result = backoffice.users.select({"surname": "Al_not_found"})
         self.assertEqual(result["count"], 0)
         self.assertEqual(len(result["result"]), 0)

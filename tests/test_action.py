@@ -9,7 +9,7 @@ import unittest
 
 from backo import Item, Collection, Action
 from backo import DBYmlConnector
-from backo import App, Error
+from backo import Backoffice, Error
 
 from stricto import String, Int, List
 
@@ -77,7 +77,7 @@ class TestAction(unittest.TestCase):
             o.comments.append(action.comment)
             o.stars -= action.num
 
-        app = App("myApp")
+        backoffice = Backoffice("myApp")
         coll = Collection(
             "users",
             Item(
@@ -90,7 +90,7 @@ class TestAction(unittest.TestCase):
             ),
             self.yml_users,
         )
-        app.register_collection(coll)
+        backoffice.register_collection(coll)
 
         # Set the increment action
         incr = Action(
@@ -109,7 +109,7 @@ class TestAction(unittest.TestCase):
 
         self.yml_users.delete_by_id("User_bebert_bebert")
 
-        v = app.users.create({"name": "bebert", "surname": "bebert"})
+        v = backoffice.users.create({"name": "bebert", "surname": "bebert"})
         self.assertEqual(v.stars, 0)
 
         incr.set({"comment": "good boy", "num": 2})

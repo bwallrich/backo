@@ -7,7 +7,7 @@ test for References()
 import unittest
 from backo import Item, Collection
 from backo import DBYmlConnector
-from backo import App
+from backo import Backoffice
 from backo import Ref, RefsList, DeleteStrategy, Error, log_system
 
 ### --- For development ---
@@ -32,31 +32,29 @@ class TestReferences(unittest.TestCase):
 
         # --- DB for user
         self.yml_users = DBYmlConnector(path=YML_DIR)
-        self.yml_users.generate_id = (
-            lambda o: "User_" + o.name.get_value() + "_" + o.surname.get_value()
-        )
+        self.yml_users.generate_id = lambda o: f"User_{o.name}_{o.surname}"
 
         # --- DB for sites
         self.yml_sites = DBYmlConnector(path=YML_DIR)
-        self.yml_sites.generate_id = lambda o: "Site_" + o.name.get_value()
+        self.yml_sites.generate_id = lambda o: f"Site_{o.name}"
 
         # --- DB for humans
         self.yml_humans = DBYmlConnector(path=YML_DIR)
-        self.yml_humans.generate_id = lambda o: "Human_" + o.name.get_value()
+        self.yml_humans.generate_id = lambda o: f"Human_{o.name}"
 
         # --- DB for animals
         self.yml_animals = DBYmlConnector(path=YML_DIR)
-        self.yml_animals.generate_id = lambda o: "Animal_" + o.desc.get_value()
+        self.yml_animals.generate_id = lambda o: f"Animal_{o.desc}"
 
     def test_references_one_to_many(self):
         """
-        creating an app with ref one to many
+        creating an backoffice with ref one to many
         and delete
         """
 
-        app = App("myApp")
+        backoffice = Backoffice("myApp")
 
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "users",
                 Item(
@@ -70,7 +68,7 @@ class TestReferences(unittest.TestCase):
                 self.yml_users,
             )
         )
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "sites",
                 Item(
@@ -92,9 +90,11 @@ class TestReferences(unittest.TestCase):
         self.yml_sites.delete_by_id("Site_moon")
         self.yml_users.delete_by_id("User_bebert_bebert")
 
-        si = app.sites.create({"name": "moon", "address": "far"})
+        si = backoffice.sites.create({"name": "moon", "address": "far"})
 
-        u = app.users.create({"name": "bebert", "surname": "bebert", "site": si._id})
+        u = backoffice.users.create(
+            {"name": "bebert", "surname": "bebert", "site": si._id}
+        )
 
         # -- Check if reverse is filled
         si.reload()
@@ -111,12 +111,12 @@ class TestReferences(unittest.TestCase):
 
     def test_references_one_to_many_strategy_clean(self):
         """
-        creating an app with ref one to many
+        creating an backoffice with ref one to many
         and delete
         """
 
-        app = App("myApp")
-        app.register_collection(
+        backoffice = Backoffice("myApp")
+        backoffice.register_collection(
             Collection(
                 "users",
                 Item(
@@ -132,7 +132,7 @@ class TestReferences(unittest.TestCase):
         )
 
         # --- DB for sites
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "sites",
                 Item(
@@ -154,9 +154,11 @@ class TestReferences(unittest.TestCase):
         self.yml_sites.delete_by_id("Site_moon")
         self.yml_users.delete_by_id("User_bebert_bebert")
 
-        si = app.sites.create({"name": "moon", "address": "far"})
+        si = backoffice.sites.create({"name": "moon", "address": "far"})
 
-        u = app.users.create({"name": "bebert", "surname": "bebert", "site": si._id})
+        u = backoffice.users.create(
+            {"name": "bebert", "surname": "bebert", "site": si._id}
+        )
 
         # -- Check if reverse is filled
         si.reload()
@@ -171,12 +173,12 @@ class TestReferences(unittest.TestCase):
 
     def test_references_one_to_many_strategy_delete(self):
         """
-        creating an app with ref one to many
+        creating an backoffice with ref one to many
         and delete
         """
 
-        app = App("myApp")
-        app.register_collection(
+        backoffice = Backoffice("myApp")
+        backoffice.register_collection(
             Collection(
                 "users",
                 Item(
@@ -192,7 +194,7 @@ class TestReferences(unittest.TestCase):
         )
 
         # --- DB for sites
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "sites",
                 Item(
@@ -214,9 +216,11 @@ class TestReferences(unittest.TestCase):
         self.yml_sites.delete_by_id("Site_moon")
         self.yml_users.delete_by_id("User_bebert_bebert")
 
-        si = app.sites.create({"name": "moon", "address": "far"})
+        si = backoffice.sites.create({"name": "moon", "address": "far"})
 
-        u = app.users.create({"name": "bebert", "surname": "bebert", "site": si._id})
+        u = backoffice.users.create(
+            {"name": "bebert", "surname": "bebert", "site": si._id}
+        )
 
         u.reload()
         self.assertEqual(u.site, si._id)
@@ -235,12 +239,12 @@ class TestReferences(unittest.TestCase):
 
     def test_references_errors(self):
         """
-        creating an app with ref with errors
+        creating an backoffice with ref with errors
         """
 
-        app = App("myApp")
+        backoffice = Backoffice("myApp")
 
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "users",
                 Item(
@@ -256,7 +260,7 @@ class TestReferences(unittest.TestCase):
         )
 
         # --- DB for sites
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "sites",
                 Item(
@@ -278,13 +282,13 @@ class TestReferences(unittest.TestCase):
         self.yml_sites.delete_by_id("Site_moon")
         self.yml_users.delete_by_id("User_bebert_bebert")
 
-        si = app.sites.new()
+        si = backoffice.sites.new()
         si.create({"name": "moon", "address": "far"})
 
-        u = app.users.new()
+        u = backoffice.users.new()
         self.assertEqual(u.site.get_root(), u)
 
-        t_id = app.start_transaction()
+        t_id = backoffice.start_transaction()
         u.site._collection = "unknown_coll"
         with self.assertRaises(Error) as e:
             u.create(
@@ -292,11 +296,11 @@ class TestReferences(unittest.TestCase):
                 transaction_id=t_id,
             )
         self.assertEqual(e.exception.message, 'Collection "unknown_coll" not found')
-        app.rollback_transaction(t_id)
+        backoffice.rollback_transaction(t_id)
 
-        t_id = app.start_transaction()
+        t_id = backoffice.start_transaction()
         # self.yml_users.delete_by_id("User_bebert_bebert")
-        u = app.users.new()
+        u = backoffice.users.new()
         u.site._collection = "sites"
         u.site._reverse = "unknown_reverse"
         with self.assertRaises(Error) as e:
@@ -307,29 +311,29 @@ class TestReferences(unittest.TestCase):
         self.assertEqual(
             e.exception.message, 'Collection "sites"."unknown_reverse" not found'
         )
-        app.rollback_transaction(t_id)
+        backoffice.rollback_transaction(t_id)
 
-        t_id = app.start_transaction()
+        t_id = backoffice.start_transaction()
         # self.yml_users.delete_by_id("User_bebert_bebert")
-        u = app.users.new()
+        u = backoffice.users.new()
         u.site._reverse = "users"
         with self.assertRaises(Error) as e:
-            app.users.create(
+            backoffice.users.create(
                 {"name": "bebert", "surname": "bebert", "site": "no_ref"},
                 transaction_id=t_id,
             )
         self.assertEqual(e.exception.message, '_id "no_ref" not found')
-        app.rollback_transaction(t_id)
+        backoffice.rollback_transaction(t_id)
 
     def test_references_one_to_many_modification(self):
         """
-        creating an app with ref one to many
+        creating an backoffice with ref one to many
         and delete
         """
 
-        app = App("myApp")
+        backoffice = Backoffice("myApp")
 
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "users",
                 Item(
@@ -345,7 +349,7 @@ class TestReferences(unittest.TestCase):
         )
 
         # --- DB for sites
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "sites",
                 Item(
@@ -368,11 +372,11 @@ class TestReferences(unittest.TestCase):
         self.yml_sites.delete_by_id("Site_mars")
         self.yml_users.delete_by_id("User_bebert_bebert")
 
-        si_mars = app.sites.create({"name": "mars", "address": "very far"})
+        si_mars = backoffice.sites.create({"name": "mars", "address": "very far"})
 
-        si_moon = app.sites.create({"name": "moon", "address": "far"})
+        si_moon = backoffice.sites.create({"name": "moon", "address": "far"})
 
-        u = app.users.new()
+        u = backoffice.users.new()
         u.create({"name": "bebert", "surname": "bebert", "site": si_moon._id})
 
         # -- Check if reverse is filled
@@ -396,13 +400,13 @@ class TestReferences(unittest.TestCase):
 
     def test_references_many_to_one_modification(self):
         """
-        creating an app with ref one to many
+        creating an backoffice with ref one to many
         and delete
         """
 
-        app = App("myApp")
+        backoffice = Backoffice("myApp")
 
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "users",
                 Item(
@@ -418,7 +422,7 @@ class TestReferences(unittest.TestCase):
         )
 
         # --- DB for sites
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "sites",
                 Item(
@@ -442,15 +446,17 @@ class TestReferences(unittest.TestCase):
         self.yml_users.delete_by_id("User_bebert_bebert")
         self.yml_users.delete_by_id("User_john_john")
 
-        si_mars = app.sites.create({"name": "mars", "address": "very far"})
+        si_mars = backoffice.sites.create({"name": "mars", "address": "very far"})
 
-        si_moon = app.sites.create({"name": "moon", "address": "far"})
+        si_moon = backoffice.sites.create({"name": "moon", "address": "far"})
 
-        ub = app.users.create(
+        ub = backoffice.users.create(
             {"name": "bebert", "surname": "bebert", "site": si_moon._id}
         )
 
-        uj = app.users.create({"name": "john", "surname": "john", "site": si_moon._id})
+        uj = backoffice.users.create(
+            {"name": "john", "surname": "john", "site": si_moon._id}
+        )
 
         # -- Check if reverse is filled
         si_moon.reload()
@@ -461,7 +467,7 @@ class TestReferences(unittest.TestCase):
         # -- Modify site
         si_mars.users = [ub._id]
         si_mars.save()
-        si_mars = app.sites.new()
+        si_mars = backoffice.sites.new()
         si_mars.load("Site_mars")
         self.assertEqual(len(si_mars.users), 1)
 
@@ -477,13 +483,13 @@ class TestReferences(unittest.TestCase):
 
     def test_references_one_to_one(self):
         """
-        creating an app with ref one to one
+        creating an backoffice with ref one to one
         and delete
         """
 
-        app = App("myApp")
+        backoffice = Backoffice("myApp")
 
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "humans",
                 Item(
@@ -498,7 +504,7 @@ class TestReferences(unittest.TestCase):
         )
 
         # --- DB for animal
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "animals",
                 Item(
@@ -518,12 +524,12 @@ class TestReferences(unittest.TestCase):
         self.yml_animals.delete_by_id("Animal_ant")
 
         # create humans
-        up = app.humans.create({"name": "parker", "surname": "peter"})
-        uh = app.humans.create({"name": "pym", "surname": "hank"})
+        up = backoffice.humans.create({"name": "parker", "surname": "peter"})
+        uh = backoffice.humans.create({"name": "pym", "surname": "hank"})
 
         # ctreate animal totem related to humans
-        asp = app.animals.create({"desc": "spider", "human": up._id})
-        aa = app.animals.create({"desc": "ant", "human": uh._id})
+        asp = backoffice.animals.create({"desc": "spider", "human": up._id})
+        aa = backoffice.animals.create({"desc": "ant", "human": uh._id})
 
         # check human link
         up.reload()
@@ -551,13 +557,13 @@ class TestReferences(unittest.TestCase):
 
     def test_references_one_to_one_required(self):
         """
-        creating an app with ref one to one with require
+        creating an backoffice with ref one to one with require
         and delete
         """
 
-        app = App("myApp")
+        backoffice = Backoffice("myApp")
 
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "humans",
                 Item(
@@ -572,7 +578,7 @@ class TestReferences(unittest.TestCase):
         )
 
         # --- DB for animal
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "animals",
                 Item(
@@ -592,12 +598,16 @@ class TestReferences(unittest.TestCase):
         self.yml_animals.delete_by_id("Animal_ant")
 
         # ctreate animal totem related to humans
-        asp = app.animals.create({"desc": "spider"})
-        aa = app.animals.create({"desc": "ant"})
+        asp = backoffice.animals.create({"desc": "spider"})
+        aa = backoffice.animals.create({"desc": "ant"})
 
         # create humans
-        up = app.humans.create({"name": "parker", "surname": "peter", "totem": asp._id})
-        uh = app.humans.create({"name": "pym", "surname": "hank", "totem": aa._id})
+        up = backoffice.humans.create(
+            {"name": "parker", "surname": "peter", "totem": asp._id}
+        )
+        uh = backoffice.humans.create(
+            {"name": "pym", "surname": "hank", "totem": aa._id}
+        )
 
         # check human link
         up.reload()
@@ -613,13 +623,13 @@ class TestReferences(unittest.TestCase):
 
     def test_references_many_to_many_empty_empty(self):
         """
-        creating an app with many to many refs
+        creating an backoffice with many to many refs
         and delete
         """
 
-        app = App("myApp")
+        backoffice = Backoffice("myApp")
 
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "humans",
                 Item(
@@ -638,7 +648,7 @@ class TestReferences(unittest.TestCase):
         )
 
         # --- DB for animal
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "animals",
                 Item(
@@ -662,14 +672,16 @@ class TestReferences(unittest.TestCase):
         self.yml_animals.delete_by_id("Animal_ant")
 
         # ctreate animal totem related to humans
-        asp = app.animals.create({"desc": "spider"})
-        aa = app.animals.create({"desc": "ant"})
+        asp = backoffice.animals.create({"desc": "spider"})
+        aa = backoffice.animals.create({"desc": "ant"})
 
         # create humans
-        up = app.humans.create(
+        up = backoffice.humans.create(
             {"name": "parker", "surname": "peter", "totems": [asp._id, aa._id]}
         )
-        uh = app.humans.create({"name": "pym", "surname": "hank", "totems": [aa._id]})
+        uh = backoffice.humans.create(
+            {"name": "pym", "surname": "hank", "totems": [aa._id]}
+        )
 
         # check human links
         up.reload()
@@ -702,13 +714,13 @@ class TestReferences(unittest.TestCase):
 
     def test_references_selector(self):
         """
-        creating an app with ref one to many
+        creating an backoffice with ref one to many
         and use selectors to cross
         """
 
-        app = App("myApp")
+        backoffice = Backoffice("myApp")
 
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "users",
                 Item(
@@ -724,7 +736,7 @@ class TestReferences(unittest.TestCase):
         )
 
         # --- DB for sites
-        app.register_collection(
+        backoffice.register_collection(
             Collection(
                 "sites",
                 Item(
@@ -748,11 +760,15 @@ class TestReferences(unittest.TestCase):
         self.yml_users.delete_by_id("User_bebert_bebert")
         self.yml_users.delete_by_id("User_john_john")
 
-        # si_mars = app.sites.create({"name": "mars", "address": "very far"})
-        si_moon = app.sites.create({"name": "moon", "address": "far"})
+        # si_mars = backoffice.sites.create({"name": "mars", "address": "very far"})
+        si_moon = backoffice.sites.create({"name": "moon", "address": "far"})
 
-        app.users.create({"name": "bebert", "surname": "bebert", "site": si_moon._id})
-        uj = app.users.create({"name": "john", "surname": "john", "site": si_moon._id})
+        backoffice.users.create(
+            {"name": "bebert", "surname": "bebert", "site": si_moon._id}
+        )
+        uj = backoffice.users.create(
+            {"name": "john", "surname": "john", "site": si_moon._id}
+        )
 
         # -- follow references in selectors
         si_moon.reload()
