@@ -42,7 +42,9 @@ class Collection:
         self.model.set_db_handler(db_handler)
 
         # Set permissions
-        self._permissions = Permissions(read=True, create=True, delete=True, modify=True)
+        self._permissions = Permissions(
+            read=True, create=True, delete=True, modify=True
+        )
         for key, right in kwargs.items():
             a = re.findall(r"^can_(.*)$", key)
             if a:
