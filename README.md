@@ -16,7 +16,7 @@ The way to use is very simple, see [Quickstart](#quickstart) for a basic setup.
 ## Installation
 
 ```bash
-pip install backo # (soon)
+pip install backo
 ```
 
 ## Quickstart

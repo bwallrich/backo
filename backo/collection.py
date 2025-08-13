@@ -11,7 +11,7 @@ import sys
 from flask import Flask, request, session
 
 sys.path.insert(1, "../../stricto")
-from stricto import StrictoEncoder, Rights
+from stricto import Permissions, StrictoEncoder
 
 
 from .item import Item
@@ -42,7 +42,7 @@ class Collection:
         self.model.set_db_handler(db_handler)
 
         # Set rights
-        self._rights = Rights(read=True, create=True, delete=True, modify=True)
+        self._rights = Permissions(read=True, create=True, delete=True, modify=True)
         for key, right in kwargs.items():
             a = re.findall(r"^can_(.*)$", key)
             if a:
