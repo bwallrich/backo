@@ -310,6 +310,57 @@ Partial modification of the user with _id *1234* with the patch.
 Patch content can be a *list of patch operations*.
 
 
+
+### GET /check/\<collection name\>
+
+
+Check the validity a field of the item
+
+Please refer to [stricto selectors](https://github.com/bwallrich/stricto#selectors) for more details on selectors.
+
+get must provide a json structure in the body :
+
+| field | type | descrimtion |
+| -- | -- | -- |
+| item | dict | the data to check. It can be partial, see examples belowv |
+| path | string | the field to check in the item. This is a selector. Please refer to [stricto selectors](https://github.com/bwallrich/stricto#selectors) for more details |
+
+The answer is a status 200 message with a json structure :
+
+| field | type | descrimtion |
+| -- | -- | -- |
+| error | string or null | if null ther is no error, otherwise the error message |
+
+
+Examples :
+
+
+```bash
+curl -X GET 'http://localhost/myApp/check/users' -d '{ "item" : { "name" : "John", "surname" : 32 }, "path" : "$.surname" }'
+# will check surname an return a response.data like 
+{
+    'error' : "Must be a string"
+}
+```
+
+The response is a *status 200* even if the check return an error. The request is correct.
+
+```bash
+curl -X GET 'http://localhost/myApp/check/users' -d '{ "item" : { "surname" : "Johnny" }, "path" : "$.surname" }' 
+# will check surname an return a response.data like 
+{
+    'error' : null
+}
+
+
+curl -X GET 'http://localhost/myApp/check/users' -d '{ "item" : { "name" : 23, "surname" : "Johnny" }, "path" : "$.surname" }'
+# (only the surname is tested. don't car if name is correct or not)
+{
+    'error' : null
+}
+```
+
+
 ## Internal usage
 Typical use case for users and theirs addresses.
 
