@@ -55,14 +55,14 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
         """
         Check if this action exists for running
         """
-        return self._rights.has_right("see", self, o)
+        return self._permissions.is_allowed_to("see", self, o)
 
     def can_execute(self, o: Item) -> bool:
         """
         Check if can execute the action
         object can be a Dict, a array of Dict, or None, depends ont the target for this actopn
         """
-        return self._rights.has_right("execute", self, o)
+        return self._permissions.is_allowed_to("execute", self, o)
 
     def go(self, o: Item) -> None:
         """

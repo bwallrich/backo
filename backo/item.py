@@ -194,10 +194,10 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         )
 
         # Check if right to create
-        if self._collection.has_right("modify", self) is not True:
+        if self._collection.is_allowed_to("modify", self) is not True:
             raise Error(
                 ErrorType.RIGHT,
-                f"No rights to modify element in collection {self.self._collection}.",
+                f"No permission to modify element in collection {self.self._collection}.",
             )
 
         if self.meta_data_handler:
@@ -265,10 +265,10 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         )
 
         # Check if right to create
-        if self._collection.has_right("delete", self) is not True:
+        if self._collection.is_allowed_to("delete", self) is not True:
             raise Error(
                 ErrorType.RIGHT,
-                f"No rights to delete in collection {self.self._collection}.",
+                f"No permission to delete in collection {self.self._collection}.",
             )
 
         # Send delete event before deletion to do  some stufs
@@ -319,10 +319,10 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         )
 
         # Check if right to create
-        if self._collection.has_right("create") is not True:
+        if self._collection.is_allowed_to("create") is not True:
             raise Error(
                 ErrorType.RIGHT,
-                f"No rights to create in collection {self.self._collection}.",
+                f"No permission to create in collection {self.self._collection}.",
             )
 
         self.set(obj)

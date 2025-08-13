@@ -70,7 +70,7 @@ class StandardMetaDataHandler(
         self, value, o, other=None
     ):  # pylint: disable=unused-argument
         """
-        Used by "has_right" with read / modif. Depends on the status of the object
+        Used by "is_allowed_to" with read / modif. Depends on the status of the object
         """
         if o._status == StatusType.UNSET:
             return True

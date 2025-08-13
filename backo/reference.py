@@ -27,8 +27,8 @@ class DeleteStrategy(Enum):
     """
 
     MUST_BE_EMPTY = auto()
-    DELETE_REVERSES_TOO = auto()
-    CLEAN_REVERSES = auto()
+    DELETE_REFERENCED_ITEMS = auto()
+    UNLINK_REFERENCED_ITEMS = auto()
 
     def __repr__(self):
         return self.name
@@ -391,9 +391,9 @@ class RefsList(List):
         )
         if on_delete_strategy == DeleteStrategy.MUST_BE_EMPTY:
             on_delete_strategy = self.on_delete_must_by_empty
-        if on_delete_strategy == DeleteStrategy.DELETE_REVERSES_TOO:
+        if on_delete_strategy == DeleteStrategy.DELETE_REFERENCED_ITEMS:
             on_delete_strategy = self.on_delete_with_reverse
-        if on_delete_strategy == DeleteStrategy.CLEAN_REVERSES:
+        if on_delete_strategy == DeleteStrategy.UNLINK_REFERENCED_ITEMS:
             on_delete_strategy = self.on_delete_clean_reverse
 
         on_modify_strategy = self.on_modify_clean_reverse

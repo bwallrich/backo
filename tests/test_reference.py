@@ -142,7 +142,7 @@ class TestReferences(unittest.TestCase):
                         "users": RefsList(
                             coll="users",
                             field="$.site",
-                            ods=DeleteStrategy.CLEAN_REVERSES,
+                            ods=DeleteStrategy.UNLINK_REFERENCED_ITEMS,
                         ),
                     }
                 ),
@@ -204,7 +204,7 @@ class TestReferences(unittest.TestCase):
                         "users": RefsList(
                             coll="users",
                             field="$.site",
-                            ods=DeleteStrategy.DELETE_REVERSES_TOO,
+                            ods=DeleteStrategy.DELETE_REFERENCED_ITEMS,
                         ),
                     }
                 ),
@@ -270,7 +270,7 @@ class TestReferences(unittest.TestCase):
                         "users": RefsList(
                             coll="users",
                             field="$.site",
-                            ods=DeleteStrategy.DELETE_REVERSES_TOO,
+                            ods=DeleteStrategy.DELETE_REFERENCED_ITEMS,
                         ),
                     }
                 ),
@@ -359,7 +359,7 @@ class TestReferences(unittest.TestCase):
                         "users": RefsList(
                             coll="users",
                             field="$.site",
-                            ods=DeleteStrategy.DELETE_REVERSES_TOO,
+                            ods=DeleteStrategy.DELETE_REFERENCED_ITEMS,
                         ),
                     }
                 ),
@@ -432,7 +432,7 @@ class TestReferences(unittest.TestCase):
                         "users": RefsList(
                             coll="users",
                             field="$.site",
-                            ods=DeleteStrategy.CLEAN_REVERSES,
+                            ods=DeleteStrategy.UNLINK_REFERENCED_ITEMS,
                         ),
                     }
                 ),
@@ -746,7 +746,7 @@ class TestReferences(unittest.TestCase):
                         "users": RefsList(
                             coll="users",
                             field="$.site",
-                            ods=DeleteStrategy.CLEAN_REVERSES,
+                            ods=DeleteStrategy.UNLINK_REFERENCED_ITEMS,
                         ),
                     }
                 ),

@@ -41,12 +41,12 @@ class Collection:
         self.model.__dict__["_collection"] = self
         self.model.set_db_handler(db_handler)
 
-        # Set rights
-        self._rights = Permissions(read=True, create=True, delete=True, modify=True)
+        # Set permissions
+        self._permissions = Permissions(read=True, create=True, delete=True, modify=True)
         for key, right in kwargs.items():
             a = re.findall(r"^can_(.*)$", key)
             if a:
-                self._rights.add_or_modify_right(a[0], right)
+                self._permissions.add_or_modify_permission(a[0], right)
 
         # For filtering
         self.refuse_filter = kwargs.pop("refuse_filter", None)
@@ -84,11 +84,11 @@ class Collection:
             if name not in f._views:
                 f._views.append(name)
 
-    def has_right(self, right_name: str, o: Item = None) -> bool:
+    def is_allowed_to(self, right_name: str, o: Item = None) -> bool:
         """
         Return the right for this collection
         """
-        return self._rights.has_right(right_name, o)
+        return self._permissions.is_allowed_to(right_name, o)
 
     def new_item(self):
         """
@@ -110,10 +110,10 @@ class Collection:
         m_path : modification path, to avoid loop with references
         """
 
-        if self._rights.has_right("create", None) is not True:
+        if self._permissions.is_allowed_to("create", None) is not True:
             raise Error(
                 ErrorType.UNAUTHORIZED,
-                f"No rights to create in collection {self.name}.",
+                f"No permission to create in collection {self.name}.",
             )
 
         item = self.new_item()
@@ -159,10 +159,10 @@ class Collection:
         return an object by Id.
         """
 
-        if self._rights.has_right("read", None) is not True:
+        if self._permissions.is_allowed_to("read", None) is not True:
             raise Error(
                 ErrorType.UNAUTHORIZED,
-                f"No rights to create in collection {self.name}.",
+                f"No permission to create in collection {self.name}.",
             )
 
         obj = self.new_item()
@@ -188,10 +188,10 @@ class Collection:
 
         """
 
-        if self._rights.has_right("read", None) is not True:
+        if self._permissions.is_allowed_to("read", None) is not True:
             raise Error(
                 ErrorType.UNAUTHORIZED,
-                f"No rights to read the entire collection {self.name}.",
+                f"No permission to read the entire collection {self.name}.",
             )
 
         # Do the DB selection without pagination
@@ -225,7 +225,7 @@ class Collection:
             # Do the post match filtering
 
             # Ignore all elements matched by the refuse filter
-            if self._rights.has_right("read", o) is not True:
+            if self._permissions.is_allowed_to("read", o) is not True:
                 continue
 
             if o.match(match_filter) is True:
@@ -247,7 +247,7 @@ class Collection:
         """
 
         # read datas
-        if self._rights.get_strict_right("read") is not False:
+        if self._permissions.is_strictly_allowed_to("read") is not False:
             # GET /<_id>
             log.debug(f"Add routes GET {my_path}/coll/{self.name}/<string:_id>")
 
@@ -266,7 +266,7 @@ class Collection:
             flask_app.view_functions[f"select_{self.name}"] = self.filtering
 
         # POST / Create data
-        if self._rights.get_strict_right("create") is not False:
+        if self._permissions.is_strictly_allowed_to("create") is not False:
             log.debug(f"Add routes POST {my_path}/coll/{self.name}")
             flask_app.add_url_rule(
                 f"{my_path}/coll/{self.name}", f"create_{self.name}", methods=["POST"]
@@ -274,7 +274,7 @@ class Collection:
             flask_app.view_functions[f"create_{self.name}"] = self.http_create
 
         # PUT /<_id> Modify Data
-        if self._rights.get_strict_right("modify") is not False:
+        if self._permissions.is_strictly_allowed_to("modify") is not False:
             log.debug(f"Add routes PUT {my_path}/coll/{self.name}/<string:_id>")
             flask_app.add_url_rule(
                 f"{my_path}/coll/{self.name}/<string:_id>",
@@ -284,7 +284,7 @@ class Collection:
             flask_app.view_functions[f"put_{self.name}"] = self.http_modify
 
         # PATCH /<_id> Modify Data
-        if self._rights.get_strict_right("modify") is not False:
+        if self._permissions.is_strictly_allowed_to("modify") is not False:
             log.debug(f"Add routes PATCH {my_path}/coll/{self.name}/<string:_id>")
             flask_app.add_url_rule(
                 f"{my_path}/coll/{self.name}/<string:_id>",
@@ -294,7 +294,7 @@ class Collection:
             flask_app.view_functions[f"patch_one_{self.name}"] = self.http_patch_one
 
         # DELETE /<_id> Delete Data
-        if self._rights.get_strict_right("delete") is not False:
+        if self._permissions.is_strictly_allowed_to("delete") is not False:
             log.debug(f"Add routes DELETE {my_path}/coll/{self.name}/<string:_id>")
             flask_app.add_url_rule(
                 f"{my_path}/coll/{self.name}/<string:_id>",
@@ -304,7 +304,7 @@ class Collection:
             flask_app.view_functions[f"delete_{self.name}"] = self.http_delete
 
         # CHECK /<_id> Check values
-        if self._rights.get_strict_right("read") is not False:
+        if self._permissions.is_strictly_allowed_to("read") is not False:
             log.debug(f"Add routes POST {my_path}/check/{self.name}/<string:_id>")
             flask_app.add_url_rule(
                 f"{my_path}/coll/{self.name}/<string:_id>",
