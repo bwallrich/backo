@@ -11,7 +11,14 @@ import sys
 from flask import Flask, request, session
 
 sys.path.insert(1, "../../stricto")
-from stricto import Permissions, StrictoEncoder
+from stricto import (
+    Permissions,
+    StrictoEncoder,
+    FreeDict,
+    Dict,
+    String,
+    Error as StrictoError,
+)
 
 
 from .item import Item
@@ -24,6 +31,10 @@ from .patch import Patch
 
 
 log = log_system.get_or_create_logger("collection", logging.DEBUG)
+
+check_model_request = Dict(
+    {"path": String(required=True, default="$"), "item": FreeDict(default={})}
+)
 
 
 class Collection:
@@ -306,14 +317,14 @@ class Collection:
             flask_app.view_functions[f"delete_{self.name}"] = self.http_delete
 
         # CHECK /<_id> Check values
-        if self._permissions.is_strictly_allowed_to("read") is not False:
-            log.debug(f"Add routes POST {my_path}/check/{self.name}/<string:_id>")
+        if self._permissions.is_strictly_allowed_to("modify") is not False:
+            log.debug(f"Add routes GET {my_path}/check/{self.name}")
             flask_app.add_url_rule(
-                f"{my_path}/coll/{self.name}/<string:_id>",
-                f"delete_{self.name}",
-                methods=["DELETE"],
+                f"{my_path}/check/{self.name}",
+                f"check_{self.name}",
+                methods=["GET"],
             )
-            flask_app.view_functions[f"delete_{self.name}"] = self.http_delete
+            flask_app.view_functions[f"check_{self.name}"] = self.http_check
 
     @error_to_http_handler
     def http_get_by_id(self, _id: str):
@@ -392,6 +403,30 @@ class Collection:
         obj.delete()
 
         return ("deleted", 200)
+
+    @error_to_http_handler
+    def http_check(self):
+        """
+        GET HTTP -> check value if a field
+        """
+
+        print(f"request {request.json}")
+
+        c = check_model_request.copy()
+        c.set(request.json)
+
+        # Create a partial object with values given in request.item
+        obj = self.new_item()
+        obj.set_value_without_checks(c.item.get_value())
+        sub_object = obj.select(c.path)
+        if sub_object is None:
+            raise Error(ErrorType.FIELD_NOT_FOUND, "path not found")
+
+        try:
+            sub_object.check(sub_object.get_value())
+            return (json.dumps({"error": None}), 200)
+        except StrictoError as e:
+            return (json.dumps({"error": e.message}), 200)
 
     @error_to_http_handler
     def http_patch_one(self, _id: str):

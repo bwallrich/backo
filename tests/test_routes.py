@@ -296,3 +296,27 @@ class TestRoutes(unittest.TestCase):
 
         l = self.backo.users.set(results["result"])
         self.assertEqual(len(l), 1)
+
+    def test_check_route_filter(self):
+        """
+        do a check
+        """
+        response = self.client.get(
+            "/myApp/check/users",
+            json={"item": {"name": "bert3", "surname": "hector"}, "path": "$.surname"},
+        )
+        self.assertEqual(response.status_code, 200)
+        results = json.loads(response.data)
+        self.assertEqual(results["error"], None)
+
+    def test_check_route_filter_1(self):
+        """
+        do a check with error
+        """
+        response = self.client.get(
+            "/myApp/check/users",
+            json={"item": {"name": "bert3", "surname": 21}, "path": "$.surname"},
+        )
+        self.assertEqual(response.status_code, 200)
+        results = json.loads(response.data)
+        self.assertEqual(results["error"], "Must be a string")

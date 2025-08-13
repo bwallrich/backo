@@ -50,6 +50,8 @@ def error_to_http_handler(f):
                 return return_http_error(424, e.message)
             if e.error_code == BackoErrorType.ACTION_FORBIDDEN:
                 return return_http_error(403, e.message)
+            if e.error_code == BackoErrorType.FIELD_NOT_FOUND:
+                return return_http_error(400, e.message)
             # default error
             return return_http_error(500, e.message)
         except StrictoError as e:
