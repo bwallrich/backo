@@ -6,11 +6,11 @@
 
 ![pylint](https://img.shields.io/github/actions/workflow/status/bwallrich/backo/pylint.yml?label=linter) ![test](https://img.shields.io/github/actions/workflow/status/bwallrich/backo/test.yml?label=test)
 
-Backo
+Jump to [Quickstart](#quickstart) for a basic setup.
 
-The way to use is very simple, see [Quickstart](#quickstart) for a basic setup.
 
 ## What is backo
+It aims at providing a simple and efficient way to create a backend application that exposes a set of REST API routes. 
 
 
 ## Installation
@@ -25,7 +25,7 @@ Here is a sample with a DB (storage full in yaml file) with users and adresses r
 
 ```mermaid
 erDiagram
-    User }o--|| Adresses : addr
+    User }|--|| Adresses : addr
     User {
         string name
         string surname
@@ -40,7 +40,7 @@ erDiagram
     }
 ```
 
-Becomes in python with backo
+It translates into Python code using Backo like following:
 
 ```python
 from flask import Flask
@@ -99,16 +99,18 @@ my_backoffice.add_routes(flask)
 
 ### Item
 
-```Item```is the main object in backo. It describe an object in the DB with all methodes for CRUD (CReate, Update, Delete). 
+`Item` is the central class in Backo. 
 
-A generic object is a [stricto](https://github.com/bwallrich/stricto) ```Dict()``` object.
+It represents a database entity and includes all the methods required for CRUD operations: *Create*, *Read*, *Update*, and *Delete*.
 
-```Item( description object , db connector )```
+A generic object is a [stricto](https://github.com/bwallrich/stricto) `Dict()` object.
 
-example :
+`Item( description object , db connector )`
+
+#### example
 
 ```python
-# Describe what is a 'cat'
+# Describe what a 'cat' is
 cat = Item(
         {
             "name": String( required=True, default='Felix'),
@@ -119,77 +121,82 @@ cat = Item(
 
 # Add the cat object into the backoffice object
 backoffice.add_collection( "cats", cat )
-# similar : backoffice.register_collection( "cats", cat )
 ```
 
 > [!IMPORTANT]  
-> At this point, you don't care about [_id](#_id).
+> Up to now no need to care about [_id](#_id).
 
 | Method | Description |
 | - | - |
-| ```.create( data :dict )``` | Create an Item into the DB with data in parameters. |
-| ```.save()``` | save the Item into the DB |
-| ```.load( _id :str )``` | get the Item with the _id from the DB |
-| ```.reload()``` | reload the Item from the DB |
-| ```.delete()``` | delete the Item in the DB|
-| ```.new()``` | create an empty Item (mist be fill with .set() and then .save() |
-| ```.select()``` | do a selection of Items from the DB retirn a list of Item |
+| ```.create( data :dict )``` | Create a new `Item` in the database using the provided `data` dictionary.
+| ```.save()``` | saves the current `Item` to the database. |
+| ```.load( _id :str )``` | loads an `Item` from the database by its `_id`. |
+| ```.reload()``` | reloads the current `Item` from the database. |
+| ```.delete()``` | deletes the current `Item` from the database. |
+| ```.new()``` | creates a new empty `Item` (must be populated with `.set()` and then saved). |
+| ```.select()``` | retrieves a selection of `Item` from the database based on the selection criteria. |
 
-each function raise errors in something goes wrong
+For each function above, an error is triggered in case of something went wrong.
 
-### Ref and RefsList
+### Cardinalities
+Relations cardinalities are expressed by the mean of `Ref()` and `RefsList()`:
+* `Ref()`: for `0 or 1` or `exactly 1` relations.
+* `RefsList()`: for `0 or more` or `1 or more` relations.
 
-A ```Ref()``` is a specific type for relation between collections ( aka *tables*).
-
-#### Ref one to many
-
-this is an example with *books* and *authors*
-
-```python
-# Authors write books
-author = Item({
-    'name' : String(),
-    'books' : RefsList( coll='book', field="$.autor" )
-}, db_connector)
-
-# A book is written by on author
-book = Item({
-    ... # Some attibutes
-    # one or zero to many
-    author = Ref( coll='author', field="$.books" )
-    # or one to many
-    author = Ref( coll='author', field="$.books", required=True )
-}, db_connector )
-```
-
+#### Options
 | Option for Ref | Default | Description |
 | - | - | - |
 | ```coll=``` | None | the collection to make the ref |
 | ```table=``` | None | similar to ```coll``` |
 | ```field=``` | None | The reverse field in the targeted collection (use [selector](https://github.com/bwallrich/stricto?tab=readme-ov-file#selectors) to target it) |
 | ```rev=``` | None | similar to ```field``` |
-| ```ods=``` | None | *On Delete Strategy* see [ods](#on-delete-strategy-ods)|
+| ```ods=``` | None | *On Delete Strategy* see [ods](#deletion-strategies)|
 
 And all options availables in [stricto String()](https://github.com/bwallrich/stricto?tab=readme-ov-file#string) fields.
 
 
-#### On Delete Strategy (ods)
+#### Deletion strategies (`ods`)
 
 ods define the behaviour of the database when a delete occure and the object contain some ```RefList```. For each  ```RefList```, you can define the strategy :
 
 * ```DeleteStrategy.MUST_BE_EMPTY``` (by default)
-This strategy oblige this RefList to be empty first. Otherwise, the delete wil be refused and an Error will be raised.
+Requires the RefList to be empty before allowing the object to be deleted.
+If the RefList contains items, the deletion will be blocked and an error will be raised.
 
-* ```DeleteStrategy.DELETE_REVERSES_TOO```
-This strategy delete all reverse object too. can be dangerous.
+* ```DeleteStrategy.DELETE_REFERENCED_ITEMS```
+When deleting the parent object, this strategy also deletes all objects referenced in the RefList.
+[!Warning] Use with caution, as this causes cascading deletes and may remove many related objects unintentionally.
 
-* ```DeleteStrategy.CLEAN_REVERSES```
-This strategy is often used in *many-to-many* links. This strategy erase this reference on the reverse object
+* ```DeleteStrategy.UNLINK_REFERENCED_ITEMS```
+Instead of deleting the referenced objects, this strategy removes the reference to the deleted object from each referenced item.
+This is commonly used for many-to-many relationships where you want to delete the parent object but keep the referenced objects intact, but simply cleaning up their links.
+
+
+#### Relationship example: Books and Authors
+An author can write 0 or many books.
+
+A book can be written only by 1 author.
+
+```python
+# Authors write books
+author = Item({
+    'name' : String(),
+    # An author may have written 0 or many books
+    'books' : RefsList( coll='book', field="$.autor" )
+}, db_connector)
+
+# A book is written by on author
+book = Item({
+    ... # Some attibutes
+    # A book may have 1 or more authors
+    authors = RefsList( coll='author', field="$.books", required=True )
+}, db_connector )
+```
+
 
 ## Routes
 
-Automatic creation route provide the following routes.
-
+Automatic routes creation provide the following resources
 
 ### GET /coll/\<collection name\>/\<_id\> \?_view=\<view name\>
 
@@ -211,10 +218,10 @@ Answers can be :
 
 | code | data | Description |
 | - | - | - |
-| 200 | json structure of the object | the object |
-| 401 | None | you don t have the righe to see this element |
-| 404 | None | Element does not exist |
-| 500 | None | Crash from the server |
+| 200 | JSON object data | the requested item |
+| 401 | None | you are not authorized to view this item |
+| 404 | None | item not found |
+| 500 | None | server-side error |
 
 ### GET /coll/\<collection name\>?\<query_string\>
 
@@ -222,20 +229,22 @@ Get a list of objects matching the query string. The query string can be with th
 
 | key | value | description |
 | - | - | - |
-| \<field\> | \<value\> | example ```surname=donald``` mean i want to select all donald's |
-| \<field\>.\<operator\> | \<value\> | example ```age.$lt=12``` mean the *age* field must be less than 12 |
-| \<field\>.\<subfield\> | \<value\> | example ```address.number=1``` mean *address* is a nested Dict with *number* attribut |
+| \<field\> | \<value\> | matches items where `<field>` equals `<value>`. Example: `surname=donald` finds all items where surname equals to "donald". |
+| \<field\>.\<operator\> | \<value\> | matches items where `<field>` satisfies `<operator>` with `<value>`. Example: `age.$lt=12` finds items where age is less than 12. |
+| \<field\>.\<subfield\> | \<value\> | Matches items where `<field>` is a nested dictionary containing `<subfield>` equal to `<value>`. Example: `address.number=1` matches items where address.number equals to 1. |
+
 
 [list of available operators](https://github.com/bwallrich/stricto?tab=readme-ov-file#filtering-and-matching)
 
-| key | value | description |
-| - | - | - |
-| \_view | string ( by default "client" ) | example ```_view=short``` is the selection of view. [stricto views](https://github.com/bwallrich/stricto?tab=readme-ov-file#views)  |
-| \_page | int | example ```_page=50``` mean the number of element to get |
-| \_skip | int | example ```_skip=100``` mean to start at the element 100 of the list. it is for pagination.  |
+
+| key | value | default | description |
+| - | - | - | - |
+| \_view | string | "client" | selects the view ([stricto views](https://github.com/bwallrich/stricto?tab=readme-ov-file#views))  |
+| \_page | int | - | sets the desired number of items per page in paginated data presentation |
+| \_skip | int | - | skips the n-first items of the result list in paginated data presentation. |
 
 
-The result (if no error) is a http 200 with this json object :
+The request returns a HTTP status `200` with that JSON object:
 
 ```python
 {
@@ -245,36 +254,29 @@ The result (if no error) is a http 200 with this json object :
     "_skip": # the _skip given in the request
     "_page": # the _page given in the request
 }
-
 ```
 
-examples 
+#### Example
+Select all users whose name includes 'do' and present the result list with 10 items per page.
 ```bash
-curl -X GET 'http://localhost/myApp/coll/users/?name.$re=do&_page=10'  # All users name matching "do" 10 per page.
-
+curl -X GET 'http://localhost/myApp/coll/users/?name.$re=do&_page=10'  
 ```
-
-
 
 ### POST /coll/\<collection name\>
+Create a new item for the collection `collection name`.
 
-
-Create a new object.
-
+#### Example
 ```bash
 curl -X POST 'http://localhost/myApp/coll/users/' -d '{"name":"John","surname":"Rambo"}'
-
 ```
-return the created *user* object with this _id and some _metadatas, or an error
 
-
+It returns the created *user* JSON object with a generated unique identifier `_id` and some _metadatas or an error otherwise.
 
 
 ### PUT /coll/\<collection name\>/\<_id\>
+Modify an existing object whose id is `_id`.
 
-
-Modify an existing object.
-
+#### Example
 ```bash
 curl -X PUT 'http://localhost/myApp/coll/users/1234' -d '{"name":"Johnny"}'
 
@@ -284,60 +286,52 @@ Modify the users with _id *1234* and return the modified object.
 
 
 ### DELETE /coll/\<collection name\>/\<_id\>
+Delete an existing object whose id is `_id`.
 
-
-Delete an existing object.
-
+#### Example
 ```bash
 curl -X DELETE 'http://localhost/myApp/coll/users/1234'
 
 ```
-Delete the users with _id *1234*.
-
-
+Delete the user that has _id = *1234*.
 
 
 ### PATCH /coll/\<collection name\>/\<_id\>
+Partial change of an existing object whose id is `_id`.
+Please refer to the [Stricto patch method](https://github.com/bwallrich/stricto?tab=readme-ov-file#patch).
 
-
-Modify an existing object with [patch method](https://github.com/bwallrich/stricto?tab=readme-ov-file#patch).
-
+#### Example
 ```bash
 curl -X PATCH  'http://localhost/myApp/coll/users/1234' -d '{"op": "replace", "path" : "$.name", "value": "Gilda"}'
-
 ```
-Modifythe users with _id *1234* with the patch.
 
-Patch content can be a list of patch operations
+Partial modification of the user with _id *1234* with the patch.
 
-
-
+Patch content can be a *list of patch operations*.
 
 
 ## Internal usage
-
-Then usage :
+Typical use case for users and theirs addresses.
 
 ```python
-# Create an adress, save it in the DB and provide the object an uniq id.
+# Create an adress, save it in the DB and provide the object with a unique id.
 moon_address = backoffice.addrs.create({"name": "moon", "address": "far"})
 
 # Create a user with this address
 astro = backoffice.users.create({"name": "neil", "surname": "amstrong", "addr": moon_address._id})
 
 moon_address.users # -> return []
-moon_address.reload() # reload datas from the DB.
+moon_address.reload() # reload data from the DB so that crossed references are updated
 moon_address.users # -> return [ astro._id ]
-
 ```
 
 ### _id
 
-You dont't hate to care of *_ids* in your item description. Backo will alter schema to add _id  for each Item (see [stricto schemas](https://github.com/bwallrich/stricto?tab=readme-ov-file#schemas) for details).
+You dont't have to care about *_ids* in your item description. Backo will alter schema to add `_id` for each Item (see [stricto schemas](https://github.com/bwallrich/stricto?tab=readme-ov-file#schemas) for details).
 
 ### _meta
 
-the db_connector add meta datas ti each item by [altering schema](https://github.com/bwallrich/stricto?tab=readme-ov-file#schemas).
+the db_connector adds meta data to each item by [altering its schema](https://github.com/bwallrich/stricto?tab=readme-ov-file#schemas).
 
 
 The provided *meta_data_handler* give this Dict() :
@@ -356,22 +350,20 @@ Dict(
     },
 ),
 ```
-With associated rights.
 
+## Workflow and events
 
-## workflow and events
-
-Each Item has a specific workflow and trigg specific events
+Each Item has a specific workflow and triggers specific events.
 
 ### workflow
 
-Here is states fir each Item
+The defined states for each item are following:
 
 | State | descripion |
 | - | - |
-| UNSET | The Item result of a ```.new()``` function. cannot be saved in this state |
-| UNSAVED | The Item has some changes and must be saved |
-| SAVED | The Item is saved in the DB and no changes since the last save |
+| UNSET | The Item result of a ```.new()``` function. It can't be saved in this state |
+| UNSAVED | The Item has been modified and must be saved |
+| SAVED | The Item is saved in the DB and has not been changed since last save |
 
 
 
@@ -389,9 +381,8 @@ stateDiagram
 ```
 
 
-### events
-
-Some events are trigged during some functions of the Item.
+### Events
+The following events are triggered when the functions above are called:
 
 | function | event before | event after |
 | - | - | - |
@@ -400,7 +391,8 @@ Some events are trigged during some functions of the Item.
 | .delete() | "before_delete" |  |
 | .create() | None | "created" |
 
-You can use them 
+#### Example
+Below is a simple use case on how to use these events:
 
 ```python
         def rip( event_name, root, me, **kwargs ):
@@ -411,32 +403,29 @@ You can use them
             """
             # Do what you want
 
-
         cat = Item( {
-            'name' : String()
-            'birth' : Datetime()
-        }
-        on=[ ( "before_delete", rip ) ]
+                'name' : String()
+                'birth' : Datetime()
+            }
+            on=[ ( "before_delete", rip ) ]
         )
 ```
 
-
-
 ## Transactions
 
-Soon
+*Soon*
 
 ## CurrentUser
 
-Soon
+*Soon*
 
 ## Logs
 
-Log system is based on [logging](https://docs.python.org/3/library/logging.html)
+The log system is based on [logging Python module](https://docs.python.org/3/library/logging.html)
 
-You must first design your logging system with handlers. Then write logs.
+You must first design your logging system with handlers. Then you can write the logs outputs.
 
-### sample use
+### Example
 
 ```python
 import logging
@@ -459,9 +448,9 @@ log.debug("hey this is my first debug message")
 
 ```
 
-### advanced use
+### Advanced use
 
-You can select a specific ```logger``` and modify it by adding/removing handlers and and changing its level.
+You can select a specific ```logger``` and modify it by adding/removing handlers and changing its level.
 
 ```python
 log = log_system.get_or_create_logger("custom")
@@ -472,8 +461,7 @@ log.addHandler ( my_own_handler )
 
 ### current loggers
 
-
-Current availables loggers are :
+Currently available loggers are :
 
 | logger | description |
 | - | - |
@@ -484,11 +472,9 @@ Current availables loggers are :
 | yml | yaml database connector |
 
 
-
-
 ## Tests & co
 
-For personal use only
+For personal use only.
 
 ```bash
 # all tests
@@ -512,7 +498,7 @@ firefox htmlcov/index.html
 
 ### Building a new release
 
-For personal use only
+For personal use only.
 
 ```bash
 # Modify changelog
