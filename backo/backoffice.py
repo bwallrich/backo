@@ -1,14 +1,18 @@
 """
 The Backoffice module
 """
+# pylint: disable=logging-fstring-interpolation
 
 import logging
+import json
 from flask import Flask
 
 from .item import Item
+from .request_decorators import error_to_http_handler
 from .transaction import Transaction, OperatorType
 from .collection import Collection
 from .log import log_system
+
 
 log = log_system.get_or_create_logger("backoffice", logging.DEBUG)
 
@@ -98,3 +102,27 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
 
         for collection in self.collections.values():
             collection.flask_add_routes(flask_app, my_path)
+
+        flask_app.add_url_rule(
+            f"{my_path}/_meta",
+            f"_meta_{self.name}",
+            methods=["GET"],
+        )
+        flask_app.view_functions[f"_meta_{self.name}"] = self.meta_http
+
+    def get_meta(self):
+        """
+        Get all meta information for all collections, view, actions
+        """
+        d = {"name": self.name, "collections": []}
+        for collection in self.collections.values():
+            d["collections"].append(collection.get_meta())
+        return d
+
+    @error_to_http_handler
+    def meta_http(self):
+        """
+        GET META information
+        """
+        log.debug(f"get meta information for {self.name}")
+        return (json.dumps(self.get_meta()), 200)

@@ -2,7 +2,7 @@
 The Collection module
 """
 
-# pylint: disable=logging-fstring-interpolation
+# pylint: disable=logging-fstring-interpolation, too-many-public-methods
 import json
 import logging
 import re
@@ -35,6 +35,7 @@ log = log_system.get_or_create_logger("collection", logging.DEBUG)
 check_model_request = Dict(
     {"path": String(required=True, default="$"), "item": FreeDict(default={})}
 )
+meta_model_request = FreeDict(default={})
 
 
 class Collection:
@@ -70,6 +71,13 @@ class Collection:
 
         # For views
         self._views = {}
+
+    def get_meta(self) -> dict:
+        """
+        return the meta data for this collection and actions
+        """
+        d = {"name": self.name, "item": self.model.get_schema()}
+        return d
 
     def set(self, datas: dict | list) -> Item | list:
         """
@@ -131,6 +139,7 @@ class Collection:
 
         item = self.new_item()
         item.create(obj, **kwargs)
+        item.enable_permissions()
         return item
 
     def get_other_collection(self, name):
@@ -180,6 +189,7 @@ class Collection:
 
         obj = self.new_item()
         obj.load(_id)
+        obj.enable_permissions()
         return obj
 
     def select(
@@ -234,6 +244,7 @@ class Collection:
             obj["_id"] = str(obj["_id"])
             o = self.new_item()
             o.set(obj)
+            o.enable_permissions()
             o.set_status_saved()
             # Do the post match filtering
 
@@ -316,15 +327,25 @@ class Collection:
             )
             flask_app.view_functions[f"delete_{self.name}"] = self.http_delete
 
-        # CHECK /<_id> Check values
+        # CHECK / Check values
         if self._permissions.is_strictly_allowed_to("modify") is not False:
-            log.debug(f"Add routes GET {my_path}/check/{self.name}")
+            log.debug(f"Add routes POST {my_path}/check/{self.name}")
             flask_app.add_url_rule(
                 f"{my_path}/check/{self.name}",
                 f"check_{self.name}",
-                methods=["GET"],
+                methods=["POST"],
             )
             flask_app.view_functions[f"check_{self.name}"] = self.http_check
+
+        # META /> Check values
+        if self._permissions.is_strictly_allowed_to("modify") is not False:
+            log.debug(f"Add routes GET {my_path}/meta/{self.name}")
+            flask_app.add_url_rule(
+                f"{my_path}/meta/{self.name}",
+                f"meta_{self.name}",
+                methods=["POST"],
+            )
+            flask_app.view_functions[f"meta_{self.name}"] = self.http_meta
 
     @error_to_http_handler
     def http_get_by_id(self, _id: str):
@@ -407,7 +428,7 @@ class Collection:
     @error_to_http_handler
     def http_check(self):
         """
-        GET HTTP -> check value if a field
+        POST HTTP -> check value if a field
         """
 
         print(f"request {request.json}")
@@ -418,6 +439,7 @@ class Collection:
         # Create a partial object with values given in request.item
         obj = self.new_item()
         obj.set_value_without_checks(c.item.get_value())
+        obj.enable_permissions()
         sub_object = obj.select(c.path)
         if sub_object is None:
             raise Error(ErrorType.FIELD_NOT_FOUND, "path not found")
@@ -427,6 +449,24 @@ class Collection:
             return (json.dumps({"error": None}), 200)
         except StrictoError as e:
             return (json.dumps({"error": e.message}), 200)
+
+    @error_to_http_handler
+    def http_meta(self):
+        """
+        POST HTTP -> get a meta structure for this context
+        """
+
+        print(f"request {request.json}")
+
+        c = meta_model_request.copy()
+        c.set(request.json)
+
+        # Create a partial object with values given in request.item
+        obj = self.new_item()
+        obj.set_value_without_checks(c.get_value())
+        obj.enable_permissions()
+
+        return (json.dumps(obj.get_current_meta()), 200)
 
     @error_to_http_handler
     def http_patch_one(self, _id: str):

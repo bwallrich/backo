@@ -8,7 +8,7 @@ import sys
 
 from datetime import datetime
 from .current_user import current_user
-from .status import StatusType
+# from .status import StatusType
 
 sys.path.insert(1, "../../stricto")
 from stricto import Dict, String, Datetime
@@ -24,12 +24,7 @@ class GenericMetaDataHandler:  # pylint: disable=too-many-instance-attributes
         Nothing to do
         """
 
-    def set_on_create(self, o):
-        """
-        Modification of metadata when the object will be created
-        """
-
-    def set_on_save(self, o):
+    def update(self, o):
         """
         Modification of metadata when the object will be created
         """
@@ -52,50 +47,32 @@ class StandardMetaDataHandler(
         Nothing to do
         """
 
-    def on_set(self, value, o):  # pylint: disable=unused-argument
-        """
-        ctime and created_by cannot be modified by user
-        """
-        if value is None:
-            return {
-                "ctime": 0,
-                "mtime": 0,
-                "created_by": {"user_id": 0, "login": "ANONYMOUS"},
-                "modified_by": {"user_id": 0, "login": "ANONYMOUS"},
-            }
-
-        return value
-
-    def can_modify_creation_meta(
-        self, value, o, other=None
-    ):  # pylint: disable=unused-argument
-        """
-        Used by "is_allowed_to" with read / modif. Depends on the status of the object
-        """
-        if o._status == StatusType.UNSET:
-            return True
-        return False
-
-    def set_on_create(self, o: Dict) -> None:
+    def update(self, o: Dict) -> None:
         """
         Modification of metadata when the object will be created
         """
-        o._meta.created_by.user_id = current_user.user_id.copy()
-        o._meta.created_by.login = current_user.login.copy()
-        o._meta.modified_by.user_id = current_user.user_id.copy()
-        o._meta.modified_by.login = current_user.login.copy()
-
+        permission_enabled = o._permissions.get_permissions_status()
         now = datetime.now()
-        o._meta.ctime = now
-        o._meta.mtime = now
 
-    def set_on_save(self, o: Dict) -> None:
-        """
-        Modification of metadata when the object will be created
-        """
-        o._meta.mtime = datetime.now()
+        # Disable momentary permissions to change meta_data
+        o.disable_permissions()
+
+        # Set creation ctime and owner
+        if o._meta.ctime == None:   # pylint: disable=singleton-comparison
+            o._meta.ctime = now
+
+        if o._meta.created_by.user_id == None: # pylint: disable=singleton-comparison
+            o._meta.created_by.user_id = current_user.user_id.copy()
+            o._meta.created_by.login = current_user.login.copy()
+
+        # Set modificattion time and last updater
+        o._meta.mtime = now
         o._meta.modified_by.user_id = current_user.user_id.copy()
         o._meta.modified_by.login = current_user.login.copy()
+
+        # Put permission back
+        if permission_enabled is True:
+            o.enable_permissions()
 
     def append_schema(self, o: Dict) -> None:
         """
@@ -105,14 +82,18 @@ class StandardMetaDataHandler(
             "_meta",
             Dict(
                 {
-                    "ctime": Datetime(can_modify=self.can_modify_creation_meta),
-                    "mtime": Datetime(),
+                    "ctime": Datetime(description="Creation time"),
+                    "mtime": Datetime(description="Last modification time"),
                     "created_by": Dict(
-                        {"user_id": String(), "login": String()},
-                        can_modify=self.can_modify_creation_meta,
+                        {"user_id": String(), "login": String(default="ANONYMOUS")},
+                        description="Created by",
                     ),
-                    "modified_by": Dict({"user_id": String(), "login": String()}),
+                    "modified_by": Dict(
+                        {"user_id": String(), "login": String(default="ANONYMOUS")},
+                        description="Modifyied by",
+                    ),
                 },
-                transform=self.on_set,
+                can_modify=False,
+                description="Meta data information",
             ),
         )

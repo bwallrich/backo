@@ -131,7 +131,9 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         _id_to_load = _id.get_value() if isinstance(_id, String) else str(_id)
 
         obj = self.db_handler.get_by_id(_id_to_load)
+        self.disable_permissions()
         self.set(obj)
+        self.enable_permissions()
         self.set_status_saved()
         self.__dict__["_loaded_object"] = copy.copy(self)
 
@@ -160,7 +162,10 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         # set as UNSET to be able to modify meta datas.
         self.set_status_unset()
 
+        self.disable_permissions()
         self.set(obj)
+        self.enable_permissions()
+
         self.set_status_saved()
         self.__dict__["_loaded_object"] = copy.copy(self)
 
@@ -201,7 +206,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
             )
 
         if self.meta_data_handler:
-            self.meta_data_handler.set_on_save(self)
+            self.meta_data_handler.update(self)
 
         # Load the previous value in the DB (for transactions and comparison of values )
         if self.__dict__["_loaded_object"] is None:
@@ -325,10 +330,14 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
                 f"No permission to create in collection {self.self._collection}.",
             )
 
+        # Lock permissions
+        self.enable_permissions()
+
         self.set(obj)
+
         # Set _meta
         if self.meta_data_handler:
-            self.meta_data_handler.set_on_create(self)
+            self.meta_data_handler.update(self)
 
         # Set the _id
         self._id = self.create_uniq_id()

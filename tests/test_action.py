@@ -113,6 +113,7 @@ class TestAction(unittest.TestCase):
         self.assertEqual(v.stars, 0)
 
         incr.set({"comment": "good boy", "num": 2})
+        incr.enable_permissions()
         incr.go(v)
 
         self.assertEqual(v.stars, 2)

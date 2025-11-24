@@ -16,3 +16,5 @@ from .test_reference import TestReferences
 
 # from .test_view import TestViews
 from .test_api_toolbox import TestApiToolbox
+
+from .test_meta import TestMeta

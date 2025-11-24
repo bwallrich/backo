@@ -159,6 +159,7 @@ class TestCRUD(unittest.TestCase):
 
         v = backoffice.users.new()
         v.load(u._id.get_value())
+        v.enable_permissions()
         self.assertEqual(v.surname, "foo")
 
         with self.assertRaises(StrictoError) as e:

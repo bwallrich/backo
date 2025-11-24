@@ -21,24 +21,48 @@ pip install backo
 
 ## Quickstart
 
-Here is a sample with a DB (storage full in yaml file) with users and adresses reference
+Here is a sample with a DB (storage full in yaml file) with users to adresses reference
+
+Imagine this Entity Relationship (users ar living in exactly one address, but zero onr more user can live at the same address)
 
 ```mermaid
 erDiagram
-    User }|--|| Adresses : addr
-    User {
-        string name
-        string surname
-        bool male
-        ref addr
+    direction LR
+    classDef className fill:#f9f,stroke:#333,stroke-width:4px
+    Users |o--o{ Addresses : live
+    Users {
+        String name UK
+        String surname
+        Bool male
     }
-    Adresses {
-        int orderNumber
-        string name
-        string adresse
-        refs users
+    Addresses {
+        String name UK
+        String address
     }
 ```
+
+You only will add [Ref](#cardinalities) and [Refs](#cardinalities) to exprime the relationship. 
+
+```mermaid
+erDiagram
+    direction LR
+    classDef className fill:#f9f,stroke:#333,stroke-width:4px
+    Users |o--o{ Addresses : live
+    Users {
+        String name UK
+        String surname
+        Bool male
+        Ref addr "link one-to-many to Addresses"
+    }
+    Addresses {
+        String name UK
+        String address
+        Refs users "link many-to-one to Usres"
+    }
+```
+
+
+
 
 It translates into Python code using Backo like following:
 
@@ -311,7 +335,7 @@ Patch content can be a *list of patch operations*.
 
 
 
-### GET /check/\<collection name\>
+### POST /check/\<collection name\>
 
 
 Check the validity a field of the item
@@ -336,7 +360,7 @@ Examples :
 
 
 ```bash
-curl -X GET 'http://localhost/myApp/check/users' -d '{ "item" : { "name" : "John", "surname" : 32 }, "path" : "$.surname" }'
+curl -X POST 'http://localhost/myApp/check/users' -d '{ "item" : { "name" : "John", "surname" : 32 }, "path" : "$.surname" }'
 # will check surname an return a response.data like 
 {
     'error' : "Must be a string"
@@ -346,7 +370,7 @@ curl -X GET 'http://localhost/myApp/check/users' -d '{ "item" : { "name" : "Jo
 The response is a *status 200* even if the check return an error. The request is correct.
 
 ```bash
-curl -X GET 'http://localhost/myApp/check/users' -d '{ "item" : { "surname" : "Johnny" }, "path" : "$.surname" }' 
+curl -X POST 'http://localhost/myApp/check/users' -d '{ "item" : { "surname" : "Johnny" }, "path" : "$.surname" }' 
 # will check surname an return a response.data like 
 {
     'error' : null
@@ -360,6 +384,273 @@ curl -X GET 'http://localhost/myApp/check/users' -d '{ "item" : { "name" : 23,
 }
 ```
 
+## Meta routes
+
+there is some route availables to get informations on the applications (its structure, rights, etc)
+
+### GET /_meta
+
+Return the structure of the application as a json with thoses keys :
+
+| key | type | description |
+| - | - | - |
+| name | string | The name of the application |
+| collections | array of *collection description* | list of all collections description |
+
+#### collection description
+
+Describe a collection
+
+| key | type | description |
+| - | - | - |
+| name | string | The name ov the collection |
+| item | [meta element description](#meta-element-description) | description of an item |
+
+#### meta element description
+
+Describe an element (an item, a key in an item)
+
+| key | type | description |
+| - | - | - |
+| type | string | the type of this element. For example *"<class 'backo.item.Item'>"* or *"<class 'stricto.string.String'>"* |
+| type_short | string | the type of this element, but a short version like *"Item"* or *"String"*|
+| description | string | a sort of comment. (optional) or null |
+| require | boolean | mean this element is required or not |
+| in | array of values | if the element must be in a list of value, or null if not. |
+| constraints | boolean | means if there is one or more constraints on this value |
+| default | -- | the default value for this field (= null if no default value) |
+| transform | boolean | say there is a transformation function |
+| exists | boolean | false mean this field does not exist and must not be displayed |
+| rights | [meta rights description](#meta-rights-description) | the description of rights |
+| sub_scheme | [meta element description](#meta-element-description) | reccusive description for childs if this object is a [Dict](https://github.com/bwallrich/stricto?tab=readme-ov-file#dict) or an Item |
+| sub_type | [meta element description](#meta-element-description) | description of the content if this object is a [List](https://github.com/bwallrich/stricto?tab=readme-ov-file#list) |
+| sub_types | array of [meta element description](#meta-element-description) | description of the tuple content if this object is a [Tuple](https://github.com/bwallrich/stricto?tab=readme-ov-file#tuple) |
+
+#### meta rights description
+
+
+
+#### Example
+```bash
+curl -X GET  'http://localhost/myApp/_meta'
+# Will return for example
+
+{
+  "name": "myApp",
+  "collections": [
+    {
+      "name": "users",
+      "item": {
+        "type": "<class 'backo.item.Item'>",
+        "type_short": "Item",
+        "description": null,
+        "required": false,
+        "in": null,
+        "constraints": [],
+        "default": null,
+        "transform": null,
+        "exists": true,
+        "rights": {
+          "read": null,
+          "modify": null
+        },
+        "sub_scheme": {
+          "name": {
+            "type": "<class 'stricto.string.String'>",
+            "type_short": "String",
+            "description": null,
+            "required": false,
+            "in": null,
+            "constraints": [],
+            "default": null,
+            "transform": null,
+            "exists": true,
+            "rights": {
+              "read": null,
+              "modify": null
+            },
+            "regexp": []
+          },
+          "surname": {
+            "type": "<class 'stricto.string.String'>",
+            "type_short": "String",
+            "description": null,
+            "required": false,
+            "in": null,
+            "constraints": [],
+            "default": null,
+            "transform": null,
+            "exists": true,
+            "rights": {
+              "read": null,
+              "modify": null
+            },
+            "regexp": []
+          },
+          "age": {
+            "type": "<class 'stricto.int.Int'>",
+            "type_short": "Int",
+            "description": null,
+            "required": false,
+            "in": null,
+            "constraints": [
+              "func"
+            ],
+            "default": null,
+            "transform": null,
+            "exists": true,
+            "rights": {
+              "read": null,
+              "modify": null
+            },
+            "min": null,
+            "max": null
+          },
+          "site": {
+            "type": "<class 'backo.reference.Ref'>",
+            "type_short": "Ref",
+            "description": null,
+            "required": false,
+            "in": null,
+            "constraints": [],
+            "default": null,
+            "transform": null,
+            "exists": true,
+            "rights": {
+              "read": null,
+              "modify": null
+            },
+            "regexp": []
+          },
+          "_id": {
+            "type": "<class 'stricto.string.String'>",
+            "type_short": "String",
+            "description": null,
+            "required": false,
+            "in": null,
+            "constraints": [],
+            "default": null,
+            "transform": null,
+            "exists": true,
+            "rights": {
+              "read": null,
+              "modify": null
+            },
+            "regexp": []
+          }
+        }
+      }
+    }
+  ]
+}
+
+```
+
+### POST /meta/\<collection name\>
+
+Ask the backoffice the currents meta information for this collection object.
+
+
+            "type": ty,
+            "type_short" : re.sub(".*\.|\'>", '', ty),
+            "description": self.get_as_string(self._description),
+            "required": self.get_as_string(self._not_none),
+            "in": self.get_as_string(self._union),
+            "constraints": self.get_as_string(self._constraints),
+            "default": self.get_as_string(self._default),
+            "exists": self.exists( self.get_value() ),
+            "rights": rights,
+
+
+#### Example
+
+For this structure :
+
+```python
+def can_see_and_modify_salary(value, o):
+
+    """
+    return true if can read the salary
+    """
+    global current_user_name
+    if current_user_name == o.name:
+        return True
+    return False
+
+my_backoffice.add_collection(
+    "users",
+    Item(
+        {
+            "name" : String(),
+            "salary" : Int( default=0, can_read=can_see_and_modify_salary, can_modify=can_see_and_modify_salary ),
+        },
+        yml_users,
+    ),
+)
+
+```
+
+```bash
+# Logged as "Hector"
+curl -X POST 'http://localhost/myApp/meta/users' -d { 'name' : "John" }
+# Will return this structure.
+# rights "read" and "modify" are set to false for the salary
+{
+      "name": "users",
+      "item": {
+        "type": "<class 'backo.item.Item'>",
+        "type_short": "Item",
+        "description": null,
+        "required": false,
+        "in": null,
+        "constraints": [],
+        "default": null,
+        "transform": null,
+        "exists": true,
+        "rights": {
+          "read": null,
+          "modify": null
+        },
+        "sub_scheme": {
+          "name": {
+            "type": "<class 'stricto.string.String'>",
+            "type_short": "String",
+            "description": null,
+            "required": false,
+            "in": null,
+            "constraints": [],
+            "default": null,
+            "transform": null,
+            "exists": true,
+            "rights": {
+              "read": true,
+              "modify": true
+            },
+            "regexp": []
+          },
+          "salary": {
+            "type": "<class 'stricto.string.Int'>",
+            "type_short": "Int",
+            "description": null,
+            "required": false,
+            "in": null,
+            "constraints": [],
+            "default": 0,
+            "transform": null,
+            "exists": true,
+            "rights": {
+              "read": false,
+              "modify": false
+            },
+            "regexp": []
+          }
+        }
+    }
+}
+
+
+
+```
 
 ## Internal usage
 Typical use case for users and theirs addresses.

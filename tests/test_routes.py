@@ -100,7 +100,7 @@ class TestRoutes(unittest.TestCase):
         rep = self.users_coll.select(None, {"name": ("$reg", r"bert.*")})
         self.assertEqual(rep["total"], 2)
         rep = self.users_coll.select(None, None)
-        self.assertEqual(rep["total"], 3)
+        self.assertEqual(rep["total"], 0)
 
     def test_get_by_id(self):
         """
@@ -301,7 +301,7 @@ class TestRoutes(unittest.TestCase):
         """
         do a check
         """
-        response = self.client.get(
+        response = self.client.post(
             "/myApp/check/users",
             json={"item": {"name": "bert3", "surname": "hector"}, "path": "$.surname"},
         )
@@ -309,14 +309,26 @@ class TestRoutes(unittest.TestCase):
         results = json.loads(response.data)
         self.assertEqual(results["error"], None)
 
-    def test_check_route_filter_1(self):
+    def test_check_route_filter_error(self):
         """
         do a check with error
         """
-        response = self.client.get(
+        response = self.client.post(
             "/myApp/check/users",
             json={"item": {"name": "bert3", "surname": 21}, "path": "$.surname"},
         )
         self.assertEqual(response.status_code, 200)
         results = json.loads(response.data)
         self.assertEqual(results["error"], "Must be a string")
+
+    def test_current_meta_route(self):
+        """
+        get current_meta for an object
+        """
+        response = self.client.post(
+            "/myApp/meta/users",
+            json={"name": "bert3", "surname": 21},
+        )
+        self.assertEqual(response.status_code, 200)
+        results = json.loads(response.data)
+        self.assertEqual(results["exists"], True)

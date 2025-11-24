@@ -93,11 +93,11 @@ class Logger:
         else:
             l = logging.getLogger(name)
             self.loggers[name] = l
+            # Adding all previous handler
+            for handler in self.handlers_for_all:
+                l.addHandler(handler)
 
         l.setLevel(level)
-        # Adding all previous handler
-        for handler in self.handlers_for_all:
-            l.addHandler(handler)
 
         # Adding a methode to get the last message
         # use for test
