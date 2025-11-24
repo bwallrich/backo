@@ -1,4 +1,5 @@
 pyyaml
 mongo
 flask
+jwt
 stricto @ git+https://github.com/bwallrich/stricto@main
