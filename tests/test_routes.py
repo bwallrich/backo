@@ -131,7 +131,6 @@ class TestRoutes(unittest.TestCase):
         response = self.client.post(
             "/myApp/coll/users", json={"name": "bert3", "surname": "bert3"}
         )
-        print(f"response {str(response.data, "utf-8")}")
         self.assertEqual(response.status_code, 200)
 
         u = self.backo.users.new_item()
