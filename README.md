@@ -684,10 +684,10 @@ Dict(
         "ctime": Datetime(),
         "mtime": Datetime(),
         "created_by": Dict(
-            {"user_id": String(), "login": String()}
+            {"_id": String(), "login": String()}
         ),
         "modified_by": Dict(
-            {"user_id": String(), "login": String()}
+            {"_id": String(), "login": String()}
         ),
     },
 ),

@@ -10,7 +10,7 @@ from flask import Flask
 
 from backo import Item, Collection
 from backo import DBYmlConnector
-from backo import Backoffice
+from backo import Backoffice, current_user
 
 from stricto import String, Bool
 
@@ -27,6 +27,9 @@ class TestRoutes(unittest.TestCase):
         init this tests
         """
         super().__init__(*args, **kwargs)
+
+        # ignore sessions for this campaign of tests.
+        current_user.standalone = True
 
         # --- DB for user
         self.yml_users = DBYmlConnector(path=YML_DIR)
@@ -128,6 +131,7 @@ class TestRoutes(unittest.TestCase):
         response = self.client.post(
             "/myApp/coll/users", json={"name": "bert3", "surname": "bert3"}
         )
+        print(f"response {str(response.data, "utf-8")}")
         self.assertEqual(response.status_code, 200)
 
         u = self.backo.users.new_item()

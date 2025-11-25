@@ -6,37 +6,12 @@ This class must not be used directly
 # pylint: disable=wrong-import-position,import-error, wrong-import-order
 import sys
 
+from flask import session
+
 sys.path.insert(1, "../../stricto/stricto")
 
 from stricto import Dict, String, List
-
-from flask import session, request, jsonify
-import jwt
-import uuid
-from datetime import datetime, timezone, timedelta
-from functools import wraps
-
-
-
-def token_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        token = request.cookies.get('jwt_token')
-
-        if not token:
-            return jsonify({'message': 'Token is missing!'}), 401
-
-        try:
-            data = jwt.decode(token, 'myappsecretkey', algorithms=["HS256"])
-            session['current_user_id'] = data['_id']
-        except:
-            return jsonify({'message': 'Token is invalid!'}), 401
-
-        return f(current_user, *args, **kwargs)
-
-    return decorated
-
-
+from .error import Error, ErrorType
 
 
 class CurrentUser(Dict):  # pylint: disable=too-few-public-methods
@@ -51,8 +26,8 @@ class CurrentUser(Dict):  # pylint: disable=too-few-public-methods
         Dict.__init__(
             self,
             {
+                "_id": String(default=None),
                 "login": String(default=None),
-                "user_id": String(default=None),
                 "roles": List(String(default=None), default=[]),
             },
             **kwargs,
@@ -64,23 +39,80 @@ class CurrentUser(Dict):  # pylint: disable=too-few-public-methods
         """
         return role in self.roles
 
-    def set_user( self ):
-        """
-        test
-        """
-        print(f'Set user session {session.keys}')
+
+ANONYMOUS_USER = CurrentUser()
+ANONYMOUS_USER.set({"_id": "000", "login": "ANONYMOUS", "roles": []})
+user_without_session = ANONYMOUS_USER.copy()
 
 
-class FlaskUser:
+class CurrentUserWrapper:
     """
-    Define with a proxy
+    Wrap the currentUser per session
     """
 
-    def __init__(self, **kwargs):
-        self.users = []
+    def __init__(self):
 
-    
+        # stadalone = False mean use session to retrieve user. standalone = True use for testing only
+        self.standalone = False
+        self.users = {}
 
-flasusers = FlaskUser()
+    def retrieve_current_user(self) -> CurrentUser:
+        """
+        retrieve the current user with the session_id
+        """
+        if self.standalone is True:
+            return user_without_session
 
-current_user = CurrentUser()
+        session_user_id = session.get("current_user_id", None)
+        if session_user_id is None:
+            raise Error(ErrorType.NO_SESSION_ID, "No session id for authentication")
+        u = self.users.get(session_user_id, None)
+        if u is None:
+            raise Error(
+                ErrorType.SESSION_NOT_AUTHENTICATED, "Session not authenticated"
+            )
+
+        return u
+
+    def logout(self) -> None:
+        """
+        erase the user from the db
+        """
+        if self.standalone is True:
+            return
+
+        session_user_id = session.get("current_user_id", None)
+        if session_user_id is not None:
+            del self.users[session_user_id]
+
+    def set(self, data) -> None:
+        """
+        Set the user and save it into the database
+        """
+        if self.standalone is True:
+            user_without_session.set(data)
+            return
+
+        u = CurrentUser()
+        u.set(data)
+        session["current_user_id"] = u._id.get_value()
+        self.users[u._id.get_value()] = u
+
+    def __getattr__(self, k):
+        """
+        replicate all atributes from value, but prefere self attribute first.
+        """
+        if k == "standalone":
+            return self.standalone
+        if k == "retrieve_current_user":
+            return self.retrieve_current_user
+        if k == "set":
+            return self.set
+        if k == "logout":
+            return self.logout
+
+        u = self.retrieve_current_user()
+        return getattr(u, k, None)
+
+
+current_user = CurrentUserWrapper()

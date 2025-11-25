@@ -29,6 +29,9 @@ class TestCRUD(unittest.TestCase):
         """
         super().__init__(*args, **kwargs)
 
+        # ignore sessions for this campaign of tests.
+        current_user.standalone = True
+
         # --- DB for user
         self.yml_users = DBYmlConnector(path=YML_DIR)
         self.yml_users.generate_id = lambda o: f"User_{o.name}_{o.surname}"
@@ -91,8 +94,7 @@ class TestCRUD(unittest.TestCase):
 
         self.yml_users.drop()
 
-        current_user.login = "Roger"
-        current_user.user_id = "1234"
+        current_user.set({"login": "Roger", "_id": "1234"})
 
         # -- creation
         u = backoffice.users.create({"name": "bebert", "surname": "bebert"})
@@ -102,14 +104,13 @@ class TestCRUD(unittest.TestCase):
         self.assertEqual(v.male, True)
         self.assertEqual(v._meta.mtime, v._meta.ctime)
         self.assertEqual(v._meta.created_by.login, "Roger")
-        self.assertEqual(v._meta.created_by.user_id, "1234")
+        self.assertEqual(v._meta.created_by._id, "1234")
         self.assertEqual(v._meta.modified_by.login, "Roger")
-        self.assertEqual(v._meta.modified_by.user_id, "1234")
+        self.assertEqual(v._meta.modified_by._id, "1234")
 
         # -- change the mtime
         time.sleep(1.1)
-        current_user.login = "Mary"
-        current_user.user_id = "4321"
+        current_user.set({"login": "Mary", "_id": "4321"})
 
         # modification
         u.male = False
@@ -119,9 +120,9 @@ class TestCRUD(unittest.TestCase):
         self.assertEqual(v.male, False)
         self.assertEqual(v._meta.mtime > v._meta.ctime, True)
         self.assertEqual(v._meta.created_by.login, "Roger")
-        self.assertEqual(v._meta.created_by.user_id, "1234")
+        self.assertEqual(v._meta.created_by._id, "1234")
         self.assertEqual(v._meta.modified_by.login, "Mary")
-        self.assertEqual(v._meta.modified_by.user_id, "4321")
+        self.assertEqual(v._meta.modified_by._id, "4321")
 
         # -- delete
         u.delete()

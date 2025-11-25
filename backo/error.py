@@ -31,6 +31,8 @@ class ErrorType(Enum):
     NOT_DIR = auto()
     SELECTOR_NOT_FOUND = auto()
     DEVELOPPER = auto()
+    NO_SESSION_ID = auto()
+    SESSION_NOT_AUTHENTICATED = auto()
 
     def __repr__(self):
         return PREFIX + self.name

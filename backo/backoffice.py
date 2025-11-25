@@ -1,6 +1,7 @@
 """
 The Backoffice module
 """
+
 # pylint: disable=logging-fstring-interpolation
 
 import logging

@@ -227,7 +227,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
             "%r/%r modified by %r/%r",
             self._collection.name,
             self._id,
-            current_user.user_id,
+            current_user._id,
             current_user.login,
         )
 
@@ -284,7 +284,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
             "%r/%r deleted by %r/%r",
             self._collection.name,
             self._id,
-            current_user.user_id,
+            current_user._id,
             current_user.login,
         )
 
@@ -364,7 +364,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
             "%r/%r created by %r/%r",
             self._collection.name,
             self._id,
-            current_user.user_id,
+            current_user._id,
             current_user.login,
         )
         self.trigg("created", id(self), **kwargs)

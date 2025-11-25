@@ -8,6 +8,7 @@ import sys
 
 from datetime import datetime
 from .current_user import current_user
+
 # from .status import StatusType
 
 sys.path.insert(1, "../../stricto")
@@ -58,16 +59,16 @@ class StandardMetaDataHandler(
         o.disable_permissions()
 
         # Set creation ctime and owner
-        if o._meta.ctime == None:   # pylint: disable=singleton-comparison
+        if o._meta.ctime == None:  # pylint: disable=singleton-comparison
             o._meta.ctime = now
 
-        if o._meta.created_by.user_id == None: # pylint: disable=singleton-comparison
-            o._meta.created_by.user_id = current_user.user_id.copy()
+        if o._meta.created_by._id == None:  # pylint: disable=singleton-comparison
+            o._meta.created_by._id = current_user._id.copy()
             o._meta.created_by.login = current_user.login.copy()
 
         # Set modificattion time and last updater
         o._meta.mtime = now
-        o._meta.modified_by.user_id = current_user.user_id.copy()
+        o._meta.modified_by._id = current_user._id.copy()
         o._meta.modified_by.login = current_user.login.copy()
 
         # Put permission back
@@ -85,11 +86,11 @@ class StandardMetaDataHandler(
                     "ctime": Datetime(description="Creation time"),
                     "mtime": Datetime(description="Last modification time"),
                     "created_by": Dict(
-                        {"user_id": String(), "login": String(default="ANONYMOUS")},
+                        {"_id": String(), "login": String(default="ANONYMOUS")},
                         description="Created by",
                     ),
                     "modified_by": Dict(
-                        {"user_id": String(), "login": String(default="ANONYMOUS")},
+                        {"_id": String(), "login": String(default="ANONYMOUS")},
                         description="Modifyied by",
                     ),
                 },
