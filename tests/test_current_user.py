@@ -12,9 +12,9 @@ from flask import Flask, request, jsonify, make_response
 from datetime import datetime, timezone, timedelta
 from backo import Item, Collection
 from backo import DBYmlConnector
-from backo import Backoffice, current_user
+from backo import Backoffice, current_user, CurrentUser
 
-from stricto import String, Bool
+from stricto import String, Bool, Error as StrictoError
 
 
 YML_DIR = "/tmp/backo_tests_current_user"
@@ -54,6 +54,7 @@ class TestCurrentUser(unittest.TestCase):
             ),
             self.yml_users,
         )
+        current_user.standalone = True
         self.users_coll.define_view("!surname_only", ["$.name"])
 
         self.backo.register_collection(self.users_coll)
@@ -70,6 +71,7 @@ class TestCurrentUser(unittest.TestCase):
 
         u = self.backo.users.create({"name": "bert2", "surname": "bert2"})
         self.assertEqual(u._id, "User_bert2_bert2")
+        current_user.standalone = True
 
         # set the flask application route
         self.flask = Flask(__name__)
@@ -88,7 +90,7 @@ class TestCurrentUser(unittest.TestCase):
             token = jwt.encode(
                 {
                     "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-                    "user": {"_id": "test_id", "login": "test "},
+                    "user": {"_id": "test_id", "login": "test"},
                 },
                 "myappsecretkey",
                 algorithm="HS256",
@@ -105,7 +107,7 @@ class TestCurrentUser(unittest.TestCase):
                     return jsonify({"message": "Token is missing!"}), 401
                 try:
                     data = jwt.decode(token, "myappsecretkey", algorithms=["HS256"])
-                except: # pylint: disable=bare-except
+                except:  # pylint: disable=bare-except
                     return jsonify({"message": "Token is invalid!"}), 401
 
                 current_user.set(data["user"])
@@ -172,6 +174,61 @@ class TestCurrentUser(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         results = json.loads(response.data)
         self.assertEqual(results["current_user"]["_id"], "test_id")
+        response = self.client.get("/logout")
+        self.assertEqual(response.status_code, 200)
+        response = self.client.get("/ping")
+        self.assertEqual(response.status_code, 401)
+
+    def test_inherit_current_user(self):
+        """
+        Test inheritage with current_user
+        """
+
+        class Current1(CurrentUser):
+            """
+            a new class child of CurrentUser
+            """
+
+            def __init__(self, **kwargs):
+                CurrentUser.__init__(self, **kwargs)
+                self.add_to_model("email", String())
+
+            def dummy_function(self):
+                """
+                a Dummy function
+                """
+                return "yeah"
+
+        current_user.reset(Current1())
+
+        response = self.client.post(
+            "/login",
+            json={"login": "test", "password": "1234"},
+        )
+        self.assertEqual(response.status_code, 200)
+        response = self.client.get("/ping")
+        self.assertEqual(response.status_code, 200)
+        results = json.loads(response.data)
+        self.assertEqual(results["current_user"]["_id"], "test_id")
+
+        current_user.email = "test@toto.com"
+        self.assertEqual(current_user.email, "test@toto.com")
+
+        with self.assertRaises(StrictoError) as e:
+            current_user.email = 22
+        self.assertEqual(e.exception.message, "Must be a string")
+
+        with self.assertRaises(StrictoError) as e:
+            current_user.anythingelse = 22
+        self.assertEqual(e.exception.message, "locked")
+
+        self.assertEqual(current_user.dummy_function(), "yeah")
+        with self.assertRaises(AttributeError) as e:
+            current_user.unknown_function()
+        self.assertEqual(
+            e.exception.args[0], "'Current1' object has no attribute 'unknown_function'"
+        )
+
         response = self.client.get("/logout")
         self.assertEqual(response.status_code, 200)
         response = self.client.get("/ping")

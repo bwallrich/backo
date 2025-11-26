@@ -3,15 +3,16 @@ Module providing the Generic() Class
 This class must not be used directly
 """
 
-# pylint: disable=wrong-import-position,import-error, wrong-import-order
+# pylint: disable=wrong-import-position,import-error, wrong-import-order, no-member
 import sys
-
 from flask import session
 
 sys.path.insert(1, "../../stricto/stricto")
 
 from stricto import Dict, String, List
 from .error import Error, ErrorType
+
+ANONYMOUS_DATA = {"_id": "000", "login": "ANONYMOUS", "roles": []}
 
 
 class CurrentUser(Dict):  # pylint: disable=too-few-public-methods
@@ -40,28 +41,37 @@ class CurrentUser(Dict):  # pylint: disable=too-few-public-methods
         return role in self.roles
 
 
-ANONYMOUS_USER = CurrentUser()
-ANONYMOUS_USER.set({"_id": "000", "login": "ANONYMOUS", "roles": []})
-user_without_session = ANONYMOUS_USER.copy()
-
-
 class CurrentUserWrapper:
     """
     Wrap the currentUser per session
     """
 
-    def __init__(self):
-
+    def __init__(self, obj: CurrentUser):
+        """
+        initialisation of the wrapper with can work in standalone mode
+        or with sessions
+        """
         # stadalone = False mean use session to retrieve user. standalone = True use for testing only
         self.standalone = False
+        self.user_without_session = obj.copy()
+        self.anonymous = obj.copy()
+        self.administrator = obj.copy()
         self.users = {}
+
+    def reset(self, obj: CurrentUser):
+        """
+        remap
+        """
+        self.user_without_session = obj.copy()
+        self.anonymous = obj.copy()
+        self.administrator = obj.copy()
 
     def retrieve_current_user(self) -> CurrentUser:
         """
         retrieve the current user with the session_id
         """
         if self.standalone is True:
-            return user_without_session
+            return self.user_without_session
 
         session_user_id = session.get("current_user_id", None)
         if session_user_id is None:
@@ -90,10 +100,10 @@ class CurrentUserWrapper:
         Set the user and save it into the database
         """
         if self.standalone is True:
-            user_without_session.set(data)
+            self.user_without_session.set(data)
             return
 
-        u = CurrentUser()
+        u = self.anonymous.copy()
         u.set(data)
         session["current_user_id"] = u._id.get_value()
         self.users[u._id.get_value()] = u
@@ -102,6 +112,8 @@ class CurrentUserWrapper:
         """
         replicate all atributes from value, but prefere self attribute first.
         """
+        if k == "reset":
+            return self.reset
         if k == "standalone":
             return self.standalone
         if k == "retrieve_current_user":
@@ -112,7 +124,26 @@ class CurrentUserWrapper:
             return self.logout
 
         u = self.retrieve_current_user()
-        return getattr(u, k, None)
+        return u.__getattr__(k)
+
+    def __setattr__(self, name, value):
+        """
+        Wrap all attribute to the current_session_user object
+        """
+        if name in [
+            "standalone",
+            "user_without_session",
+            "anonymous",
+            "administrator",
+            "users",
+        ]:
+            self.__dict__[name] = value
+            return None
+
+        u = self.retrieve_current_user()
+        return u.__setattr__(name, value)
 
 
-current_user = CurrentUserWrapper()
+current_user = CurrentUserWrapper(CurrentUser())
+current_user.anonymous.set(ANONYMOUS_DATA)
+current_user.user_without_session.set(ANONYMOUS_DATA)

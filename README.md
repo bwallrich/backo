@@ -217,6 +217,141 @@ book = Item({
 }, db_connector )
 ```
 
+### current_user
+
+`current_user`is a object containing information of the authenticated user currently connected.
+
+#### usage
+
+```python
+# anywhere in your code
+from backo import current_user
+
+print(current_user._id) # The id of the current connected user
+print(current_user.login) # A login name or whatever you store as "login"
+
+# check if the user has the given role
+if current_user.has_role('teamManager'):
+  return True
+```
+
+#### How to set values to the current_user ?
+
+`backo` doesnt manage authentication, because there is so much way to authenticate a user (or an app). So you have to do the auth by yourself.
+
+However, using jwt is a goot solution. See [Authentication](#authentication) for that.
+
+
+#### current_user api
+
+`current_user` is a very simple [Stricto Dict](https://github.com/bwallrich/stricto?tab=readme-ov-file#dict) (but can be [extended](#extend-current_user)). It contains :
+
+| key | type | usage |
+| - | - | - |
+| _id | [Stricto String()](https://github.com/bwallrich/stricto?tab=readme-ov-file#string) | the _id of the user. 
+| login | [Stricto String()](https://github.com/bwallrich/stricto?tab=readme-ov-file#string) | the login or whatever you store . 
+| roles | [Stricto List( String() )](https://github.com/bwallrich/stricto?tab=readme-ov-file#list) | the list of roles for this users. A *role* is a kid of group the user belongs to | 
+| has_role() | function | return True or false to the role givent in param | 
+| reset() | function | change the current_user object type. See [extend current_user](#extend-current_user) for that| 
+
+
+#### extend current_user
+
+You can extend `current_user`, adding stuff in its schema, functions... etc.
+
+
+```python
+from backo import current_user, CurrentUser, CurrentUserWrapper
+
+class MyCurrentUser(CurrentUser):
+
+
+      def __init__(self, obj: CurrentUser):
+
+        CurrentUser.__init__(self, obj)
+        self.add_to_model( 'email' , String() )
+
+
+    """
+    a new class child of CuurrentUser
+    """
+    def dummy_function(self):
+        """
+        a Dummy function
+        """
+        return("yeah")
+
+current_user.reset(MyCurrentUser())
+
+# Later in the code
+current_user.email = "toto@titi.com"
+current_user.
+```
+
+## Authentication
+
+This is an short and uncompleted example to authenticate and fill [current_user](#current_user).
+
+
+first, the login part. a `/login` route in flas to make the login, and return a jwt
+
+```python
+app = Flask(__name__)
+app.secret_key = "super secret key"
+# Set the login route
+@app.route("/login", methods=["POST"])
+def login():
+    """
+    login load the user from the DB, verify the password and if
+    Ok generate a JWT an return it to the client.
+    At this point, current_user is not used.
+    """
+    d = request.json
+    login = d["login"]
+    password = d["password"]
+    # find the user by your way
+    user = load_from_db_by_login( login )
+    # Do the check of the password
+    if not user.check_password( password ):
+      return jsonify({"message": "Invalid email or password"}), 401
+ 
+    token = jwt.encode(
+        {
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            "user_id": user._id ,
+        },
+        "myappsecretkey",
+        algorithm="HS256",
+    )
+    response = make_response(json.dumps({"login": "ok"}))
+    response.set_cookie("jwt_token", token)
+    return response
+```
+
+Second par : The decorator for authenticate the route and fill [current_user](#current_user)
+
+```python
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.cookies.get("jwt_token")
+        if not token:
+            return jsonify({"message": "Token is missing!"}), 401
+        try:
+            data = jwt.decode(token, "myappsecretkey", algorithms=["HS256"])
+        except:  # pylint: disable=bare-except
+            return jsonify({"message": "Token is invalid!"}), 401
+
+        # Load the user from the DB and fill current_user
+        # we supose roles are store in your user_db
+        user = load_from_db_by_id( data["user_id"] )
+        current_user.set( { "_id" : user._id, "login" : user.login, "roles" : user.roles })
+
+        return f(*args, **kwargs)
+    return decorated
+```
+
+
 
 ## Routes
 
