@@ -1,14 +1,19 @@
 """
 The decortators used for flask routes
 """
+# pylint: disable=logging-fstring-interpolation
 
 import sys
+import logging
 from functools import wraps
 from flask import request
 
 sys.path.insert(1, "../../stricto")
 from stricto import Error as StrictoError
 from .error import Error as BackError, ErrorType as BackoErrorType
+from .log import log_system
+
+log = log_system.get_or_create_logger("http", logging.ERROR)
 
 
 def return_http_error(code, message):
@@ -42,6 +47,7 @@ def error_to_http_handler(f):
         try:
             return f(*args, **kwargs)
         except BackError as e:
+            log.error(f" Error Backo {e.error_code}")
             if e.error_code == BackoErrorType.UNAUTHORIZED:
                 return return_http_error(403, e.message)
             if e.error_code == BackoErrorType.NOTFOUND:
@@ -55,13 +61,17 @@ def error_to_http_handler(f):
             # default error
             return return_http_error(500, e.message)
         except StrictoError as e:
+            log.error(f" Error StrictoError {e.message}")
             # default error. All errors are in fac a bad request
             return return_http_error(400, e.message)
         except AttributeError as e:
+            log.error(f" Error AttributeError {str(e)}")
             return return_http_error(400, str(e))
         except TypeError as e:
+            log.error(f" Error TypeError {str(e)}")
             return return_http_error(400, str(e))
         except Exception as e:  # pylint: disable=broad-exception-caught
+            log.error(f" Error Exception {str(e)}")
             return return_http_error(500, str(e))
 
     return wrapper

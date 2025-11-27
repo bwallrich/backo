@@ -8,7 +8,7 @@ import logging
 import re
 import sys
 
-from flask import Flask, request, session
+from flask import request, Blueprint
 
 sys.path.insert(1, "../../stricto")
 from stricto import (
@@ -265,93 +265,104 @@ class Collection:
         result["total"] = index
         return result
 
-    def flask_add_routes(self, flask_app: Flask, my_path: str = "") -> None:
+    def flask_add_routes(self) -> Blueprint:
         """
         Add CRUD routes and add axtions routes
         """
+        collection_blueprint = Blueprint(f"{self.name}", __name__)
 
         # read datas
         if self._permissions.is_strictly_allowed_to("read") is not False:
-            # GET /<_id>
-            log.debug(f"Add routes GET {my_path}/coll/{self.name}/<string:_id>")
-
-            flask_app.add_url_rule(
-                f"{my_path}/coll/{self.name}/<string:_id>",
-                f"get_{self.name}",
-                methods=["GET"],
-            )
-            flask_app.view_functions[f"get_{self.name}"] = self.http_get_by_id
-
             # GET / - The selection
-            log.debug(f"Add routes GET {my_path}/coll/{self.name}")
-            flask_app.add_url_rule(
-                f"{my_path}/coll/{self.name}", f"select_{self.name}", methods=["GET"]
-            )
-            flask_app.view_functions[f"select_{self.name}"] = self.filtering
+            log.debug(f"Add routes GET {self.name}/")
+            collection_blueprint.add_url_rule("", "select", methods=["GET"])
+            collection_blueprint.view_functions[f"{self.name}.select"] = self.filtering
 
         # POST / Create data
         if self._permissions.is_strictly_allowed_to("create") is not False:
-            log.debug(f"Add routes POST {my_path}/coll/{self.name}")
-            flask_app.add_url_rule(
-                f"{my_path}/coll/{self.name}", f"create_{self.name}", methods=["POST"]
+            log.debug(f"Add routes POST {self.name}/")
+            collection_blueprint.add_url_rule("", "create", methods=["POST"])
+            collection_blueprint.view_functions[f"{self.name}.create"] = (
+                self.http_create
             )
-            flask_app.view_functions[f"create_{self.name}"] = self.http_create
-
-        # PUT /<_id> Modify Data
-        if self._permissions.is_strictly_allowed_to("modify") is not False:
-            log.debug(f"Add routes PUT {my_path}/coll/{self.name}/<string:_id>")
-            flask_app.add_url_rule(
-                f"{my_path}/coll/{self.name}/<string:_id>",
-                f"put_{self.name}",
-                methods=["PUT"],
-            )
-            flask_app.view_functions[f"put_{self.name}"] = self.http_modify
-
-        # PATCH /<_id> Modify Data
-        if self._permissions.is_strictly_allowed_to("modify") is not False:
-            log.debug(f"Add routes PATCH {my_path}/coll/{self.name}/<string:_id>")
-            flask_app.add_url_rule(
-                f"{my_path}/coll/{self.name}/<string:_id>",
-                f"patch_one_{self.name}",
-                methods=["PATCH"],
-            )
-            flask_app.view_functions[f"patch_one_{self.name}"] = self.http_patch_one
-
-        # DELETE /<_id> Delete Data
-        if self._permissions.is_strictly_allowed_to("delete") is not False:
-            log.debug(f"Add routes DELETE {my_path}/coll/{self.name}/<string:_id>")
-            flask_app.add_url_rule(
-                f"{my_path}/coll/{self.name}/<string:_id>",
-                f"delete_{self.name}",
-                methods=["DELETE"],
-            )
-            flask_app.view_functions[f"delete_{self.name}"] = self.http_delete
 
         # CHECK / Check values
         if self._permissions.is_strictly_allowed_to("modify") is not False:
-            log.debug(f"Add routes POST {my_path}/check/{self.name}")
-            flask_app.add_url_rule(
-                f"{my_path}/check/{self.name}",
-                f"check_{self.name}",
+            log.debug(f"Add routes POST {self.name}/_check")
+            collection_blueprint.add_url_rule(
+                "/_check",
+                "check",
                 methods=["POST"],
             )
-            flask_app.view_functions[f"check_{self.name}"] = self.http_check
+            collection_blueprint.view_functions[f"{self.name}.check"] = self.http_check
 
         # META /> Check values
         if self._permissions.is_strictly_allowed_to("modify") is not False:
-            log.debug(f"Add routes GET {my_path}/meta/{self.name}")
-            flask_app.add_url_rule(
-                f"{my_path}/meta/{self.name}",
-                f"meta_{self.name}",
+            log.debug(f"Add routes GET {self.name}/_meta")
+            collection_blueprint.add_url_rule(
+                "/_meta",
+                "meta",
                 methods=["POST"],
             )
-            flask_app.view_functions[f"meta_{self.name}"] = self.http_meta
+            collection_blueprint.view_functions[f"{self.name}.meta"] = self.http_meta
+
+        if self._permissions.is_strictly_allowed_to("read") is not False:
+            # GET /<_id>
+            log.debug(f"Add routes GET {self.name}/<string:_id>")
+
+            collection_blueprint.add_url_rule(
+                "/<string:_id>",
+                "get",
+                methods=["GET"],
+            )
+            collection_blueprint.view_functions[f"{self.name}.get"] = (
+                self.http_get_by_id
+            )
+
+        # PUT /<_id> Modify Data
+        if self._permissions.is_strictly_allowed_to("modify") is not False:
+            log.debug(f"Add routes PUT {self.name}/<string:_id>")
+            collection_blueprint.add_url_rule(
+                "/<string:_id>",
+                "put",
+                methods=["PUT"],
+            )
+            collection_blueprint.view_functions[f"{self.name}.put"] = self.http_modify
+
+        # PATCH /<_id> Modify Data
+        if self._permissions.is_strictly_allowed_to("modify") is not False:
+            log.debug(f"Add routes PATCH {self.name}/<string:_id>")
+            collection_blueprint.add_url_rule(
+                "/<string:_id>",
+                "patch_one",
+                methods=["PATCH"],
+            )
+            collection_blueprint.view_functions[f"{self.name}.patch_one"] = (
+                self.http_patch_one
+            )
+
+        # DELETE /<_id> Delete Data
+        if self._permissions.is_strictly_allowed_to("delete") is not False:
+            log.debug(f"Add routes DELETE {self.name}/<string:_id>")
+            collection_blueprint.add_url_rule(
+                "/<string:_id>",
+                "delete",
+                methods=["DELETE"],
+            )
+            collection_blueprint.view_functions[f"{self.name}.delete"] = (
+                self.http_delete
+            )
+
+        return collection_blueprint
 
     @error_to_http_handler
     def http_get_by_id(self, _id: str):
         """
         GET HTTP
         """
+
+        log.debug(f"http_get_by_id _id {_id}")
+
         query = request.args
         _view = query.get("_view", "client")
 
@@ -366,6 +377,7 @@ class Collection:
         """
         SELECT HTTP
         """
+        log.debug(f"filtering request.args {request.args}")
         query = request.args
         _page = int(query.get("_page", 10))
         _skip = int(query.get("_skip", 0))
@@ -387,6 +399,9 @@ class Collection:
         """
         POST HTTP -> creation
         """
+
+        log.debug(f"http_create request {request.json}")
+
         query = request.args
         _view = query.get("_view", "client")
 
@@ -401,10 +416,11 @@ class Collection:
         """
         PUT HTTP -> modification of an object
         """
+
+        log.debug(f"http_modify request {request.json}")
+
         query = request.args
         _view = query.get("_view", "client")
-
-        log.debug(f"session {session.keys()}")
 
         obj = self.new_item()
         obj.load(_id)
@@ -418,6 +434,7 @@ class Collection:
         """
         DELETE HTTP -> deletion
         """
+        log.debug(f"http_delete _id {_id}")
 
         obj = self.new_item()
         obj.load(_id)
@@ -431,7 +448,7 @@ class Collection:
         POST HTTP -> check value if a field
         """
 
-        print(f"request {request.json}")
+        log.debug(f"http_check request {request.json}")
 
         c = check_model_request.copy()
         c.set(request.json)
@@ -456,7 +473,7 @@ class Collection:
         POST HTTP -> get a meta structure for this context
         """
 
-        print(f"request {request.json}")
+        log.debug(f"http_meta request {request.json}")
 
         c = meta_model_request.copy()
         c.set(request.json)

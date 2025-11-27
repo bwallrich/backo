@@ -128,7 +128,7 @@ class CurrentUserWrapper:
 
     def __setattr__(self, name, value):
         """
-        Wrap all attribute to the current_session_user object
+        Wrapp all attribute to the current_session_user
         """
         if name in [
             "standalone",

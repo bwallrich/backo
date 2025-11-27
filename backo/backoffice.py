@@ -102,7 +102,10 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
         log.debug("Adding routes under %s", my_path)
 
         for collection in self.collections.values():
-            collection.flask_add_routes(flask_app, my_path)
+            blue_print = collection.flask_add_routes()
+            flask_app.register_blueprint(
+                blue_print, url_prefix=f"{my_path}/coll/{collection.name}"
+            )
 
         flask_app.add_url_rule(
             f"{my_path}/_meta",

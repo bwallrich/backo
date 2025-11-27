@@ -275,17 +275,17 @@ class MyCurrentUser(CurrentUser):
     """
     a new class child of CuurrentUser
     """
-    def dummy_function(self):
+    def my_function(self):
         """
         a Dummy function
         """
-        return("yeah")
+        return(f"user {self.login} ({self._id})")
 
 current_user.reset(MyCurrentUser())
 
 # Later in the code
 current_user.email = "toto@titi.com"
-current_user.
+current_user.my_function() # return the string "user ..."
 ```
 
 ## Authentication

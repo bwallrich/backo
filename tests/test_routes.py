@@ -305,7 +305,7 @@ class TestRoutes(unittest.TestCase):
         do a check
         """
         response = self.client.post(
-            "/myApp/check/users",
+            "/myApp/coll/users/_check",
             json={"item": {"name": "bert3", "surname": "hector"}, "path": "$.surname"},
         )
         self.assertEqual(response.status_code, 200)
@@ -317,7 +317,7 @@ class TestRoutes(unittest.TestCase):
         do a check with error
         """
         response = self.client.post(
-            "/myApp/check/users",
+            "/myApp/coll/users/_check",
             json={"item": {"name": "bert3", "surname": 21}, "path": "$.surname"},
         )
         self.assertEqual(response.status_code, 200)
@@ -329,7 +329,7 @@ class TestRoutes(unittest.TestCase):
         get current_meta for an object
         """
         response = self.client.post(
-            "/myApp/meta/users",
+            "/myApp/coll/users/_meta",
             json={"name": "bert3", "surname": 21},
         )
         self.assertEqual(response.status_code, 200)
