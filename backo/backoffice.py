@@ -93,7 +93,7 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
 
         del self.transactions[transaction_id]
 
-    def add_routes(self, flask_app: Flask, prefix: str = "") -> None:
+    def add_routes(self, flask_app: Flask, prefix: str = "", jwt_auth=None) -> None:
         """
         Add all routes to flask application
         """
@@ -102,7 +102,12 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
         log.debug("Adding routes under %s", my_path)
 
         for collection in self.collections.values():
-            blue_print = collection.flask_add_routes()
+            blue_print = collection.create_routes()
+
+            # Adding the jwt authentication for each route
+            if jwt_auth is not None:
+                blue_print.before_request(jwt_auth)
+
             flask_app.register_blueprint(
                 blue_print, url_prefix=f"{my_path}/coll/{collection.name}"
             )

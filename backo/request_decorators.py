@@ -1,6 +1,7 @@
 """
 The decortators used for flask routes
 """
+
 # pylint: disable=logging-fstring-interpolation
 
 import sys

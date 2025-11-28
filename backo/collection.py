@@ -265,9 +265,9 @@ class Collection:
         result["total"] = index
         return result
 
-    def flask_add_routes(self) -> Blueprint:
+    def create_routes(self) -> Blueprint:
         """
-        Add CRUD routes and add axtions routes
+        Add CRUD/_meta/_check routes
         """
         collection_blueprint = Blueprint(f"{self.name}", __name__)
 
