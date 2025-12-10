@@ -10,7 +10,15 @@ from functools import wraps
 from flask import request
 
 sys.path.insert(1, "../../stricto")
-from stricto import Error as StrictoError
+from stricto import (
+    SAttributError,
+    SError,
+    STypeError,
+    SSyntaxError,
+    SConstraintError,
+    SKeyError,
+    SRightError,
+)
 from .error import Error as BackError, ErrorType as BackoErrorType
 from .log import log_system
 
@@ -61,10 +69,19 @@ def error_to_http_handler(f):
                 return return_http_error(400, e.message)
             # default error
             return return_http_error(500, e.message)
-        except StrictoError as e:
-            log.error(f" Error StrictoError {e.message}")
-            # default error. All errors are in fac a bad request
-            return return_http_error(400, e.message)
+        except SRightError as e:
+            log.error(repr(e))
+            return return_http_error(403, repr(e))
+        except (
+            SAttributError,
+            STypeError,
+            SSyntaxError,
+            SConstraintError,
+            SKeyError,
+            SError,
+        ) as e:
+            log.error(repr(e))
+            return return_http_error(400, repr(e))
         except AttributeError as e:
             log.error(f" Error AttributeError {str(e)}")
             return return_http_error(400, str(e))

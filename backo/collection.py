@@ -17,7 +17,12 @@ from stricto import (
     FreeDict,
     Dict,
     String,
-    Error as StrictoError,
+    STypeError,
+    SAttributError,
+    SSyntaxError,
+    SConstraintError,
+    SError,
+    SRightError,
 )
 
 
@@ -464,8 +469,15 @@ class Collection:
         try:
             sub_object.check(sub_object.get_value())
             return (json.dumps({"error": None}), 200)
-        except StrictoError as e:
-            return (json.dumps({"error": e.message}), 200)
+        except (
+            STypeError,
+            SSyntaxError,
+            SConstraintError,
+            SAttributError,
+            SRightError,
+            SError,
+        ) as e:
+            return (json.dumps({"error": e.to_string()}), 200)
 
     @error_to_http_handler
     def http_meta(self):

@@ -6,11 +6,10 @@ Ref and RefsLink class definition
 
 import sys
 import logging
-import re
 from enum import Enum, auto
 
 sys.path.insert(1, "../../stricto")
-from stricto import String, List
+from stricto import String, List, Selector
 
 from .error import Error, ErrorType
 from .log import log_system
@@ -199,6 +198,7 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
 
         # fill the field
         reverse_field = other.select(me._reverse)
+
         if reverse_field is None:
             raise Error(
                 ErrorType.FIELD_NOT_FOUND,
@@ -310,13 +310,16 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
             f'Collection "{self._collection}"."{me._reverse}" is not a Ref or a RefsList',
         )
 
-    def get_selectors(self, sel_filter, selectors_as_list):
+    def get_selectors(self, index_or_slice, sel: Selector):
         """
         rewrite get_selector to populate the sub-object and continue
         """
-        # Return the _id itself
-        if not selectors_as_list:
-            return String.get_selectors(self, sel_filter, selectors_as_list)
+        # Cannot have index or slice on a Ref
+        if index_or_slice:
+            return None
+
+        if sel.empty():
+            return self
 
         # Load the other to continue
 
@@ -328,7 +331,12 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
             other.load(self.get_value())
         except Error:
             pass
-        return other.get_selectors(sel_filter, selectors_as_list)
+
+        # The index_or_slice is actually ignored.
+        # (key, sub_index_or_slice) = sel.pop()
+
+        # continue the selection
+        return other.get_selectors(None, sel)
 
     def get_view(self, view_name, final=True):  # pylint: disable=protected-access
         """
@@ -676,40 +684,44 @@ class RefsList(List):
             log.debug(f"Must change {me._collection}/{me._reverse} for {l} to {None}")
             self.change_others_ref_to(root, me, l, None, **kwargs)
 
-    def get_selectors(self, sel_filter, selectors_as_list):
+    def get_selectors(self, index_or_slice, sel: Selector):
         """
         rewrite get_selector to populate the sub-object and continue
         """
-        # Return the _id itself
-        if not selectors_as_list:
-            return String.get_selectors(self, sel_filter, selectors_as_list)
 
-        # Load others to continue
+        # No need to continue, return self or slice of lists
+        if sel.empty():
+            if index_or_slice is None:
+                return self
+            return List.get_selectors(self, index_or_slice, sel)
+
+        # Get all ids depending on index_or_slice
+        list_ids_or_id = List.get_selectors(self, index_or_slice, Selector(None))
+
+        if list_ids_or_id is None:
+            return None
 
         # set the _coll_ref (in case of)
         self.set_collection_reference()
-        # try to load the coresponding field
 
-        if sel_filter is None:
+        # Continue further with a list of ids
+        if isinstance(list_ids_or_id, (RefsList, list, List)):
             a = []
-            for v in self._value:
+            for other_id in list_ids_or_id:
                 other = self._coll_ref.new()
-                other.load(v)
-                if not other:
+                try:
+                    other.load(other_id)
+                except Error:
                     continue
-                result = other.get_selectors(None, selectors_as_list.copy())
+                result = other.get_selectors(None, sel.copy())
                 if result is not None:
                     a.append(result)
             return a
 
-        if re.match("^-*[0-9]+$", sel_filter):
-            try:
-                v = self._value[int(sel_filter)]
-            except IndexError:
-                return None
-            other = self._coll_ref.new()
-            other.load(v)
-            if other:
-                return other.get_selectors(None, selectors_as_list)
-
-        return None
+        # Continue further with a uniq id
+        other = self._coll_ref.new()
+        try:
+            other.load(list_ids_or_id)
+        except Error:
+            return None
+        return other.get_selectors(None, sel)

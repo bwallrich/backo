@@ -13,7 +13,7 @@ from backo import Item, Collection
 from backo import DBYmlConnector
 from backo import Backoffice, Error, current_user
 
-from stricto import String, Bool, Error as StrictoError
+from stricto import String, Bool, SRightError
 
 YML_DIR = "/tmp/backo_tests_crud"
 
@@ -163,9 +163,9 @@ class TestCRUD(unittest.TestCase):
         v.enable_permissions()
         self.assertEqual(v.surname, "foo")
 
-        with self.assertRaises(StrictoError) as e:
+        with self.assertRaises(SRightError) as e:
             v._meta.ctime = datetime.now()
-        self.assertEqual(e.exception.message, "cannot modify value")
+        self.assertEqual(repr(e.exception), 'RightsError("cannot modify value")')
 
     def test_crud_no_meta(self):
         """

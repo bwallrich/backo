@@ -8,13 +8,13 @@ import unittest
 from backo import Item, Collection
 from backo import DBYmlConnector
 from backo import Backoffice
-from backo import Ref, RefsList, DeleteStrategy, Error, log_system
+from backo import Ref, RefsList, DeleteStrategy, Error, log_system, current_user
 
 ### --- For development ---
 log_system.add_handler(log_system.set_streamhandler())
 log = log_system.get_or_create_logger("testing")
 
-from stricto import String, Bool, Error as StrictoError
+from stricto import String, Bool, SConstraintError
 
 YML_DIR = "/tmp/backo_tests_references"
 
@@ -90,6 +90,7 @@ class TestReferences(unittest.TestCase):
         self.yml_sites.delete_by_id("Site_moon")
         self.yml_users.delete_by_id("User_bebert_bebert")
 
+        current_user.standalone = True
         si = backoffice.sites.create({"name": "moon", "address": "far"})
 
         u = backoffice.users.create(
@@ -154,6 +155,7 @@ class TestReferences(unittest.TestCase):
         self.yml_sites.delete_by_id("Site_moon")
         self.yml_users.delete_by_id("User_bebert_bebert")
 
+        current_user.standalone = True
         si = backoffice.sites.create({"name": "moon", "address": "far"})
 
         u = backoffice.users.create(
@@ -216,6 +218,7 @@ class TestReferences(unittest.TestCase):
         self.yml_sites.delete_by_id("Site_moon")
         self.yml_users.delete_by_id("User_bebert_bebert")
 
+        current_user.standalone = True
         si = backoffice.sites.create({"name": "moon", "address": "far"})
 
         u = backoffice.users.create(
@@ -282,6 +285,7 @@ class TestReferences(unittest.TestCase):
         self.yml_sites.delete_by_id("Site_moon")
         self.yml_users.delete_by_id("User_bebert_bebert")
 
+        current_user.standalone = True
         si = backoffice.sites.new()
         si.create({"name": "moon", "address": "far"})
 
@@ -372,6 +376,7 @@ class TestReferences(unittest.TestCase):
         self.yml_sites.delete_by_id("Site_mars")
         self.yml_users.delete_by_id("User_bebert_bebert")
 
+        current_user.standalone = True
         si_mars = backoffice.sites.create({"name": "mars", "address": "very far"})
 
         si_moon = backoffice.sites.create({"name": "moon", "address": "far"})
@@ -446,6 +451,7 @@ class TestReferences(unittest.TestCase):
         self.yml_users.delete_by_id("User_bebert_bebert")
         self.yml_users.delete_by_id("User_john_john")
 
+        current_user.standalone = True
         si_mars = backoffice.sites.create({"name": "mars", "address": "very far"})
 
         si_moon = backoffice.sites.create({"name": "moon", "address": "far"})
@@ -523,6 +529,8 @@ class TestReferences(unittest.TestCase):
         self.yml_animals.delete_by_id("Animal_spider")
         self.yml_animals.delete_by_id("Animal_ant")
 
+        current_user.standalone = True
+
         # create humans
         up = backoffice.humans.create({"name": "parker", "surname": "peter"})
         uh = backoffice.humans.create({"name": "pym", "surname": "hank"})
@@ -597,6 +605,7 @@ class TestReferences(unittest.TestCase):
         self.yml_animals.delete_by_id("Animal_spider")
         self.yml_animals.delete_by_id("Animal_ant")
 
+        current_user.standalone = True
         # ctreate animal totem related to humans
         asp = backoffice.animals.create({"desc": "spider"})
         aa = backoffice.animals.create({"desc": "ant"})
@@ -617,9 +626,9 @@ class TestReferences(unittest.TestCase):
 
         # take pym's totem. impossible (pym will have no totem)
         up.totem = aa._id
-        with self.assertRaises(StrictoError) as e:
+        with self.assertRaises(SConstraintError) as e:
             up.save()
-        self.assertEqual(e.exception.message, "Cannot be empty")
+        self.assertEqual(repr(e.exception), 'ConstraintsError("Cannot be empty")')
 
     def test_references_many_to_many_empty_empty(self):
         """
@@ -671,6 +680,7 @@ class TestReferences(unittest.TestCase):
         self.yml_animals.delete_by_id("Animal_spider")
         self.yml_animals.delete_by_id("Animal_ant")
 
+        current_user.standalone = True
         # ctreate animal totem related to humans
         asp = backoffice.animals.create({"desc": "spider"})
         aa = backoffice.animals.create({"desc": "ant"})
@@ -760,6 +770,8 @@ class TestReferences(unittest.TestCase):
         self.yml_users.delete_by_id("User_bebert_bebert")
         self.yml_users.delete_by_id("User_john_john")
 
+        current_user.standalone = True
+
         # si_mars = backoffice.sites.create({"name": "mars", "address": "very far"})
         si_moon = backoffice.sites.create({"name": "moon", "address": "far"})
 
@@ -773,10 +785,16 @@ class TestReferences(unittest.TestCase):
         # -- follow references in selectors
         si_moon.reload()
         self.assertEqual(uj.select("$.name"), "john")
-        self.assertEqual(uj.select("$.site"), "Site_moon")
+        se = uj.select("$.site")
+        self.assertEqual(se, "Site_moon")
+        self.assertEqual(isinstance(se, Ref), True)
+        self.assertEqual(uj.select("$.site.name"), "moon")
         self.assertEqual(uj.select("$.site.address"), "far")
 
         self.assertEqual(si_moon.select("$.name"), "moon")
-        self.assertEqual(si_moon.select("$.users.name"), ["bebert", "john"])
+        se = si_moon.select("$.users")
+        self.assertEqual(isinstance(se, RefsList), True)
         self.assertEqual(si_moon.select("$.users[0].name"), "bebert")
+        self.assertEqual(si_moon.select("$.users[0:1].name"), ["bebert"])
         self.assertEqual(si_moon.select("$.users[0].site.address"), "far")
+        self.assertEqual(si_moon.select("$.users.name"), ["bebert", "john"])

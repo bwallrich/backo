@@ -126,7 +126,7 @@ class TestRoutes(unittest.TestCase):
             "/myApp/coll/users", json={"name": 23, "surname": "bert3"}
         )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(str(response.data, "utf-8"), "Must be a string")
+        self.assertEqual(str(response.data, "utf-8"), 'TypeError("Must be a string")')
 
         response = self.client.post(
             "/myApp/coll/users", json={"name": "bert3", "surname": "bert3"}
