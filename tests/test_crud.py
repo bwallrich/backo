@@ -6,7 +6,7 @@ test for CRUD()
 
 import unittest
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 from backo import Item, Collection
@@ -103,6 +103,8 @@ class TestCRUD(unittest.TestCase):
         self.assertEqual(v, u)
         self.assertEqual(v.male, True)
         self.assertEqual(v._meta.mtime, v._meta.ctime)
+        self.assertEqual(v._meta.mtime, u._meta.mtime)
+        self.assertEqual(v._meta.ctime, u._meta.ctime)
         self.assertEqual(v._meta.created_by.login, "Roger")
         self.assertEqual(v._meta.created_by._id, "1234")
         self.assertEqual(v._meta.modified_by.login, "Roger")
@@ -164,7 +166,7 @@ class TestCRUD(unittest.TestCase):
         self.assertEqual(v.surname, "foo")
 
         with self.assertRaises(SRightError) as e:
-            v._meta.ctime = datetime.now()
+            v._meta.ctime = datetime.now() + timedelta(minutes=1)
         self.assertEqual(repr(e.exception), 'RightsError("cannot modify value")')
 
     def test_crud_no_meta(self):

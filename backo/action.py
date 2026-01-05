@@ -38,7 +38,8 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
             kwargs["can_see"] = True
         kwargs["can_read"] = True
         kwargs["can_modify"] = True
-        kwargs["exists"] = True
+        if "exists" not in kwargs:
+            kwargs["exists"] = True
 
         Dict.__init__(self, schema, **kwargs)
 
@@ -52,8 +53,12 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
         return bool(p(self.backoffice, self.collection, self, o))
 
     def can_see(self, o: Item) -> bool:
-        """
-        Check if this action exists for running
+        """Check if this action exists for running
+
+        :param o: The current item
+        :type o: Item
+        :return: True if the action exists
+        :rtype: bool
         """
         return self._permissions.is_allowed_to("see", self, o)
 

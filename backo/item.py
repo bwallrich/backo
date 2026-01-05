@@ -6,8 +6,6 @@ Module providing the Item() Class
 
 import sys
 import copy
-import hashlib
-import json
 
 from .error import Error, ErrorType
 from .db_connector import DBConnector
@@ -60,15 +58,6 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         Set or modify the Database Handler
         """
         self.__dict__["db_handler"] = db_connector
-
-    def compute_hash_schema(self, schema: dict):
-        """
-        Compute the Hash of the schema
-        (to add in meta data to help, on load, to see if the db structure change)
-        """
-        dhash = hashlib.md5()
-        dhash.update(json.dumps(schema, sort_keys=True).encode())
-        return dhash.hexdigest()
 
     def on_change(
         self, event_name, root, me, **kwargs

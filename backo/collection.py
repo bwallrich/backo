@@ -28,6 +28,7 @@ from stricto import (
 
 from .item import Item
 from .action import Action
+from .selection import Selection
 from .error import Error, ErrorType
 from .log import log_system
 from .request_decorators import error_to_http_handler
@@ -76,6 +77,12 @@ class Collection:
 
         # For views
         self._views = {}
+
+        self._selections = {}
+
+        # Adding the "_all" selection
+        can_read = self._permissions.get("read", True)
+        self.register_selection("_all", Selection(None, can_read=can_read))
 
     def get_meta(self) -> dict:
         """
@@ -175,6 +182,15 @@ class Collection:
         """
         return self.register_action(name, action)
 
+    def register_selection(self, selection_name, selection: Selection) -> None:
+        """
+        Add a selection for this collection
+        """
+        self._selections[selection_name] = selection
+        selection.backoffice = self.backoffice
+        selection.name = selection_name
+        selection.collection = self
+
     def drop(self):
         """
         Drop all elements
@@ -196,79 +212,6 @@ class Collection:
         obj.load(_id)
         obj.enable_permissions()
         return obj
-
-    def select(
-        self,
-        db_filter,
-        match_filter=None,
-        view=None,
-        page_size=0,
-        num_of_element_to_skip=0,
-        db_sort_object={"_id": 1},
-    ):
-        """
-        Do a selection
-
-        db_filter : Is a filter related to the database system
-        match_filter : A filter for matching the object, independant
-                       from the db. See match() in stricto
-        view : The view we want (See views in stricto)
-
-        """
-
-        if self._permissions.is_allowed_to("read", None) is not True:
-            raise Error(
-                ErrorType.UNAUTHORIZED,
-                f"No permission to read the entire collection {self.name}.",
-            )
-
-        # Do the DB selection without pagination
-        db_list = self.db_handler.select(db_filter, {}, 0, 0, db_sort_object)
-        if not isinstance(db_list, list):
-            raise Error(
-                ErrorType.SELECT_ERROR,
-                f"select {self.name} error",
-            )
-        result = {
-            "result": [],
-            "total": 0,
-            "_view": view,
-            "_skip": num_of_element_to_skip,
-            "_page": page_size,
-        }
-
-        # Get the restriction filter
-        # rfilter = (
-        #     self.refuse_filter() if callable(self.refuse_filter) else self.refuse_filter
-        # )
-
-        # Do the selection on the object
-        index = 0
-        log.debug(f"try match {match_filter} for {len(db_list)}")
-        for obj in db_list:
-            obj["_id"] = str(obj["_id"])
-            o = self.new_item()
-            o.set(obj)
-            o.enable_permissions()
-            o.set_status_saved()
-            # Do the post match filtering
-
-            # Ignore all elements matched by the refuse filter
-            if self._permissions.is_allowed_to("read", o) is not True:
-                continue
-
-            if o.match(match_filter) is True:
-                if index >= num_of_element_to_skip:
-                    if page_size == 0 or (
-                        page_size > 0 and index < (num_of_element_to_skip + page_size)
-                    ):
-                        result["result"].append(o)
-                index += 1
-            else:
-                log.debug(f"Not matchs {match_filter} for {o}")
-
-        result["total"] = index
-        return result
 
     def create_routes(self) -> Blueprint:
         """
@@ -386,15 +329,15 @@ class Collection:
         query = request.args
         _page = int(query.get("_page", 10))
         _skip = int(query.get("_skip", 0))
-        _view = query.get("_view", "client")
 
         match_filter = multidict_to_filter(query)
 
         log.debug(f"filtering {self.name} with filter={match_filter}")
 
-        result = self.select(None, match_filter, _view, _page, _skip)
+        result = self._selections["_all"].select(match_filter, _page, _skip)
+
         log.debug(
-            f"select in {self.name} {match_filter} {_view}/{_page} skip {_skip} -> {result}"
+            f"select in {self.name} {match_filter}/{_page} skip {_skip} -> {result}"
         )
 
         return (json.dumps(result, cls=StrictoEncoder), 200)

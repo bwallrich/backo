@@ -50,6 +50,18 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
                 f"Mongo connection error at {self._connection_string}",
             ) from e
 
+    def close(self):
+        """
+        Close the database
+        """
+        try:
+            return self._db.close()
+        except Exception as e:
+            raise Error(
+                ErrorType.MONGO_CONNECT_ERROR,
+                f"Mongo close error at {self._connection_string}",
+            ) from e
+
     def drop(self):
         """
         Drop the collection
@@ -120,9 +132,9 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
         """
         Read the corresponding file
         """
-        log.debug(f"read {_id} ")
-        db_filter = self.combine_with_restriction_filter({"_id": ObjectId(_id)})
+        log.debug(f"try to read {_id} ")
         try:
+            db_filter = self.combine_with_restriction_filter({"_id": ObjectId(_id)})
             o = self._collection.find_one(db_filter)
         except Exception as e:
             raise Error(
@@ -140,9 +152,9 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
         Delete data by Id
         return True if deleted, or False if not found
         """
-        log.debug("delete %r", _id)
-        db_filter = self.combine_with_restriction_filter({"_id": ObjectId(_id)})
+        log.debug("try to delete %r", _id)
         try:
+            db_filter = self.combine_with_restriction_filter({"_id": ObjectId(_id)})
             result = self._collection.delete_one(db_filter)
         except Exception as e:
             raise Error(

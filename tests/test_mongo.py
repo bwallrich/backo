@@ -36,6 +36,11 @@ class TestMongo(unittest.TestCase):
             connection_string="mongodb://localhost:27017/testMongo", collection="Sites"
         )
 
+    def tearDown(self):
+        self.db_site.close()
+        self.db_users.close()
+        return super().tearDown()
+
     def test_error_db_connect(self):
         """
         try to connect error
@@ -69,6 +74,9 @@ class TestMongo(unittest.TestCase):
 
         coll_users.drop()
 
+        # ignore sessions for this campaign of tests.
+        current_user.standalone = True
+
         with self.assertRaises(Error) as e:
             self.db_users.delete_by_id("42")
         self.assertEqual(
@@ -91,8 +99,7 @@ class TestMongo(unittest.TestCase):
             e.exception.message, '_id "66a8ee2614c85110d75b9cf8" not found'
         )
 
-        v = backoffice.users.new()
-        v.create({"name": "bebert", "surname": "bebert"})
+        v = backoffice.users.create({"name": "bebert", "surname": "bebert"})
         self.assertNotEqual(v._id, None)
         self.assertNotEqual(v._meta, None)
         u = backoffice.users.new()
@@ -120,18 +127,22 @@ class TestMongo(unittest.TestCase):
 
         backoffice.users.drop()
 
+        # ignore sessions for this campaign of tests.
+        current_user.standalone = True
+
         current_user.login = "Roger"
         current_user._id = "1234"
 
         # -- creation
-        u = backoffice.new("users")
-        u.create({"name": "bebert", "surname": "bebert"})
+        u = backoffice.users.create({"name": "bebert", "surname": "bebert"})
         v = backoffice.users.new()
 
         v.load(u._id)
-        self.assertEqual(v, u)
+
         self.assertEqual(v.male, True)
         self.assertEqual(v._meta.mtime, v._meta.ctime)
+        self.assertEqual(v._meta.mtime, u._meta.mtime)
+        self.assertEqual(v._meta.ctime, u._meta.ctime)
         self.assertEqual(v._meta.created_by.login, "Roger")
         self.assertEqual(v._meta.created_by._id, "1234")
         self.assertEqual(v._meta.modified_by.login, "Roger")
@@ -175,44 +186,44 @@ class TestMongo(unittest.TestCase):
 
         backoffice.users.drop()
 
+        # ignore sessions for this campaign of tests.
+        current_user.standalone = True
+
         current_user.login = "Roger"
         current_user._id = "1234"
 
         # -- creation
-        u = backoffice.new("users")
-        u.create({"name": "bebert1", "surname": "bebert"})
-        u = backoffice.new("users")
-        u.create({"name": "bebert2", "surname": "bebert"})
-        u = backoffice.new("users")
-        u.create({"name": "bebert3", "surname": "Joe"})
-        u = backoffice.new("users")
-        u.create({"name": "bebert4", "surname": "Joe"})
-        u = backoffice.new("users")
-        u.create({"name": "bebert5", "surname": "Joe"})
-        u = backoffice.new("users")
-        u.create({"name": "bebert6", "surname": "Al"})
-        u = backoffice.new("users")
-        u.create({"name": "bebert7", "surname": "Al"})
+        backoffice.users.create({"name": "bebert1", "surname": "bebert"})
+        backoffice.users.create({"name": "bebert2", "surname": "bebert"})
+        backoffice.users.create({"name": "bebert3", "surname": "Joe"})
+        backoffice.users.create({"name": "bebert4", "surname": "Joe"})
+        backoffice.users.create({"name": "bebert5", "surname": "Joe"})
+        backoffice.users.create({"name": "bebert6", "surname": "Al"})
+        backoffice.users.create({"name": "bebert7", "surname": "Al"})
 
-        result = backoffice.users.select({"surname": "Al"})
-        self.assertEqual(result["count"], 2)
+        result = backoffice.users._selections["_all"].select({"surname": "Al"})
+        self.assertEqual(result["total"], 2)
         self.assertEqual(len(result["result"]), 2)
         for o in result["result"]:
             self.assertEqual(type(o), Item)
             self.assertEqual(o.surname, "Al")
 
         # check pagination
-        result = backoffice.users.select({"surname": "Al"}, 1, 0)
-        self.assertEqual(result["count"], 2)
+        result = backoffice.users._selections["_all"].select({"surname": "Al"}, 1, 0)
+        self.assertEqual(result["total"], 2)
         self.assertEqual(len(result["result"]), 1)
         for o in result["result"]:
             self.assertEqual(type(o), Item)
             self.assertEqual(o.surname, "Al")
 
         # check not found
-        result = backoffice.users.select({"surname_not_found": "Al"})
-        self.assertEqual(result["count"], 0)
+        result = backoffice.users._selections["_all"].select(
+            {"surname_not_found": "Al"}
+        )
+        self.assertEqual(result["total"], 0)
         self.assertEqual(len(result["result"]), 0)
-        result = backoffice.users.select({"surname": "Al_not_found"})
-        self.assertEqual(result["count"], 0)
+        result = backoffice.users._selections["_all"].select(
+            {"surname": "Al_not_found"}
+        )
+        self.assertEqual(result["total"], 0)
         self.assertEqual(len(result["result"]), 0)

@@ -80,31 +80,6 @@ class TestRoutes(unittest.TestCase):
         self.ctx.push()
         self.client = self.flask.test_client()
 
-    def test_select(self):
-        """
-        Do a selection with different filters
-        """
-        self.yml_users.drop()
-
-        u = self.backo.users.create({"name": "bebert", "surname": "bebert"})
-        self.assertEqual(u._id, "User_bebert_bebert")
-
-        u = self.backo.users.create({"name": "bert1", "surname": "bert1"})
-        self.assertEqual(u._id, "User_bert1_bert1")
-
-        u = self.backo.users.create({"name": "bert2", "surname": "bert2"})
-        self.assertEqual(u._id, "User_bert2_bert2")
-
-        rep = self.users_coll.select(None, {})
-        self.assertEqual(rep["total"], 3)
-
-        rep = self.users_coll.select(None, {"name": "bebert"})
-        self.assertEqual(rep["total"], 1)
-        rep = self.users_coll.select(None, {"name": ("$reg", r"bert.*")})
-        self.assertEqual(rep["total"], 2)
-        rep = self.users_coll.select(None, None)
-        self.assertEqual(rep["total"], 0)
-
     def test_get_by_id(self):
         """
         get by id
@@ -269,6 +244,7 @@ class TestRoutes(unittest.TestCase):
         results = json.loads(response.data)
         self.assertEqual(results["total"], 1)
 
+        print(results)
         l = self.backo.users.set(results["result"])
         self.assertEqual(len(l), 1)
 

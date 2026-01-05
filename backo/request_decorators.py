@@ -6,6 +6,7 @@ The decortators used for flask routes
 
 import sys
 import logging
+import traceback
 from functools import wraps
 from flask import request
 
@@ -57,6 +58,7 @@ def error_to_http_handler(f):
             return f(*args, **kwargs)
         except BackError as e:
             log.error(f" Error Backo {e.error_code}")
+            log.error(traceback.print_exc())
             if e.error_code == BackoErrorType.UNAUTHORIZED:
                 return return_http_error(403, e.message)
             if e.error_code == BackoErrorType.NOTFOUND:
@@ -81,54 +83,58 @@ def error_to_http_handler(f):
             SError,
         ) as e:
             log.error(repr(e))
+            log.error(traceback.print_exc())
             return return_http_error(400, repr(e))
         except AttributeError as e:
             log.error(f" Error AttributeError {str(e)}")
+            log.error(traceback.print_exc())
             return return_http_error(400, str(e))
         except TypeError as e:
             log.error(f" Error TypeError {str(e)}")
+            log.error(traceback.print_exc())
             return return_http_error(400, str(e))
         except Exception as e:  # pylint: disable=broad-exception-caught
             log.error(f" Error Exception {str(e)}")
+            log.error(traceback.print_exc())
             return return_http_error(500, str(e))
 
     return wrapper
 
 
-def check_method(methods: list):
-    """
-    check if the method is in a list of methods [ 'GET', 'POST' ]
-    """
+# def check_method(methods: list):
+#     """
+#     check if the method is in a list of methods [ 'GET', 'POST' ]
+#     """
+#
+#     def inner(f):
+#         @wraps(f)
+#         def wrapper(*args, **kwargs):
+#             if request.method not in methods:
+#                 return return_http_error(405, "Method not Allowed")
+#             return f(*args, **kwargs)
+#
+#         return wrapper
+#
+#     return inner
 
-    def inner(f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            if request.method not in methods:
-                return return_http_error(405, "Method not Allowed")
-            return f(*args, **kwargs)
 
-        return wrapper
-
-    return inner
-
-
-def check_query_parameters(available_params: list):
-    """
-    check if the method is in a list of methods [ 'GET', 'POST' ]
-    """
-
-    def inner(f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            query = request.args
-            for param_name in query.keys():
-                if param_name not in available_params:
-                    return return_http_error(
-                        406,
-                        f'Not acceptable : query  parameter "{param_name}" not allowed.',
-                    )
-            return f(*args, **kwargs)
-
-        return wrapper
-
-    return inner
+# def check_query_parameters(available_params: list):
+#     """
+#     check if the method is in a list of methods [ 'GET', 'POST' ]
+#     """
+#
+#     def inner(f):
+#         @wraps(f)
+#         def wrapper(*args, **kwargs):
+#             query = request.args
+#             for param_name in query.keys():
+#                 if param_name not in available_params:
+#                     return return_http_error(
+#                         406,
+#                         f'Not acceptable : query  parameter "{param_name}" not allowed.',
+#                     )
+#             return f(*args, **kwargs)
+#
+#         return wrapper
+#
+#     return inner
