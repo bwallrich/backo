@@ -6,6 +6,7 @@ export all classes
 from .item import Item
 from .db_yml_connector import DBYmlConnector
 from .db_mongo_connector import DBMongoConnector
+from .db_connector import DBConnector
 from .current_user import current_user, CurrentUser, CurrentUserWrapper
 from .error import Error, ErrorType
 from .backoffice import Backoffice

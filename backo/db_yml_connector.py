@@ -14,14 +14,18 @@ log = log_system.get_or_create_logger("yml")
 
 
 class DBYmlConnector(DBConnector):  # pylint: disable=too-many-instance-attributes
-    """
-    A generic type for a DB
+    """Yaml files database Connector
+
+    This is the way to save / store / retrieve objects in yaml files
+
+    :param ``**kwargs``:
+        - *path=* ``str`` -- The directory to store yaml files
+
+
     """
 
     def __init__(self, **kwargs):
-        """
-        available arguments
-        """
+        """constructor"""
         self._path = kwargs.pop("path", "/tmp")
 
         DBConnector.__init__(self, **kwargs)
@@ -40,18 +44,14 @@ class DBYmlConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             )
 
     def drop(self) -> None:
-        """
-        Drop all elements
-        """
+        """See :func:`DBConnector.drop`"""
         dirs = os.listdir(self._path)
         for file in dirs:
             if re.match(r".*\.yml$", file):
                 os.unlink(os.path.join(self._path, file))
 
     def save(self, _id: str, o: dict) -> None:
-        """
-        Save the object
-        """
+        """See :func:`DBConnector.save`"""
         log.debug(f"save {_id} ")
         filename = os.path.join(self._path, _id + ".yml")
 
@@ -60,9 +60,7 @@ class DBYmlConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             yaml.dump(o, outfile, default_flow_style=False)
 
     def create(self, o: dict) -> str:
-        """
-        Create the object into the DB and return the _id
-        """
+        """See :func:`DBConnector.create`"""
         _id = o["_id"]
 
         log.debug(f"create {_id} ")
@@ -77,9 +75,7 @@ class DBYmlConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         return _id
 
     def get_by_id(self, _id: str) -> dict:
-        """
-        Read the corresponding file
-        """
+        """See :func:`DBConnector.get_by_id`"""
         log.debug(f"read {_id} ")
 
         filename = os.path.join(self._path, _id + ".yml")
@@ -92,10 +88,7 @@ class DBYmlConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             return data_loaded
 
     def delete_by_id(self, _id: str) -> bool:
-        """
-        Delete data by Id
-        return True if deleted, or False if not found
-        """
+        """See :func:`DBConnector.delete_by_id`"""
         log.debug(f"delete {_id}")
         filename = os.path.join(self._path, _id + ".yml")
         if os.path.isfile(filename):
@@ -111,9 +104,9 @@ class DBYmlConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         num_of_element_to_skip=0,
         sort_object={"_id": 1},
     ) -> list:
-        """
-        Select and return a list of dicts
+        """See :func:`DBConnector.select`
 
+        Params ``select_filter`` and ``projection`` are not used
 
         """
         log.debug(

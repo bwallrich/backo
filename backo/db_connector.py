@@ -7,38 +7,57 @@ from .error import Error, ErrorType
 
 
 class DBConnector:  # pylint: disable=too-many-instance-attributes
-    """
-    A generic type for a DB
+    """Database Connector
+
+    This is the way to save / store / retrieve objects
+
+    :param ``**kwargs``:
+        - *restriction=* ``func`` --
+          not used yet
+
+
     """
 
     def __init__(self, **kwargs):
-        """
-        available arguments
-
-        restriction -> a function that must produce a filter (or None).
-        """
+        """Constructor"""
 
         self.restriction_filter = kwargs.pop("restriction", None)
 
     def drop(self):  # pylint: disable=unused-argument
-        """
-        Drop the collection
-        (used in test)
+        """Drop the collection
+
+        Mainly used in test
+
+
+        :raise Error: Raise an error ErrorType.NOT_IMPLEMENTED or any db error
         """
         raise Error(
             ErrorType.NOT_IMPLEMENTED,
             f"drop is not implemented for {type(self)}",
         )
 
-    def generate_id(self, o: dict):  # pylint: disable=unused-argument
+    def generate_id(self, o: dict) -> str:  # pylint: disable=unused-argument
         """
-        generate an id:
+        The function to generate an Id.
+
+        Mainly, not used, because the database itself do the job (like mongo).
+        But for other cases, you must generate by yourself the uniq *_id* for the object
+
+        :param o: The object given (json format)
+        :type o: dict
+        :return: an Id
+        :rtype: str
+
         """
         return str(uuid.uuid4().int >> 64)
 
-    def create(self, o: dict):  # pylint: disable=unused-argument
-        """
-        Create the object into the DB and return the _id
+    def create(self, o: dict) -> str:  # pylint: disable=unused-argument
+        """Create the object into the DB and return the _id
+
+        :param o: The object given (json format)
+        :type o: dict
+        :raise Error: Raise an error ErrorType.NOT_IMPLEMENTED or any db error
+
         """
         raise Error(
             ErrorType.NOT_IMPLEMENTED,
@@ -46,26 +65,43 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
         )
 
     def save(self, _id: str, o: dict):  # pylint: disable=unused-argument
-        """
-        must be overwritten
+        """Save the objet
+
+        :param _id: the _id of this object
+        :type _id: str
+        :param o: The object given (json format)
+        :type o: dict
+        :raise Error: Raise an error ErrorType.NOT_IMPLEMENTED or any db error
+
         """
         raise Error(
             ErrorType.NOT_IMPLEMENTED,
             f"save is not implemented for {type(self)}",
         )
 
-    def get_by_id(self, _id: str):  # pylint: disable=unused-argument
+    def get_by_id(self, _id: str) -> dict:  # pylint: disable=unused-argument
         """
-        must be overwritten
+        get an object by _id in the DB and return it
+
+        :param _id: the _id
+        :type _id: str
+        :return: The object (json format)
+        :rtype: dict
+        :raise Error: Raise an error ErrorType.NOT_IMPLEMENTED or any db error
+
         """
+
         raise Error(
             ErrorType.NOT_IMPLEMENTED,
             f"get_by_id is not implemented for {type(self)}",
         )
 
     def delete_by_id(self, _id: str):  # pylint: disable=unused-argument
-        """
-        must be overwritten
+        """The _id to delete on the db
+
+        :param _id: the _id
+        :type _id: str
+        :raise Error: Raise an error ErrorType.NOT_IMPLEMENTED or any db error
         """
         raise Error(
             ErrorType.NOT_IMPLEMENTED,
@@ -75,16 +111,25 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
     def select(
         self,
         select_filter,
-        projection={},
-        page_size=0,
-        num_of_element_to_skip=0,
-        sort_object={},
+        projection: dict = {},
+        page_size: int = 0,
+        num_of_element_to_skip: int = 0,
+        sort_object: dict = {},
     ):  # pylint: disable=unused-argument
         """
-        Select and return a list of dicts
+        Select from filter in the DB and return a list of dicts, with pagination
 
-        select_filter : The fiter
-        projection : Fields whe want
+        :param select_filter: The filter for selection (depends on DB types)
+        :param projection: The list of elements we want for each object
+        :type projection: dict
+        :param page_size: number of elements per page
+        :type page_size: int
+        :param num_of_element_to_skip: number of element to skip from beginning
+        :type num_of_element_to_skip: int
+        :param sort_object: Soon
+        :type sort_object: dict
+        :raise Error: Raise an error ErrorType.NOT_IMPLEMENTED or any db error
+
         """
         raise Error(
             ErrorType.NOT_IMPLEMENTED,

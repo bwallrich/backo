@@ -1,0 +1,990 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>References &mdash; backo 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Errors" href="errors.html" />
+    <link rel="prev" title="Back Office Low Code (backo)" href="readme.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            backo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">Back Office Low Code (backo)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">References</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#backo.Action"><code class="docutils literal notranslate"><span class="pre">Action</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#backo.Backoffice"><code class="docutils literal notranslate"><span class="pre">Backoffice</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#backo.Backoffice.add_collection"><code class="docutils literal notranslate"><span class="pre">Backoffice.add_collection()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backo.Backoffice.add_routes"><code class="docutils literal notranslate"><span class="pre">Backoffice.add_routes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backo.Backoffice.register_collection"><code class="docutils literal notranslate"><span class="pre">Backoffice.register_collection()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#backo.Collection"><code class="docutils literal notranslate"><span class="pre">Collection</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#backo.Collection.add_action"><code class="docutils literal notranslate"><span class="pre">Collection.add_action()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backo.Collection.create"><code class="docutils literal notranslate"><span class="pre">Collection.create()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backo.Collection.get_by_id"><code class="docutils literal notranslate"><span class="pre">Collection.get_by_id()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backo.Collection.get_other_collection"><code class="docutils literal notranslate"><span class="pre">Collection.get_other_collection()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backo.Collection.new_item"><code class="docutils literal notranslate"><span class="pre">Collection.new_item()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backo.Collection.register_action"><code class="docutils literal notranslate"><span class="pre">Collection.register_action()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backo.Collection.register_selection"><code class="docutils literal notranslate"><span class="pre">Collection.register_selection()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#backo.CurrentUser"><code class="docutils literal notranslate"><span class="pre">CurrentUser</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#backo.CurrentUser.has_role"><code class="docutils literal notranslate"><span class="pre">CurrentUser.has_role()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#backo.Item"><code class="docutils literal notranslate"><span class="pre">Item</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#backo.Item.create"><code class="docutils literal notranslate"><span class="pre">Item.create()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backo.Item.delete"><code class="docutils literal notranslate"><span class="pre">Item.delete()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backo.Item.load"><code class="docutils literal notranslate"><span class="pre">Item.load()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backo.Item.reload"><code class="docutils literal notranslate"><span class="pre">Item.reload()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backo.Item.save"><code class="docutils literal notranslate"><span class="pre">Item.save()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#ref-refslist">Ref &amp; RefsList</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#backo.DeleteStrategy"><code class="docutils literal notranslate"><span class="pre">DeleteStrategy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backo.FillStrategy"><code class="docutils literal notranslate"><span class="pre">FillStrategy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backo.Ref"><code class="docutils literal notranslate"><span class="pre">Ref</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backo.RefsList"><code class="docutils literal notranslate"><span class="pre">RefsList</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#dbconnector">DBconnector</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#backo.DBConnector"><code class="docutils literal notranslate"><span class="pre">DBConnector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBConnector.create"><code class="docutils literal notranslate"><span class="pre">DBConnector.create()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBConnector.delete_by_id"><code class="docutils literal notranslate"><span class="pre">DBConnector.delete_by_id()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBConnector.drop"><code class="docutils literal notranslate"><span class="pre">DBConnector.drop()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBConnector.generate_id"><code class="docutils literal notranslate"><span class="pre">DBConnector.generate_id()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBConnector.get_by_id"><code class="docutils literal notranslate"><span class="pre">DBConnector.get_by_id()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBConnector.save"><code class="docutils literal notranslate"><span class="pre">DBConnector.save()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBConnector.select"><code class="docutils literal notranslate"><span class="pre">DBConnector.select()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#backo.DBMongoConnector"><code class="docutils literal notranslate"><span class="pre">DBMongoConnector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBMongoConnector.close"><code class="docutils literal notranslate"><span class="pre">DBMongoConnector.close()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBMongoConnector.connect"><code class="docutils literal notranslate"><span class="pre">DBMongoConnector.connect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBMongoConnector.create"><code class="docutils literal notranslate"><span class="pre">DBMongoConnector.create()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBMongoConnector.delete_by_id"><code class="docutils literal notranslate"><span class="pre">DBMongoConnector.delete_by_id()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBMongoConnector.drop"><code class="docutils literal notranslate"><span class="pre">DBMongoConnector.drop()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBMongoConnector.generate_id"><code class="docutils literal notranslate"><span class="pre">DBMongoConnector.generate_id()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBMongoConnector.get_by_id"><code class="docutils literal notranslate"><span class="pre">DBMongoConnector.get_by_id()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBMongoConnector.save"><code class="docutils literal notranslate"><span class="pre">DBMongoConnector.save()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBMongoConnector.select"><code class="docutils literal notranslate"><span class="pre">DBMongoConnector.select()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#backo.DBYmlConnector"><code class="docutils literal notranslate"><span class="pre">DBYmlConnector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBYmlConnector.create"><code class="docutils literal notranslate"><span class="pre">DBYmlConnector.create()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBYmlConnector.delete_by_id"><code class="docutils literal notranslate"><span class="pre">DBYmlConnector.delete_by_id()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBYmlConnector.drop"><code class="docutils literal notranslate"><span class="pre">DBYmlConnector.drop()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBYmlConnector.get_by_id"><code class="docutils literal notranslate"><span class="pre">DBYmlConnector.get_by_id()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBYmlConnector.save"><code class="docutils literal notranslate"><span class="pre">DBYmlConnector.save()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#backo.DBYmlConnector.select"><code class="docutils literal notranslate"><span class="pre">DBYmlConnector.select()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">backo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">References</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/api_reference.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="toctree-wrapper compound">
+</div>
+<section id="module-backo">
+<span id="references"></span><h1>References<a class="headerlink" href="#module-backo" title="Link to this heading"></a></h1>
+<p>Module backo.
+export all classes</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="backo.Action">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">backo.</span></span><span class="sig-name descname"><span class="pre">Action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_trig</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.Action" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></p>
+<p>The action to do on a collection</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>schema</strong> (<em>dict</em>) – The data schema needed for this action (see <cite>Dict &lt;https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict&gt;</cite>)</p></li>
+<li><p><strong>on_trig</strong> (<em>Callable</em>) – the function to trig on the action</p></li>
+<li><p><strong>**kwargs</strong> – see <a class="reference external" href="https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict">https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict</a>
+- <em>can_see=</em> <code class="docutils literal notranslate"><span class="pre">[func]|bool</span></code> – a function to say if this action exists
+- <em>can_execute=</em> <code class="docutils literal notranslate"><span class="pre">[func]|bool</span></code> – a function to say if the <a class="reference internal" href="#backo.CurrentUser" title="backo.CurrentUser"><code class="xref py py-class docutils literal notranslate"><span class="pre">CurrentUser</span></code></a> can execute this action.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">backo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Item</span><span class="p">,</span> <span class="n">Collection</span><span class="p">,</span> <span class="n">Backoffice</span><span class="p">,</span> <span class="n">Action</span><span class="p">,</span> <span class="n">Ref</span><span class="p">,</span> <span class="n">DBMongoConnector</span>
+
+<span class="c1"># example </span>
+<span class="n">book_item</span> <span class="o">=</span> <span class="n">Item</span><span class="p">({</span>
+    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
+    <span class="s2">&quot;subtitle&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
+    <span class="s2">&quot;author&quot;</span><span class="p">:</span> <span class="n">Ref</span><span class="p">(</span><span class="n">coll</span><span class="o">=</span><span class="s2">&quot;authors&quot;</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s2">&quot;$.books&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="n">Float</span><span class="p">(</span> <span class="n">default</span><span class="o">=</span><span class="mf">5.0</span> <span class="p">)</span>
+    <span class="s2">&quot;number_of_voter&quot;</span> <span class="p">:</span> <span class="n">Int</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="p">})</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">do_vote</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+    <span class="n">o</span><span class="o">.</span><span class="n">score</span> <span class="o">=</span> <span class="p">(</span><span class="n">o</span><span class="o">.</span><span class="n">score</span> <span class="o">*</span> <span class="n">o</span><span class="o">.</span><span class="n">number_of_voter</span> <span class="o">+</span> <span class="n">action</span><span class="o">.</span><span class="n">score</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span> <span class="n">o</span><span class="o">.</span><span class="n">number_of_voter</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">)</span>
+    <span class="n">o</span><span class="o">.</span><span class="n">number_of_voter</span> <span class="o">+=</span> <span class="mi">1</span>
+
+
+<span class="n">vote_action</span> <span class="o">=</span> <span class="n">Action</span><span class="p">(</span> <span class="p">{</span> 
+    <span class="s2">&quot;score&quot;</span> <span class="p">:</span> <span class="n">Float</span><span class="p">(</span> <span class="nb">max</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">0.0</span> <span class="p">)</span>
+<span class="p">},</span> <span class="n">do_vote</span><span class="p">)</span>
+
+<span class="n">database_for_books</span> <span class="o">=</span> <span class="n">DBMongoConnector</span><span class="p">(</span> <span class="n">connection_string</span><span class="o">=</span><span class="s2">&quot;mongodb://localhost:27017/bookcase&quot;</span> <span class="p">)</span>
+<span class="n">books</span> <span class="o">=</span> <span class="n">Collection</span><span class="p">(</span> <span class="s2">&quot;books&quot;</span><span class="p">,</span> <span class="n">book_item</span><span class="p">,</span> <span class="n">database_for_books</span> <span class="p">)</span>
+<span class="n">books</span><span class="o">.</span><span class="n">register_action</span><span class="p">(</span> <span class="s2">&quot;vote&quot;</span><span class="p">,</span> <span class="n">vote_action</span> <span class="p">)</span>
+
+<span class="n">my_bookstore</span> <span class="o">=</span> <span class="n">Backoffice</span><span class="p">(</span><span class="s2">&quot;bookstore&quot;</span><span class="p">)</span>
+<span class="n">my_bookstore</span><span class="o">.</span><span class="n">register_collection</span><span class="p">(</span><span class="n">books</span><span class="p">)</span>
+<span class="c1"># ...</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="backo.Backoffice">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">backo.</span></span><span class="sig-name descname"><span class="pre">Backoffice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.Backoffice" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Backoffice is tha application itself.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – A name for the application</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">backo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Backoffice</span>
+
+<span class="c1"># example </span>
+<span class="n">my_app</span> <span class="o">=</span> <span class="n">Backoffice</span><span class="p">(</span><span class="s2">&quot;customer_app&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.Backoffice.add_collection">
+<span class="sig-name descname"><span class="pre">add_collection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coll</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#backo.Collection" title="backo.collection.Collection"><span class="pre">Collection</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#backo.Backoffice.add_collection" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#backo.Backoffice.register_collection" title="backo.Backoffice.register_collection"><code class="xref py py-func docutils literal notranslate"><span class="pre">register_collection()</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.Backoffice.add_routes">
+<span class="sig-name descname"><span class="pre">add_routes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flask_app</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Flask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jwt_auth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#backo.Backoffice.add_routes" title="Link to this definition"></a></dt>
+<dd><p>Add all routes to flask application</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>flask_app</strong> (<em>Flask</em>) – The Flask object</p></li>
+<li><p><strong>prefix</strong> (<em>str</em>) – an optional prefix to the path</p></li>
+<li><p><strong>jwt_auth</strong> – The token function</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.Backoffice.register_collection">
+<span class="sig-name descname"><span class="pre">register_collection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coll</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#backo.Collection" title="backo.collection.Collection"><span class="pre">Collection</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#backo.Backoffice.register_collection" title="Link to this definition"></a></dt>
+<dd><p>Register a collection into this backoffice</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>coll</strong> (<a class="reference internal" href="#backo.Collection" title="backo.Collection"><em>Collection</em></a>) – The collection to add.</p>
+</dd>
+</dl>
+<p>See <a class="reference internal" href="#backo.Collection" title="backo.Collection"><code class="xref py py-class docutils literal notranslate"><span class="pre">Collection</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="backo.Collection">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">backo.</span></span><span class="sig-name descname"><span class="pre">Collection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#backo.Item" title="backo.item.Item"><span class="pre">Item</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">db_handler</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.Collection" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The Collection refer to a “table”</p>
+<dl class="simple">
+<dt>A collection is the main object in backo. It contains</dt><dd><ul class="simple">
+<li><p>an <a class="reference internal" href="#backo.Item" title="backo.Item"><code class="xref py py-class docutils literal notranslate"><span class="pre">Item</span></code></a> = the description of the object structure</p></li>
+<li><p>an <a class="reference internal" href="#backo.DBConnector" title="backo.DBConnector"><code class="xref py py-class docutils literal notranslate"><span class="pre">DBConnector</span></code></a> = the database connector to say how and where to save the object</p></li>
+<li><p>some <code class="xref py py-class docutils literal notranslate"><span class="pre">Selection</span></code> = some preset <em>select</em> for this collection</p></li>
+<li><p>some <a class="reference internal" href="#backo.Action" title="backo.Action"><code class="xref py py-class docutils literal notranslate"><span class="pre">Action</span></code></a> = a list of actions to do on this collection</p></li>
+</ul>
+</dd>
+</dl>
+<p>A collection mus by registered into a <a class="reference internal" href="#backo.Backoffice" title="backo.Backoffice"><code class="xref py py-class docutils literal notranslate"><span class="pre">Backoffice</span></code></a> with <a class="reference internal" href="#backo.Backoffice.register_collection" title="backo.Backoffice.register_collection"><code class="xref py py-func docutils literal notranslate"><span class="pre">Backoffice.register_collection()</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – The collection name</p></li>
+<li><p><strong>model</strong> (<a class="reference internal" href="#backo.Item" title="backo.Item"><em>Item</em></a>) – The description of the structure (an Item)</p></li>
+<li><p><strong>db_handler</strong> (<a class="reference internal" href="#backo.DBConnector" title="backo.DBConnector"><em>DBConnector</em></a>) – The database handler</p></li>
+<li><p><strong>**kwargs</strong> – <ul>
+<li><p><em>refuse_filter=</em> <code class="docutils literal notranslate"><span class="pre">func</span></code> –
+not used yet</p></li>
+<li><p><em>can_read=</em> <code class="docutils literal notranslate"><span class="pre">[func]|bool</span></code> –
+a function to say if the <a class="reference internal" href="#backo.CurrentUser" title="backo.CurrentUser"><code class="xref py py-class docutils literal notranslate"><span class="pre">CurrentUser</span></code></a> can read this collection</p></li>
+<li><p><em>can_create=</em> <code class="docutils literal notranslate"><span class="pre">[func]|bool</span></code> –
+a function to say if the <a class="reference internal" href="#backo.CurrentUser" title="backo.CurrentUser"><code class="xref py py-class docutils literal notranslate"><span class="pre">CurrentUser</span></code></a> can create an <a class="reference internal" href="#backo.Item" title="backo.Item"><code class="xref py py-class docutils literal notranslate"><span class="pre">Item</span></code></a> in this collection</p></li>
+<li><p><em>can_delete=</em> <code class="docutils literal notranslate"><span class="pre">[func]|bool</span></code> –
+a function to say if the <a class="reference internal" href="#backo.CurrentUser" title="backo.CurrentUser"><code class="xref py py-class docutils literal notranslate"><span class="pre">CurrentUser</span></code></a> can delete an <a class="reference internal" href="#backo.Item" title="backo.Item"><code class="xref py py-class docutils literal notranslate"><span class="pre">Item</span></code></a> in this collection</p></li>
+<li><p><em>can_modify=</em> <code class="docutils literal notranslate"><span class="pre">[func]|bool</span></code> –
+a function to say if the <a class="reference internal" href="#backo.CurrentUser" title="backo.CurrentUser"><code class="xref py py-class docutils literal notranslate"><span class="pre">CurrentUser</span></code></a> can modify an <a class="reference internal" href="#backo.Item" title="backo.Item"><code class="xref py py-class docutils literal notranslate"><span class="pre">Item</span></code></a> in this collection</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">backo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Item</span><span class="p">,</span> <span class="n">Collection</span><span class="p">,</span> <span class="n">Backoffice</span><span class="p">,</span> <span class="p">,</span> <span class="n">DBMongoConnector</span>
+
+<span class="c1"># example </span>
+<span class="n">book_item</span> <span class="o">=</span> <span class="n">Item</span><span class="p">({</span>
+    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
+    <span class="s2">&quot;subtitle&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
+    <span class="s2">&quot;author&quot;</span><span class="p">:</span> <span class="n">Ref</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="s2">&quot;authors&quot;</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s2">&quot;$.books&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+<span class="p">})</span>
+
+
+<span class="n">database_for_books</span> <span class="o">=</span> <span class="n">DBMongoConnector</span><span class="p">(</span> <span class="n">connection_string</span><span class="o">=</span><span class="s2">&quot;mongodb://localhost:27017/bookcase&quot;</span> <span class="p">)</span>
+<span class="n">books</span> <span class="o">=</span> <span class="n">Collection</span><span class="p">(</span> <span class="s2">&quot;books&quot;</span><span class="p">,</span> <span class="n">book_item</span><span class="p">,</span> <span class="n">database_for_books</span> <span class="p">)</span>
+
+<span class="n">my_bookstore</span> <span class="o">=</span> <span class="n">Backoffice</span><span class="p">(</span><span class="s2">&quot;bookstore&quot;</span><span class="p">)</span>
+<span class="n">my_bookstore</span><span class="o">.</span><span class="n">register_collection</span><span class="p">(</span><span class="n">books</span><span class="p">)</span>
+<span class="c1"># ...</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.Collection.add_action">
+<span class="sig-name descname"><span class="pre">add_action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#backo.Action" title="backo.action.Action"><span class="pre">Action</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.Collection.add_action" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#backo.Collection.register_action" title="backo.Collection.register_action"><code class="xref py py-func docutils literal notranslate"><span class="pre">register_action()</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.Collection.create">
+<span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#backo.Item" title="backo.item.Item"><span class="pre">Item</span></a></span></span><a class="headerlink" href="#backo.Collection.create" title="Link to this definition"></a></dt>
+<dd><p>Create and save an item into the DB</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> (<em>dict</em>) – The json object struture to create</p></li>
+<li><p><strong>**kwargs</strong> – <ul>
+<li><p><em>transaction_id=</em> <code class="docutils literal notranslate"><span class="pre">int</span></code> – the current transaction_id (in case of rollback)</p></li>
+<li><p><em>m_path=</em> <code class="docutils literal notranslate"><span class="pre">[str]</span></code> – the modification path, to to avoid loop with references</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>an empty Item</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#backo.Item" title="backo.Item">Item</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.Collection.get_by_id">
+<span class="sig-name descname"><span class="pre">get_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#backo.Item" title="backo.item.Item"><span class="pre">Item</span></a></span></span><a class="headerlink" href="#backo.Collection.get_by_id" title="Link to this definition"></a></dt>
+<dd><p>Return an object by Id.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>_id</strong> (<em>str</em>) – the _id of the Item you want</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The item</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#backo.Item" title="backo.Item">Item</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.Collection.get_other_collection">
+<span class="sig-name descname"><span class="pre">get_other_collection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="headerlink" href="#backo.Collection.get_other_collection" title="Link to this definition"></a></dt>
+<dd><p>Return another collection (used by <a class="reference internal" href="#backo.Ref" title="backo.Ref"><code class="xref py py-class docutils literal notranslate"><span class="pre">Ref</span></code></a> and <a class="reference internal" href="#backo.RefsList" title="backo.RefsList"><code class="xref py py-class docutils literal notranslate"><span class="pre">RefsList</span></code></a>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> – the name of the collection you want</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the collection</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Self</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.Collection.new_item">
+<span class="sig-name descname"><span class="pre">new_item</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#backo.Item" title="backo.item.Item"><span class="pre">Item</span></a></span></span><a class="headerlink" href="#backo.Collection.new_item" title="Link to this definition"></a></dt>
+<dd><p>Return an empty <a class="reference internal" href="#backo.Item" title="backo.Item"><code class="xref py py-class docutils literal notranslate"><span class="pre">Item</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>an empty Item</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#backo.Item" title="backo.Item">Item</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.Collection.register_action">
+<span class="sig-name descname"><span class="pre">register_action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#backo.Action" title="backo.action.Action"><span class="pre">Action</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.Collection.register_action" title="Link to this definition"></a></dt>
+<dd><p>Register an action to this collection</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – The name of the action</p></li>
+<li><p><strong>action</strong> (<a class="reference internal" href="#backo.Action" title="backo.Action"><code class="xref py py-class docutils literal notranslate"><span class="pre">Action</span></code></a>) – the <a class="reference internal" href="#backo.Action" title="backo.Action"><code class="xref py py-class docutils literal notranslate"><span class="pre">Action</span></code></a> to register</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.Collection.register_selection">
+<span class="sig-name descname"><span class="pre">register_selection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">selection_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Selection</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#backo.Collection.register_selection" title="Link to this definition"></a></dt>
+<dd><p>Register a selction to this collection</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – The name of the selection</p></li>
+<li><p><strong>action</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Selection</span></code>) – the <code class="xref py py-class docutils literal notranslate"><span class="pre">Selection</span></code> to register</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="backo.CurrentUser">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">backo.</span></span><span class="sig-name descname"><span class="pre">CurrentUser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.CurrentUser" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></p>
+<p>the current connected user object</p>
+<dl class="simple">
+<dt>the current user is a <a class="reference external" href="https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict">Dict</a> with</dt><dd><ul class="simple">
+<li><p>_id (<a class="reference external" href="https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.String">String</a>) : The _id of the user</p></li>
+<li><p>login (<a class="reference external" href="https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.String">String</a>) : The login as a string</p></li>
+<li><p>roles (<a class="reference external" href="https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.List">List</a> of <a class="reference external" href="https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.String">String</a>) :             The list of roles for this user. A role is a string which can be used for rights.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – see <a class="reference external" href="https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict">https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict</a></p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.CurrentUser.has_role">
+<span class="sig-name descname"><span class="pre">has_role</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">role</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#backo.CurrentUser.has_role" title="Link to this definition"></a></dt>
+<dd><p>Return if the currentUser has the role given in param</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>role</strong> (<em>str</em>) – the role</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a boolean if the user as the role has the role</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># example </span>
+<span class="k">if</span> <span class="n">current_user</span><span class="o">.</span><span class="n">has_role</span><span class="p">(</span> <span class="s2">&quot;Admin&quot;</span> <span class="p">):</span>
+    <span class="k">return</span> <span class="kc">True</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="k">return</span> <span class="kc">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="backo.Item">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">backo.</span></span><span class="sig-name descname"><span class="pre">Item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.Item" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></p>
+<p>The description of the object of a collection</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>schema</strong> (<em>dict</em>) – its schema (see <cite>Dict &lt;https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict&gt;</cite>)</p></li>
+<li><p><strong>**kwargs</strong> – see <a class="reference external" href="https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict">https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict</a></p></li>
+</ul>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">backo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Item</span><span class="p">,</span> <span class="n">Collection</span><span class="p">,</span> <span class="n">Backoffice</span><span class="p">,</span> <span class="n">DBMongoConnector</span>
+
+<span class="c1"># example </span>
+<span class="n">book</span> <span class="o">=</span> <span class="n">Item</span><span class="p">({</span>
+    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
+    <span class="s2">&quot;subtitle&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
+    <span class="s2">&quot;author&quot;</span><span class="p">:</span> <span class="n">Ref</span><span class="p">(</span><span class="n">coll</span><span class="o">=</span><span class="s2">&quot;authors&quot;</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s2">&quot;$.books&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="s2">&quot;pages&quot;</span><span class="p">:</span> <span class="n">Int</span><span class="p">()</span>
+<span class="p">})</span>
+
+<span class="n">database_for_books</span> <span class="o">=</span> <span class="n">DBMongoConnector</span><span class="p">(</span> <span class="n">connection_string</span><span class="o">=</span><span class="s2">&quot;mongodb://localhost:27017/bookcase&quot;</span> <span class="p">)</span>
+<span class="n">books</span> <span class="o">=</span> <span class="n">Collection</span><span class="p">(</span> <span class="n">book</span><span class="p">,</span> <span class="n">database_for_books</span> <span class="p">)</span>
+
+<span class="n">bookstore</span> <span class="o">=</span> <span class="n">Backoffice</span><span class="p">(</span><span class="s2">&quot;bookstore&quot;</span><span class="p">)</span>
+<span class="n">bookstore</span><span class="o">.</span><span class="n">register_collection</span><span class="p">(</span><span class="n">books</span><span class="p">)</span>
+<span class="c1"># ...</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.Item.create">
+<span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.Item.create" title="Link to this definition"></a></dt>
+<dd><p>Create and save an object into the DB</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> (<em>dict</em>) – The json object struture to create</p></li>
+<li><p><strong>**kwargs</strong> – <ul>
+<li><p><em>transaction_id=</em> <code class="docutils literal notranslate"><span class="pre">int</span></code> – the current transaction_id (in case of rollback)</p></li>
+<li><p><em>m_path=</em> <code class="docutils literal notranslate"><span class="pre">[str]</span></code> – the modification path, to to avoid loop with references</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.Item.delete">
+<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#backo.Item.delete" title="Link to this definition"></a></dt>
+<dd><p>delete the object in the database</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – <ul class="simple">
+<li><p><em>transaction_id=</em> <code class="docutils literal notranslate"><span class="pre">int</span></code> – the current transaction_id (in case of rollback)</p></li>
+<li><p><em>m_path=</em> <code class="docutils literal notranslate"><span class="pre">[str]</span></code> – the modification path, to to avoid loop with references</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.Item.load">
+<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#backo.Item.load" title="Link to this definition"></a></dt>
+<dd><p>Read in the database by Id and fill the Data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>_id</strong> (<em>str</em>) – The _id to load.</p></li>
+<li><p><strong>**kwargs</strong> – <ul>
+<li><p><em>transaction_id=</em> <code class="docutils literal notranslate"><span class="pre">int</span></code> – the current transaction_id (in case of rollback)</p></li>
+<li><p><em>m_path=</em> <code class="docutils literal notranslate"><span class="pre">[str]</span></code> – the modification path, to to avoid loop with references</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.Item.reload">
+<span class="sig-name descname"><span class="pre">reload</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#backo.Item.reload" title="Link to this definition"></a></dt>
+<dd><p>Reload from DB the object (in case of changement)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – <ul class="simple">
+<li><p><em>transaction_id=</em> <code class="docutils literal notranslate"><span class="pre">int</span></code> – the current transaction_id (in case of rollback)</p></li>
+<li><p><em>m_path=</em> <code class="docutils literal notranslate"><span class="pre">[str]</span></code> – the modification path, to to avoid loop with references</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.Item.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#backo.Item.save" title="Link to this definition"></a></dt>
+<dd><p>save the object in the database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – <ul class="simple">
+<li><p><em>transaction_id=</em> <code class="docutils literal notranslate"><span class="pre">int</span></code> – the current transaction_id (in case of rollback)</p></li>
+<li><p><em>m_path=</em> <code class="docutils literal notranslate"><span class="pre">[str]</span></code> – the modification path, to to avoid loop with references</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<section id="ref-refslist">
+<h2>Ref &amp; RefsList<a class="headerlink" href="#ref-refslist" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="backo.DeleteStrategy">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">backo.</span></span><span class="sig-name descname"><span class="pre">DeleteStrategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.DeleteStrategy" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>Specifics strategy for deletion for <a class="reference internal" href="#backo.RefsList" title="backo.RefsList"><code class="xref py py-class docutils literal notranslate"><span class="pre">RefsList</span></code></a></p>
+<p>when the user want to delete the object, if the object contains a <a class="reference internal" href="#backo.RefsList" title="backo.RefsList"><code class="xref py py-class docutils literal notranslate"><span class="pre">RefsList</span></code></a>. Say how to handle the deletion</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">MUST_BE_EMPTY</span></code> = The RefsList must be empty otherwise the delete action will raise an error.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DELETE_REFERENCED_ITEMS</span></code> = All objects targeted with this RefsList will be deleted too. Caution !</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">UNLINK_REFERENCED_ITEMS</span></code> = The reverse field of all objects targeted with this RefsList will be cleaned</p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="backo.FillStrategy">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">backo.</span></span><span class="sig-name descname"><span class="pre">FillStrategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.FillStrategy" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>Specifics strategy for fill RefsList in case of one_to_many or many_to_many links</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">FILL</span></code> = The reverse is a List of _ids. Usefull to manage which is pointing to me.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">NOT_FILL</span></code> = Whe don’t want to fill because the list is to big (for example person -&gt; nationality) but is important to keep the information of this link.</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="backo.Ref">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">backo.</span></span><span class="sig-name descname"><span class="pre">Ref</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.Ref" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">String</span></code></p>
+<p>Ref 0 or 1 to many to another <a class="reference internal" href="#backo.Collection" title="backo.Collection"><code class="xref py py-class docutils literal notranslate"><span class="pre">Collection</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – <ul class="simple">
+<li><p><em>collection|coll=</em> <code class="docutils literal notranslate"><span class="pre">str</span></code> – The target collection</p></li>
+<li><p><em>reverse|rev|field=</em> <code class="docutils literal notranslate"><span class="pre">str</span></code> – The field in the target collection which reference my collection. Must be a RFC 9535 path (<a class="reference external" href="https://datatracker.ietf.org/doc/rfc9535/">https://datatracker.ietf.org/doc/rfc9535/</a>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">backo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Item</span><span class="p">,</span> <span class="n">Ref</span><span class="p">,</span> <span class="n">RefsList</span>
+
+<span class="c1"># example </span>
+<span class="n">book_item</span> <span class="o">=</span> <span class="n">Item</span><span class="p">({</span>
+    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
+    <span class="s2">&quot;author&quot;</span><span class="p">:</span> <span class="n">Ref</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="s2">&quot;authors&quot;</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s2">&quot;$.books&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+<span class="p">})</span>
+<span class="n">author_item</span> <span class="o">=</span> <span class="n">Item</span><span class="p">({</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
+    <span class="s2">&quot;surname&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
+    <span class="s2">&quot;books&quot;</span><span class="p">:</span> <span class="n">RefsList</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="s2">&quot;books&quot;</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s2">&quot;$.author&quot;</span><span class="p">),</span>
+<span class="p">})</span>
+
+<span class="n">books</span> <span class="o">=</span> <span class="n">Collection</span><span class="p">(</span> <span class="s2">&quot;books&quot;</span><span class="p">,</span> <span class="n">book_item</span><span class="p">,</span> <span class="n">database_for_books</span> <span class="p">)</span>
+<span class="n">authors</span> <span class="o">=</span> <span class="n">Collection</span><span class="p">(</span> <span class="s2">&quot;authors&quot;</span><span class="p">,</span> <span class="n">author_item</span><span class="p">,</span> <span class="n">database_for_authors</span> <span class="p">)</span>
+
+<span class="n">my_bookstore</span> <span class="o">=</span> <span class="n">Backoffice</span><span class="p">(</span><span class="s2">&quot;bookstore&quot;</span><span class="p">)</span>
+<span class="n">my_bookstore</span><span class="o">.</span><span class="n">register_collection</span><span class="p">(</span><span class="n">books</span><span class="p">)</span>
+<span class="n">my_bookstore</span><span class="o">.</span><span class="n">register_collection</span><span class="p">(</span><span class="n">authors</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="backo.RefsList">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">backo.</span></span><span class="sig-name descname"><span class="pre">RefsList</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.RefsList" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></p>
+<p>Ref 0 or 1 to many to another <a class="reference internal" href="#backo.Collection" title="backo.Collection"><code class="xref py py-class docutils literal notranslate"><span class="pre">Collection</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – <ul class="simple">
+<li><p><em>collection|coll=</em> <code class="docutils literal notranslate"><span class="pre">str</span></code> – The target collection</p></li>
+<li><p><em>reverse|rev|field=</em> <code class="docutils literal notranslate"><span class="pre">str</span></code> – The field in the target collection which reference my collection. Must be a RFC 9535 path (<a class="reference external" href="https://datatracker.ietf.org/doc/rfc9535/">https://datatracker.ietf.org/doc/rfc9535/</a>)</p></li>
+<li><p><em>on_delete|ods=</em> <a class="reference internal" href="#backo.DeleteStrategy" title="backo.DeleteStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">DeleteStrategy</span></code></a> – The deletion strategy <a class="reference internal" href="#backo.DeleteStrategy" title="backo.DeleteStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">DeleteStrategy</span></code></a>. By default <code class="docutils literal notranslate"><span class="pre">DeleteStrategy.MUST_BE_EMPTY</span></code></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">backo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Item</span><span class="p">,</span> <span class="n">Ref</span><span class="p">,</span> <span class="n">RefsList</span><span class="p">,</span> <span class="n">DeleteStrategy</span>
+
+<span class="c1"># example </span>
+<span class="n">book_item</span> <span class="o">=</span> <span class="n">Item</span><span class="p">({</span>
+    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
+    <span class="s2">&quot;author&quot;</span><span class="p">:</span> <span class="n">Ref</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="s2">&quot;authors&quot;</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s2">&quot;$.books&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+<span class="p">})</span>
+<span class="n">author_item</span> <span class="o">=</span> <span class="n">Item</span><span class="p">({</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
+    <span class="s2">&quot;surname&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
+    <span class="s2">&quot;books&quot;</span><span class="p">:</span> <span class="n">RefsList</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="s2">&quot;books&quot;</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s2">&quot;$.author&quot;</span><span class="p">,</span> <span class="n">ods</span><span class="o">=</span><span class="n">DeleteStrategy</span><span class="o">.</span><span class="n">DELETE_REFERENCED_ITEMS</span><span class="p">),</span>
+<span class="p">})</span>
+
+<span class="n">books</span> <span class="o">=</span> <span class="n">Collection</span><span class="p">(</span> <span class="s2">&quot;books&quot;</span><span class="p">,</span> <span class="n">book_item</span><span class="p">,</span> <span class="n">database_for_books</span> <span class="p">)</span>
+<span class="n">authors</span> <span class="o">=</span> <span class="n">Collection</span><span class="p">(</span> <span class="s2">&quot;authors&quot;</span><span class="p">,</span> <span class="n">author_item</span><span class="p">,</span> <span class="n">database_for_authors</span> <span class="p">)</span>
+
+<span class="n">my_bookstore</span> <span class="o">=</span> <span class="n">Backoffice</span><span class="p">(</span><span class="s2">&quot;bookstore&quot;</span><span class="p">)</span>
+<span class="n">my_bookstore</span><span class="o">.</span><span class="n">register_collection</span><span class="p">(</span><span class="n">books</span><span class="p">)</span>
+<span class="n">my_bookstore</span><span class="o">.</span><span class="n">register_collection</span><span class="p">(</span><span class="n">authors</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="dbconnector">
+<h2>DBconnector<a class="headerlink" href="#dbconnector" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="backo.DBConnector">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">backo.</span></span><span class="sig-name descname"><span class="pre">DBConnector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.DBConnector" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Database Connector</p>
+<p>This is the way to save / store / retrieve objects</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – <ul class="simple">
+<li><p><em>restriction=</em> <code class="docutils literal notranslate"><span class="pre">func</span></code> –
+not used yet</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBConnector.create">
+<span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">o</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#backo.DBConnector.create" title="Link to this definition"></a></dt>
+<dd><p>Create the object into the DB and return the _id</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>o</strong> (<em>dict</em>) – The object given (json format)</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="errors.html#backo.Error" title="backo.Error"><strong>Error</strong></a> – Raise an error ErrorType.NOT_IMPLEMENTED or any db error</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBConnector.delete_by_id">
+<span class="sig-name descname"><span class="pre">delete_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.DBConnector.delete_by_id" title="Link to this definition"></a></dt>
+<dd><p>The _id to delete on the db</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>_id</strong> (<em>str</em>) – the _id</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="errors.html#backo.Error" title="backo.Error"><strong>Error</strong></a> – Raise an error ErrorType.NOT_IMPLEMENTED or any db error</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBConnector.drop">
+<span class="sig-name descname"><span class="pre">drop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#backo.DBConnector.drop" title="Link to this definition"></a></dt>
+<dd><p>Drop the collection</p>
+<p>Mainly used in test</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="errors.html#backo.Error" title="backo.Error"><strong>Error</strong></a> – Raise an error ErrorType.NOT_IMPLEMENTED or any db error</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBConnector.generate_id">
+<span class="sig-name descname"><span class="pre">generate_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">o</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#backo.DBConnector.generate_id" title="Link to this definition"></a></dt>
+<dd><p>The function to generate an Id.</p>
+<p>Mainly, not used, because the database itself do the job (like mongo). 
+But for other cases, you must generate by yourself the uniq <em>_id</em> for the object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>o</strong> (<em>dict</em>) – The object given (json format)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>an Id</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBConnector.get_by_id">
+<span class="sig-name descname"><span class="pre">get_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#backo.DBConnector.get_by_id" title="Link to this definition"></a></dt>
+<dd><p>get an object by _id in the DB and return it</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>_id</strong> (<em>str</em>) – the _id</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The object (json format)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="errors.html#backo.Error" title="backo.Error"><strong>Error</strong></a> – Raise an error ErrorType.NOT_IMPLEMENTED or any db error</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBConnector.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">o</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.DBConnector.save" title="Link to this definition"></a></dt>
+<dd><p>Save the objet</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>_id</strong> (<em>str</em>) – the _id of this object</p></li>
+<li><p><strong>o</strong> (<em>dict</em>) – The object given (json format)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="errors.html#backo.Error" title="backo.Error"><strong>Error</strong></a> – Raise an error ErrorType.NOT_IMPLEMENTED or any db error</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBConnector.select">
+<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">select_filter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_of_element_to_skip</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_object</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.DBConnector.select" title="Link to this definition"></a></dt>
+<dd><p>Select from filter in the DB and return a list of dicts, with pagination</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>select_filter</strong> – The filter for selection (depends on DB types)</p></li>
+<li><p><strong>projection</strong> (<em>dict</em>) – The list of elements we want for each object</p></li>
+<li><p><strong>page_size</strong> (<em>int</em>) – number of elements per page</p></li>
+<li><p><strong>num_of_element_to_skip</strong> (<em>int</em>) – number of element to skip from beginning</p></li>
+<li><p><strong>sort_object</strong> (<em>dict</em>) – Soon</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="errors.html#backo.Error" title="backo.Error"><strong>Error</strong></a> – Raise an error ErrorType.NOT_IMPLEMENTED or any db error</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="backo.DBMongoConnector">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">backo.</span></span><span class="sig-name descname"><span class="pre">DBMongoConnector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.DBMongoConnector" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#backo.DBConnector" title="backo.db_connector.DBConnector"><code class="xref py py-class docutils literal notranslate"><span class="pre">DBConnector</span></code></a></p>
+<p>Mongodb database Connector</p>
+<p>This is the way to save / store / retrieve objects in a mongodb</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – <ul class="simple">
+<li><p><em>restriction=</em> <code class="docutils literal notranslate"><span class="pre">func</span></code> – not used yet</p></li>
+<li><p>all other params are passed to <code class="docutils literal notranslate"><span class="pre">Mongoclient</span></code></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBMongoConnector.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#backo.DBMongoConnector.close" title="Link to this definition"></a></dt>
+<dd><p>Close the mongodb connection</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="errors.html#backo.Error" title="backo.Error"><strong>Error</strong></a> – Raise an error ErrorType.MONGO_CONNECT_ERROR in case of database Error</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBMongoConnector.connect">
+<span class="sig-name descname"><span class="pre">connect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#backo.DBMongoConnector.connect" title="Link to this definition"></a></dt>
+<dd><p>Try to make a connection to the mongodb</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="errors.html#backo.Error" title="backo.Error"><strong>Error</strong></a> – Raise an error ErrorType.MONGO_CONNECT_ERROR in case of database Error</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBMongoConnector.create">
+<span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">o</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.DBMongoConnector.create" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#backo.DBConnector.create" title="backo.DBConnector.create"><code class="xref py py-func docutils literal notranslate"><span class="pre">DBConnector.create()</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBMongoConnector.delete_by_id">
+<span class="sig-name descname"><span class="pre">delete_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.DBMongoConnector.delete_by_id" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#backo.DBConnector.delete_by_id" title="backo.DBConnector.delete_by_id"><code class="xref py py-func docutils literal notranslate"><span class="pre">DBConnector.delete_by_id()</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBMongoConnector.drop">
+<span class="sig-name descname"><span class="pre">drop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#backo.DBMongoConnector.drop" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#backo.DBConnector.drop" title="backo.DBConnector.drop"><code class="xref py py-func docutils literal notranslate"><span class="pre">DBConnector.drop()</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="errors.html#backo.Error" title="backo.Error"><strong>Error</strong></a> – Raise an error ErrorType.MONGO_CONNECT_ERROR in case of database Error</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBMongoConnector.generate_id">
+<span class="sig-name descname"><span class="pre">generate_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">o</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.DBMongoConnector.generate_id" title="Link to this definition"></a></dt>
+<dd><p>Do not create _id by ourself. mongo will do the job</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBMongoConnector.get_by_id">
+<span class="sig-name descname"><span class="pre">get_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.DBMongoConnector.get_by_id" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#backo.DBConnector.get_by_id" title="backo.DBConnector.get_by_id"><code class="xref py py-func docutils literal notranslate"><span class="pre">DBConnector.get_by_id()</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBMongoConnector.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">o</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.DBMongoConnector.save" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#backo.DBConnector.save" title="backo.DBConnector.save"><code class="xref py py-func docutils literal notranslate"><span class="pre">DBConnector.save()</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBMongoConnector.select">
+<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">select_filter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_of_element_to_skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_object</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'_id':</span> <span class="pre">1}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.DBMongoConnector.select" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#backo.DBConnector.select" title="backo.DBConnector.select"><code class="xref py py-func docutils literal notranslate"><span class="pre">DBConnector.select()</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>select_filter</strong> (<em>dict</em><em> ( </em><em>a mongodb fliter syntax</em><em> )</em>) – The filter for selection</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="backo.DBYmlConnector">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">backo.</span></span><span class="sig-name descname"><span class="pre">DBYmlConnector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.DBYmlConnector" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#backo.DBConnector" title="backo.db_connector.DBConnector"><code class="xref py py-class docutils literal notranslate"><span class="pre">DBConnector</span></code></a></p>
+<p>Yaml files database Connector</p>
+<p>This is the way to save / store / retrieve objects in yaml files</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – <ul class="simple">
+<li><p><em>path=</em> <code class="docutils literal notranslate"><span class="pre">str</span></code> – The directory to store yaml files</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBYmlConnector.create">
+<span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">o</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#backo.DBYmlConnector.create" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#backo.DBConnector.create" title="backo.DBConnector.create"><code class="xref py py-func docutils literal notranslate"><span class="pre">DBConnector.create()</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBYmlConnector.delete_by_id">
+<span class="sig-name descname"><span class="pre">delete_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#backo.DBYmlConnector.delete_by_id" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#backo.DBConnector.delete_by_id" title="backo.DBConnector.delete_by_id"><code class="xref py py-func docutils literal notranslate"><span class="pre">DBConnector.delete_by_id()</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBYmlConnector.drop">
+<span class="sig-name descname"><span class="pre">drop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#backo.DBYmlConnector.drop" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#backo.DBConnector.drop" title="backo.DBConnector.drop"><code class="xref py py-func docutils literal notranslate"><span class="pre">DBConnector.drop()</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBYmlConnector.get_by_id">
+<span class="sig-name descname"><span class="pre">get_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#backo.DBYmlConnector.get_by_id" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#backo.DBConnector.get_by_id" title="backo.DBConnector.get_by_id"><code class="xref py py-func docutils literal notranslate"><span class="pre">DBConnector.get_by_id()</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBYmlConnector.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">o</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#backo.DBYmlConnector.save" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#backo.DBConnector.save" title="backo.DBConnector.save"><code class="xref py py-func docutils literal notranslate"><span class="pre">DBConnector.save()</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.DBYmlConnector.select">
+<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">select_filter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projection</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_of_element_to_skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_object</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'_id':</span> <span class="pre">1}</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#backo.DBYmlConnector.select" title="Link to this definition"></a></dt>
+<dd><p>See <a class="reference internal" href="#backo.DBConnector.select" title="backo.DBConnector.select"><code class="xref py py-func docutils literal notranslate"><span class="pre">DBConnector.select()</span></code></a></p>
+<p>Params <code class="docutils literal notranslate"><span class="pre">select_filter</span></code> and <code class="docutils literal notranslate"><span class="pre">projection</span></code> are not used</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="readme.html" class="btn btn-neutral float-left" title="Back Office Low Code (backo)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="errors.html" class="btn btn-neutral float-right" title="Errors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Bertrand Wallrich.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -174,7 +174,7 @@ Relations cardinalities are expressed by the mean of `Ref()` and `RefsList()`:
 | ```table=``` | None | similar to ```coll``` |
 | ```field=``` | None | The reverse field in the targeted collection (use [selector](https://github.com/bwallrich/stricto?tab=readme-ov-file#selectors) to target it) |
 | ```rev=``` | None | similar to ```field``` |
-| ```ods=``` | None | *On Delete Strategy* see [ods](#deletion-strategies)|
+| ```ods=``` | None | *On Delete Strategy* see [ods](#deletion-strategies-ods)|
 
 And all options availables in [stricto String()](https://github.com/bwallrich/stricto?tab=readme-ov-file#string) fields.
 

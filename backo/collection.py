@@ -7,6 +7,7 @@ import json
 import logging
 import re
 import sys
+from typing import Self
 
 from flask import request, Blueprint
 
@@ -45,14 +46,61 @@ meta_model_request = FreeDict(default={})
 
 
 class Collection:
-    """
-    The Collection refer to a "table"
+    """The Collection refer to a "table"
+
+    A collection is the main object in backo. It contains
+        - an :py:class:`Item` = the description of the object structure
+        - an :py:class:`DBConnector` = the database connector to say how and where to save the object
+        - some :py:class:`Selection` = some preset *select* for this collection
+        - some :py:class:`Action` = a list of actions to do on this collection
+
+    A collection mus by registered into a :py:class:`Backoffice` with :func:`Backoffice.register_collection`
+
+    :param name: The collection name
+    :param model: The description of the structure (an Item)
+    :type model: Item
+    :param db_handler: The database handler
+    :type db_handler: DBConnector
+
+    :param ``**kwargs``:
+        - *refuse_filter=* ``func`` --
+          not used yet
+        - *can_read=* ``[func]|bool`` --
+          a function to say if the :py:class:`CurrentUser` can read this collection
+        - *can_create=* ``[func]|bool`` --
+          a function to say if the :py:class:`CurrentUser` can create an :py:class:`Item` in this collection
+        - *can_delete=* ``[func]|bool`` --
+          a function to say if the :py:class:`CurrentUser` can delete an :py:class:`Item` in this collection
+        - *can_modify=* ``[func]|bool`` --
+          a function to say if the :py:class:`CurrentUser` can modify an :py:class:`Item` in this collection
+
+
+
+    .. code-block:: python
+
+        from backo import Item, Collection, Backoffice, , DBMongoConnector
+
+        # example
+        book_item = Item({
+            "title": String(),
+            "subtitle": String(),
+            "author": Ref(collection="authors", field="$.books", required=True),
+        })
+
+
+        database_for_books = DBMongoConnector( connection_string="mongodb://localhost:27017/bookcase" )
+        books = Collection( "books", book_item, database_for_books )
+
+        my_bookstore = Backoffice("bookstore")
+        my_bookstore.register_collection(books)
+        # ...
+
+
+
     """
 
     def __init__(self, name, model: Item, db_handler, **kwargs):
-        """
-        available arguments
-        """
+        """Constructor"""
         self.db_handler = db_handler
         self.name = name
         self.model = model.copy()
@@ -85,15 +133,20 @@ class Collection:
         self.register_selection("_all", Selection(None, can_read=can_read))
 
     def get_meta(self) -> dict:
-        """
-        return the meta data for this collection and actions
+        """Return the meta data for this collection and actions
+
+        :meta private:
+
         """
         d = {"name": self.name, "item": self.model.get_schema()}
         return d
 
     def set(self, datas: dict | list) -> Item | list:
-        """
-        Set an object or a list of object
+        """Set an object or a list of object
+
+        :meta private:
+
+
         """
         if isinstance(datas, dict):
             o = self.new_item()
@@ -109,6 +162,10 @@ class Collection:
     def define_view(self, name: str, list_of_selector: list) -> None:
         """
         add element into views
+
+
+        :meta private:
+
         """
         for selector in list_of_selector:
             f = self.model.select(selector)
@@ -120,27 +177,43 @@ class Collection:
     def is_allowed_to(self, right_name: str, o: Item = None) -> bool:
         """
         Return the right for this collection
+
+
+        :meta private:
+
         """
         return self._permissions.is_allowed_to(right_name, o)
 
-    def new_item(self):
-        """
-        return an Item
+    def new_item(self) -> Item:
+        """Return an empty :py:class:`Item`
+
+        :return: an empty Item
+        :rtype: Item
         """
         return self.model.copy()
 
     def new(self):
-        """
-        return an Item
+        """See :func:`new_item`
+
+
+        :meta private:
+
         """
         return self.new_item()
 
-    def create(self, obj: dict, **kwargs):
-        """
-        Create and save an item into the DB
+    def create(self, obj: dict, **kwargs) -> Item:
+        """Create and save an item into the DB
 
-        transaction_id : The id of the transaction (used for rollback )
-        m_path : modification path, to avoid loop with references
+        :param obj: The json object struture to create
+        :type obj: dict
+
+        :return: an empty Item
+        :rtype: Item
+
+        :param ``**kwargs``:
+            - *transaction_id=* ``int`` -- the current transaction_id (in case of rollback)
+            - *m_path=* ``[str]`` -- the modification path, to to avoid loop with references
+
         """
 
         if self._permissions.is_allowed_to("create", None) is not True:
@@ -154,9 +227,12 @@ class Collection:
         item.enable_permissions()
         return item
 
-    def get_other_collection(self, name):
-        """
-        Return another collection (ised by Ref and RefsList)
+    def get_other_collection(self, name) -> Self:
+        """Return another collection (used by :py:class:`Ref` and :py:class:`RefsList`)
+
+        :param name: the name of the collection you want
+        :return: the collection
+        :rtype: Self
         """
         if self.backoffice is None:
             raise Error(
@@ -166,9 +242,13 @@ class Collection:
         return self.backoffice.collections.get(name)
 
     def register_action(self, name: str, action: Action):
-        """
-        add an action to this collection
-        this action will be related to an object
+        """Register an action to this collection
+
+        :param name: The name of the action
+        :type name: str
+        :param action: the :py:class:`Action` to register
+        :type action: :py:class:`Action`
+
         """
         self._actions[name] = action
         action.__dict__["backoffice"] = self.backoffice
@@ -176,15 +256,17 @@ class Collection:
         action.__dict__["collection"] = self
 
     def add_action(self, name: str, action: Action):
-        """
-        add an action to this collection
-        this action will be related to an object
-        """
+        """See :func:`register_action`"""
         return self.register_action(name, action)
 
-    def register_selection(self, selection_name, selection: Selection) -> None:
-        """
-        Add a selection for this collection
+    def register_selection(self, selection_name: str, selection: Selection) -> None:
+        """Register a selction to this collection
+
+        :param name: The name of the selection
+        :type name: str
+        :param action: the :py:class:`Selection` to register
+        :type action: :py:class:`Selection`
+
         """
         self._selections[selection_name] = selection
         selection.backoffice = self.backoffice
@@ -193,13 +275,23 @@ class Collection:
 
     def drop(self):
         """
-        Drop all elements
+        Drop all elements for this collection
+
+        :meta private:
+
+
         """
         self.db_handler.drop()
 
-    def get_by_id(self, _id):
-        """
-        return an object by Id.
+    def get_by_id(self, _id: str) -> Item:
+        """Return an object by Id.
+
+
+        :param _id: the _id of the Item you want
+        :type _id: str
+        :return: The item
+        :rtype: Item
+
         """
 
         if self._permissions.is_allowed_to("read", None) is not True:
@@ -214,8 +306,10 @@ class Collection:
         return obj
 
     def create_routes(self) -> Blueprint:
-        """
-        Add CRUD/_meta/_check routes
+        """Add CRUD/_meta/_check routes
+
+        :meta private:
+
         """
         collection_blueprint = Blueprint(f"{self.name}", __name__)
 
@@ -307,6 +401,10 @@ class Collection:
     def http_get_by_id(self, _id: str):
         """
         GET HTTP
+
+
+        :meta private:
+
         """
 
         log.debug(f"http_get_by_id _id {_id}")
@@ -324,6 +422,10 @@ class Collection:
     def filtering(self):
         """
         SELECT HTTP
+
+
+        :meta private:
+
         """
         log.debug(f"filtering request.args {request.args}")
         query = request.args
@@ -346,6 +448,9 @@ class Collection:
     def http_create(self):
         """
         POST HTTP -> creation
+
+        :meta private:
+
         """
 
         log.debug(f"http_create request {request.json}")
@@ -363,6 +468,9 @@ class Collection:
     def http_modify(self, _id: str):
         """
         PUT HTTP -> modification of an object
+
+        :meta private:
+
         """
 
         log.debug(f"http_modify request {request.json}")
@@ -381,6 +489,9 @@ class Collection:
     def http_delete(self, _id: str):
         """
         DELETE HTTP -> deletion
+
+        :meta private:
+
         """
         log.debug(f"http_delete _id {_id}")
 
@@ -394,6 +505,9 @@ class Collection:
     def http_check(self):
         """
         POST HTTP -> check value if a field
+
+        :meta private:
+
         """
 
         log.debug(f"http_check request {request.json}")
@@ -426,6 +540,9 @@ class Collection:
     def http_meta(self):
         """
         POST HTTP -> get a meta structure for this context
+
+        :meta private:
+
         """
 
         log.debug(f"http_meta request {request.json}")
@@ -444,6 +561,9 @@ class Collection:
     def http_patch_one(self, _id: str):
         """
         PATCH HTTP -> patch of an object
+
+        :meta private:
+
         """
         query = request.args
         _view = query.get("_view", "client")

@@ -1,0 +1,5 @@
+sphinx==8.2.3
+myst-parser==4.0.1
+sphinx_rtd_theme
+sphinxcontrib-mermaid==1.2.3
+toml

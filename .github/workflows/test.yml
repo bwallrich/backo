@@ -8,6 +8,15 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.10"]
+    services:
+      mongodb:
+        image: mongo:latest
+        env:
+          # MONGO_INITDB_ROOT_USERNAME: admin
+          # MONGO_INITDB_ROOT_PASSWORD: admin
+          MONGO_INITDB_DATABASE: testMongo
+        # ports:
+        #  - 27017:27017
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}

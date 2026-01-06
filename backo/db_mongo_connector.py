@@ -17,14 +17,19 @@ log.setLevel(logging.DEBUG)
 
 
 class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attributes
-    """
-    A generic type for a DB
+    """Mongodb database Connector
+
+    This is the way to save / store / retrieve objects in a mongodb
+
+    :param ``**kwargs``:
+        - *restriction=* ``func`` -- not used yet
+        - all other params are passed to ``Mongoclient``
+
+
     """
 
     def __init__(self, **kwargs):
-        """
-        available arguments
-        """
+        """constructor"""
         self._connection_string = kwargs.pop(
             "connection_string", "mongodb://localhost:27017/backo"
         )
@@ -39,8 +44,10 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
         DBConnector.__init__(self, **kwargs)
 
     def connect(self):
-        """
-        Try to maque a connection to the DB
+        """Try to make a connection to the mongodb
+
+        :raise Error: Raise an error ErrorType.MONGO_CONNECT_ERROR in case of database Error
+
         """
         try:
             return self._db.server_info()
@@ -51,8 +58,10 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
             ) from e
 
     def close(self):
-        """
-        Close the database
+        """Close the mongodb connection
+
+        :raise Error: Raise an error ErrorType.MONGO_CONNECT_ERROR in case of database Error
+
         """
         try:
             return self._db.close()
@@ -63,9 +72,10 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
             ) from e
 
     def drop(self):
-        """
-        Drop the collection
-        (used in test)
+        """See :func:`DBConnector.drop`
+
+        :raise Error: Raise an error ErrorType.MONGO_CONNECT_ERROR in case of database Error
+
         """
         log.debug("Drop collection %r", self._collection_name)
         try:
@@ -76,7 +86,7 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
                 f"Mongo connection error while {self._collection_name}.drop() {self._connection_string}",
             ) from e
 
-    def combine_with_restriction_filter(self, select):
+    def _combine_with_restriction_filter(self, select):
         """
         Combine the filter with the restriction filter (if exists)
         """
@@ -91,15 +101,11 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
         return {"$and": [rfilter, select]}
 
     def generate_id(self, o):  # pylint: disable=unused-argument
-        """
-        Do not create _id by ourself. mongo will do the job
-        """
+        """Do not create _id by ourself. mongo will do the job"""
         return "666"
 
     def save(self, _id: str, o: dict):
-        """
-        Save the object
-        """
+        """See :func:`DBConnector.save`"""
         o["_id"] = ObjectId(_id)
         try:
             result = self._collection.find_one_and_replace(
@@ -114,9 +120,7 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
         return True
 
     def create(self, o: dict):
-        """
-        Create the object into the DB and return the _id
-        """
+        """See :func:`DBConnector.create`"""
         del o["_id"]
         try:
             result = self._collection.insert_one(o)
@@ -129,12 +133,10 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
         return str(result.inserted_id)
 
     def get_by_id(self, _id: str):
-        """
-        Read the corresponding file
-        """
+        """See :func:`DBConnector.get_by_id`"""
         log.debug(f"try to read {_id} ")
         try:
-            db_filter = self.combine_with_restriction_filter({"_id": ObjectId(_id)})
+            db_filter = self._combine_with_restriction_filter({"_id": ObjectId(_id)})
             o = self._collection.find_one(db_filter)
         except Exception as e:
             raise Error(
@@ -148,13 +150,10 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
         return o
 
     def delete_by_id(self, _id: str):
-        """
-        Delete data by Id
-        return True if deleted, or False if not found
-        """
+        """See :func:`DBConnector.delete_by_id`"""
         log.debug("try to delete %r", _id)
         try:
-            db_filter = self.combine_with_restriction_filter({"_id": ObjectId(_id)})
+            db_filter = self._combine_with_restriction_filter({"_id": ObjectId(_id)})
             result = self._collection.delete_one(db_filter)
         except Exception as e:
             raise Error(
@@ -173,11 +172,12 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
         num_of_element_to_skip=0,
         sort_object={"_id": 1},
     ):
-        """
-        Select and return a list of dicts
+        """See :func:`DBConnector.select`
 
-        select_filter : The db_filter
-        projection : Fields whe want
+        :param select_filter: The filter for selection
+        :type select_filter: dict ( a mongodb fliter syntax )
+
+
         """
         log.debug(
             "select(%r, %r).sort(%r).skip(%r).limit(%r)",
@@ -188,7 +188,7 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
             page_size,
         )
 
-        db_filter = self.combine_with_restriction_filter(select_filter)
+        db_filter = self._combine_with_restriction_filter(select_filter)
         try:
             result_list = list(
                 self._collection.find(db_filter, projection)

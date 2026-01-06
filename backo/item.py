@@ -23,13 +23,36 @@ from stricto import Dict, String
 
 
 class Item(Dict):  # pylint: disable=too-many-instance-attributes
-    """
-    A generic type for a DB
+    """The description of the object of a collection
+
+    :param schema: its schema (see `Dict <https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict>`)
+    :type schema: dict
+    :param ``**kwargs``: see https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict
+
+    .. code-block:: python
+
+        from backo import Item, Collection, Backoffice, DBMongoConnector
+
+        # example
+        book = Item({
+            "title": String(),
+            "subtitle": String(),
+            "author": Ref(coll="authors", field="$.books", required=True),
+            "pages": Int()
+        })
+
+        database_for_books = DBMongoConnector( connection_string="mongodb://localhost:27017/bookcase" )
+        books = Collection( book, database_for_books )
+
+        bookstore = Backoffice("bookstore")
+        bookstore.register_collection(books)
+        # ...
+
     """
 
     def __init__(self, schema: dict, **kwargs):
         """
-        available arguments
+        Constructor
         """
         self.db_handler = None
         self.meta_data_handler = kwargs.pop(
@@ -56,6 +79,9 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
     def set_db_handler(self, db_connector: DBConnector) -> None:
         """
         Set or modify the Database Handler
+
+        :meta private:
+
         """
         self.__dict__["db_handler"] = db_connector
 
@@ -66,13 +92,16 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         some value has change into this Item, chang its status to UNSAVED
         if it was previously SAVED
         This is trigged by the "change" event
+
+        :meta private:
+
         """
         if me._status == StatusType.SAVED:
             me.set_status_unsaved()
 
     def __copy__(self):
         """
-        Make a copy of thos object
+        Make a copy of this object
         """
         result = Dict.__copy__(self)
         result.__dict__["_locked"] = False
@@ -86,27 +115,41 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
     def set_status_unsaved(self):
         """
         Set as StatusType.UNSAVED
+
+        :meta private:
+
         """
         self.__dict__["_status"] = StatusType.UNSAVED
 
     def set_status_saved(self):
         """
         Set as StatusType.SAVED
+
+        :meta private:
+
         """
         self.__dict__["_status"] = StatusType.SAVED
 
     def set_status_unset(self):
         """
         Set as StatusType.UNSET
+
+        :meta private:
+
         """
         self.__dict__["_status"] = StatusType.UNSET
 
     def load(self, _id: str, **kwargs) -> None:
-        """
-        Read in the database by Id and fill the Data
+        """Read in the database by Id and fill the Data
 
-        transaction_id : The id of the transaction (used for rollback )
-        m_path : modification path, to avoid loop with references
+
+        :param _id: The _id to load.
+        :type _id: str
+
+
+        :param ``**kwargs``:
+            - *transaction_id=* ``int`` -- the current transaction_id (in case of rollback)
+            - *m_path=* ``[str]`` -- the modification path, to to avoid loop with references
 
         """
         if self._status != StatusType.UNSET:
@@ -134,11 +177,11 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         # print(f"Load {int(datetime.timestamp(datetime.now()))}", self)
 
     def reload(self, **kwargs) -> None:
-        """
-        Reload from DB the object
+        """Reload from DB the object (in case of changement)
 
-        transaction_id : The id of the transaction (used for rollback )
-        m_path : modification path, to avoid loop with references
+        :param ``**kwargs``:
+            - *transaction_id=* ``int`` -- the current transaction_id (in case of rollback)
+            - *m_path=* ``[str]`` -- the modification path, to to avoid loop with references
 
         """
         if self._status != StatusType.SAVED:
@@ -165,10 +208,12 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
     def save(self, **kwargs) -> None:
         """
-        save the object.
+        save the object in the database.
 
-        transaction_id : The id of the transaction (used for rollback )
-        m_path : modification path, to avoid loop with references
+        :param ``**kwargs``:
+            - *transaction_id=* ``int`` -- the current transaction_id (in case of rollback)
+            - *m_path=* ``[str]`` -- the modification path, to to avoid loop with references
+
 
         """
         if self._status == StatusType.UNSET:
@@ -237,8 +282,9 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         """
         delete the object in the database
 
-        transaction_id : The id of the transaction (used for rollback )
-        m_path : modification path, to avoid loop with references
+        :param ``**kwargs``:
+            - *transaction_id=* ``int`` -- the current transaction_id (in case of rollback)
+            - *m_path=* ``[str]`` -- the modification path, to to avoid loop with references
 
         """
         if self._status == StatusType.UNSET:
@@ -294,6 +340,11 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         Depends on the db_connector used. some of them needs _ids
 
         is probably overwritten
+
+
+        :meta private:
+
+
         """
         return self.db_handler.generate_id(self)
 
@@ -301,8 +352,15 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         """
         Create and save an object into the DB
 
-        transaction_id : The id of the transaction (used for rollback )
-        m_path : modification path, to avoid loop with references
+
+        :param obj: The json object struture to create
+        :type obj: dict
+
+        :param ``**kwargs``:
+            - *transaction_id=* ``int`` -- the current transaction_id (in case of rollback)
+            - *m_path=* ``[str]`` -- the modification path, to to avoid loop with references
+
+
         """
         # Set the object
         log.debug(

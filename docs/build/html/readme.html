@@ -1,0 +1,1743 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Back Office Low Code (backo) &mdash; backo 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs"></script>
+      <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.2.0/dist/mermaid-layout-elk.esm.min.mjs"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.2.0/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+      <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+      <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
+
+const defaultStyle = document.createElement('style');
+defaultStyle.textContent = `pre.mermaid {
+    /* Same as .mermaid-container > pre */
+    display: block;
+    width: 100%;
+}
+
+pre.mermaid > svg {
+    /* Same as .mermaid-container > pre > svg */
+    height: 500px;
+    width: 100%;
+    max-width: 100% !important;
+}
+`;
+document.head.appendChild(defaultStyle);
+
+const fullscreenStyle = document.createElement('style');
+fullscreenStyle.textContent = `.mermaid-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.mermaid-container > pre {
+    display: block;
+    width: 100%;
+}
+
+.mermaid-container > pre > svg {
+    height: 500px;
+    width: 100%;
+    max-width: 100% !important;
+}
+
+.mermaid-fullscreen-btn {
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    color: #333;
+}
+
+.mermaid-fullscreen-btn:hover {
+    opacity: 100% !important;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-btn.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-btn.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 3px 10px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 95vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    z-index: 9999;
+    padding: 20px;
+    overflow: auto;
+}
+
+.mermaid-fullscreen-modal.dark-theme {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+.mermaid-fullscreen-modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen {
+    position: relative;
+    width: 95vw;
+    height: 90vh;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen.dark-theme {
+    background: #1a1a1a;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.mermaid-container-fullscreen pre.mermaid {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mermaid-container-fullscreen .mermaid svg {
+    height: 100% !important;
+    width: 100% !important;
+    cursor: grab;
+}
+
+.mermaid-fullscreen-close {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s;
+    font-size: 24px;
+    line-height: 1;
+    color: #333;
+}
+
+.mermaid-fullscreen-close:hover {
+    background: white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    transform: scale(1.1);
+}
+
+.mermaid-fullscreen-close.dark-theme {
+    background: rgba(50, 50, 50, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e0e0e0;
+}
+
+.mermaid-fullscreen-close.dark-theme:hover {
+    background: rgba(60, 60, 60, 1);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.2);
+}
+
+.mermaid-fullscreen-modal .mermaid-fullscreen-btn {
+    display: none !important;
+}`;
+document.head.appendChild(fullscreenStyle);
+
+// Detect if page has dark background
+const isDarkTheme = () => {
+    const bgColor = window.getComputedStyle(document.body).backgroundColor;
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)/);
+    if (match) {
+        const r = parseInt(match[1]);
+        const g = parseInt(match[2]);
+        const b = parseInt(match[3]);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128;
+    }
+    return false;
+};
+
+const load = async () => {
+    await mermaid.run();
+
+    const all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+
+    if ("False" === "True") {
+        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("");
+            if(all_mermaids.length !== mermaids_processed.length) {
+                setTimeout(load, 200);
+                return;
+            } else if(svgs.size() !== mermaids_to_add_zoom) {
+                setTimeout(load, 200);
+                return;
+            } else {
+                svgs.each(function() {
+                    var svg = d3.select(this);
+                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+                    var inner = svg.select("g");
+                    var zoom = d3.zoom().on("zoom", function(event) {
+                        inner.attr("transform", event.transform);
+                    });
+                    svg.call(zoom);
+                });
+            }
+        }
+    } else if(all_mermaids.length !== mermaids_processed.length) {
+        // Wait for mermaid to process all diagrams
+        setTimeout(load, 200);
+        return;
+    }
+
+    const darkTheme = isDarkTheme();
+
+    // Stop here if not adding fullscreen capability
+    if ("True" !== "True") return;
+
+    const modal = document.createElement('div');
+    modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
+    modal.innerHTML = `
+        <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
+    `;
+    document.body.appendChild(modal);
+
+    const modalContent = modal.querySelector('.mermaid-container-fullscreen');
+    const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    let previousScrollOffset = [window.scrollX, window.scrollY];
+
+    const closeModal = () => {
+        modal.classList.remove('active');
+        modalContent.innerHTML = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
+    };
+
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            closeModal();
+        }
+    });
+
+    const allButtons = [];
+
+    document.querySelectorAll('.mermaid').forEach((mermaidDiv) => {
+        if (mermaidDiv.parentNode.classList.contains('mermaid-container') ||
+            mermaidDiv.closest('.mermaid-fullscreen-modal')) {
+            return;
+        }
+
+        const container = document.createElement('div');
+        container.className = 'mermaid-container';
+        mermaidDiv.parentNode.insertBefore(container, mermaidDiv);
+        container.appendChild(mermaidDiv);
+
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
+        fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
+        fullscreenBtn.textContent = '⛶';
+        fullscreenBtn.style.opacity = '50%';
+
+        // Calculate dynamic position based on diagram's margin and padding
+        const diagramStyle = window.getComputedStyle(mermaidDiv);
+        const marginTop = parseFloat(diagramStyle.marginTop) || 0;
+        const marginRight = parseFloat(diagramStyle.marginRight) || 0;
+        const paddingTop = parseFloat(diagramStyle.paddingTop) || 0;
+        const paddingRight = parseFloat(diagramStyle.paddingRight) || 0;
+        fullscreenBtn.style.top = `${marginTop + paddingTop + 4}px`;
+        fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
+
+        fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scroll, window.scrollY];
+            const clone = mermaidDiv.cloneNode(true);
+            modalContent.innerHTML = '';
+            modalContent.appendChild(clone);
+
+            const svg = clone.querySelector('svg');
+            if (svg) {
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '100%';
+                svg.style.sdisplay = 'block';
+
+                if ("False" === "True") {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
+            }
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+
+        container.appendChild(fullscreenBtn);
+        allButtons.push(fullscreenBtn);
+    });
+
+    // Update theme classes when theme changes
+    const updateTheme = () => {
+        const dark = isDarkTheme();
+        allButtons.forEach(btn => {
+            if (dark) {
+                btn.classList.add('dark-theme');
+            } else {
+                btn.classList.remove('dark-theme');
+            }
+        });
+        if (dark) {
+            modal.classList.add('dark-theme');
+            modalContent.classList.add('dark-theme');
+            closeBtn.classList.add('dark-theme');
+        } else {
+            modal.classList.remove('dark-theme');
+            modalContent.classList.remove('dark-theme');
+            closeBtn.classList.remove('dark-theme');
+        }
+    };
+
+    // Watch for theme changes
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['class', 'style', 'data-theme']
+    });
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class', 'style']
+    });
+};
+
+window.addEventListener("load", load);
+</script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="References" href="api_reference.html" />
+    <link rel="prev" title="backo (Back Office Low Code) documentation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            backo
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Back Office Low Code (backo)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#what-is-backo">What is backo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quickstart">Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#syntax">Syntax</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#item">Item</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#example">example</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#cardinalities">Cardinalities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#options">Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#deletion-strategies-ods">Deletion strategies (<code class="docutils literal notranslate"><span class="pre">ods</span></code>)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#relationship-example-books-and-authors">Relationship example: Books and Authors</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#current-user">current_user</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#usage">usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#how-to-set-values-to-the-current-user">How to set values to the current_user ?</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#current-user-api">current_user api</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#extend-current-user">extend current_user</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#authentication">Authentication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#routes">Routes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#get-coll-collection-name-id-view-view-name">GET /coll/&lt;collection name&gt;/&lt;_id&gt; ?_view=&lt;view name&gt;</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#get-coll-collection-name-query-string">GET /coll/&lt;collection name&gt;?&lt;query_string&gt;</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id1">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#post-coll-collection-name">POST /coll/&lt;collection name&gt;</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id2">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#put-coll-collection-name-id">PUT /coll/&lt;collection name&gt;/&lt;_id&gt;</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id3">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#delete-coll-collection-name-id">DELETE /coll/&lt;collection name&gt;/&lt;_id&gt;</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id4">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#patch-coll-collection-name-id">PATCH /coll/&lt;collection name&gt;/&lt;_id&gt;</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id5">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#post-check-collection-name">POST /check/&lt;collection name&gt;</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#meta-routes">Meta routes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#get-meta">GET /_meta</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#collection-description">collection description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#meta-element-description">meta element description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#meta-rights-description">meta rights description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id6">Example</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#post-meta-collection-name">POST /meta/&lt;collection name&gt;</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id7">Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#internal-usage">Internal usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id">_id</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#meta">_meta</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#workflow-and-events">Workflow and events</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#workflow">workflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#events">Events</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id8">Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#transactions">Transactions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#currentuser">CurrentUser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#logs">Logs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id9">Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#advanced-use">Advanced use</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#current-loggers">current loggers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#tests-co">Tests &amp; co</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#building-a-new-release">Building a new release</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">backo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Back Office Low Code (backo)</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/readme.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="toctree-wrapper compound">
+</div>
+<section id="back-office-low-code-backo">
+<h1>Back Office Low Code (backo)<a class="headerlink" href="#back-office-low-code-backo" title="Link to this heading"></a></h1>
+<p><img alt="release" src="https://img.shields.io/github/v/release/bwallrich/backo.svg?label=latest" /></p>
+<p><img alt="pylint" src="https://img.shields.io/github/actions/workflow/status/bwallrich/backo/pylint.yml?label=linter" /> <img alt="test" src="https://img.shields.io/github/actions/workflow/status/bwallrich/backo/test.yml?label=test" /></p>
+<p>Jump to <a class="reference internal" href="#quickstart">Quickstart</a> for a basic setup.</p>
+<section id="what-is-backo">
+<h2>What is backo<a class="headerlink" href="#what-is-backo" title="Link to this heading"></a></h2>
+<p>It aims at providing a simple and efficient way to create a backend application that exposes a set of REST API routes.</p>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>backo
+</pre></div>
+</div>
+</section>
+<section id="quickstart">
+<h2>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading"></a></h2>
+<p>Here is a sample with a DB (storage full in yaml file) with users to adresses reference</p>
+<p>Imagine this Entity Relationship (users ar living in exactly one address, but zero onr more user can live at the same address)</p>
+<pre  class="mermaid">
+        erDiagram
+    direction LR
+    classDef className fill:#f9f,stroke:#333,stroke-width:4px
+    Users |o--o{ Addresses : live
+    Users {
+        String name UK
+        String surname
+        Bool male
+    }
+    Addresses {
+        String name UK
+        String address
+    }
+    </pre><p>You only will add <a class="reference internal" href="#cardinalities">Ref</a> and <a class="reference internal" href="#cardinalities">Refs</a> to exprime the relationship.</p>
+<pre  class="mermaid">
+        erDiagram
+    direction LR
+    classDef className fill:#f9f,stroke:#333,stroke-width:4px
+    Users |o--o{ Addresses : live
+    Users {
+        String name UK
+        String surname
+        Bool male
+        Ref addr &quot;link one-to-many to Addresses&quot;
+    }
+    Addresses {
+        String name UK
+        String address
+        Refs users &quot;link many-to-one to Usres&quot;
+    }
+    </pre><p>It translates into Python code using Backo like following:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flask</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flask</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">backo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Item</span><span class="p">,</span> <span class="n">DBYmlConnector</span><span class="p">,</span> <span class="n">Backoffice</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">backo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Ref</span><span class="p">,</span> <span class="n">RefsList</span><span class="p">,</span> <span class="n">DeleteStrategy</span>
+
+<span class="c1"># --- Storage for user</span>
+<span class="n">yml_users</span> <span class="o">=</span> <span class="n">DBYmlConnector</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;/tmp&quot;</span><span class="p">)</span>
+<span class="c1"># --- Storage for addresses</span>
+<span class="n">yml_addr</span> <span class="o">=</span> <span class="n">DBYmlConnector</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;/tmp&quot;</span><span class="p">)</span>
+
+<span class="c1"># -- Description of the backoffice</span>
+<span class="n">my_backoffice</span> <span class="o">=</span> <span class="n">Backoffice</span><span class="p">(</span><span class="s2">&quot;myApp&quot;</span><span class="p">)</span>
+
+<span class="c1"># -- Add the collection &quot;users&quot; into this backoffice (with a reference to the futur &quot;addrs&quot; collection)</span>
+<span class="n">my_backoffice</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span>
+    <span class="s2">&quot;users&quot;</span><span class="p">,</span>
+    <span class="n">Item</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
+            <span class="s2">&quot;surname&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
+            <span class="s2">&quot;addr&quot;</span><span class="p">:</span> <span class="n">Ref</span><span class="p">(</span><span class="n">coll</span><span class="o">=</span><span class="s2">&quot;addrs&quot;</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s2">&quot;$.users&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="s2">&quot;male&quot;</span><span class="p">:</span> <span class="n">Bool</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="p">},</span>
+        <span class="n">yml_users</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="c1"># -- Add the collection &quot;addrs&quot; into this backoffice (with reference to the &quot;usres&quot; collection)</span>
+<span class="n">my_backoffice</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span>
+    <span class="s2">&quot;addrs&quot;</span><span class="p">,</span>
+    <span class="n">Item</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
+            <span class="s2">&quot;address&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
+            <span class="s2">&quot;users&quot;</span><span class="p">:</span> <span class="n">RefsList</span><span class="p">(</span>
+                <span class="n">coll</span><span class="o">=</span><span class="s2">&quot;users&quot;</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s2">&quot;$.addr&quot;</span><span class="p">,</span> <span class="n">ods</span><span class="o">=</span><span class="n">DeleteStrategy</span><span class="o">.</span><span class="n">MUST_BE_EMPTY</span>
+            <span class="p">),</span>
+        <span class="p">},</span>
+        <span class="n">yml_addr</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+
+<span class="c1"># Your flask application</span>
+<span class="n">flask</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1"># -- Add CRUD routes for this application</span>
+<span class="n">my_backoffice</span><span class="o">.</span><span class="n">add_routes</span><span class="p">(</span><span class="n">flask</span><span class="p">)</span>
+
+</pre></div>
+</div>
+</section>
+<section id="syntax">
+<h2>Syntax<a class="headerlink" href="#syntax" title="Link to this heading"></a></h2>
+<p><a class="reference external" href="https://github.com/bwallrich/backo">backo</a> use <a class="reference external" href="https://github.com/bwallrich/stricto">stricto</a> for structured description language.</p>
+<section id="item">
+<h3>Item<a class="headerlink" href="#item" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">Item</span></code> is the central class in Backo.</p>
+<p>It represents a database entity and includes all the methods required for CRUD operations: <em>Create</em>, <em>Read</em>, <em>Update</em>, and <em>Delete</em>.</p>
+<p>A generic object is a <a class="reference external" href="https://github.com/bwallrich/stricto">stricto</a> <code class="docutils literal notranslate"><span class="pre">Dict()</span></code> object.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Item(</span> <span class="pre">description</span> <span class="pre">object</span> <span class="pre">,</span> <span class="pre">db</span> <span class="pre">connector</span> <span class="pre">)</span></code></p>
+<section id="example">
+<h4>example<a class="headerlink" href="#example" title="Link to this heading"></a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Describe what a &#39;cat&#39; is</span>
+<span class="n">cat</span> <span class="o">=</span> <span class="n">Item</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;Felix&#39;</span><span class="p">),</span>
+            <span class="s2">&quot;address&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
+            <span class="s2">&quot;age&quot;</span> <span class="p">:</span> <span class="n">Int</span><span class="p">()</span>
+        <span class="p">},</span>
+        <span class="n">db_connector_for_cat</span><span class="p">)</span>
+
+<span class="c1"># Add the cat object into the backoffice object</span>
+<span class="n">backoffice</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span> <span class="s2">&quot;cats&quot;</span><span class="p">,</span> <span class="n">cat</span> <span class="p">)</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>[!IMPORTANT]
+Up to now no need to care about <a class="reference internal" href="#id">_id</a>.</p>
+</div></blockquote>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.create(</span> <span class="pre">data</span> <span class="pre">:dict</span> <span class="pre">)</span></code></p></td>
+<td><p>Create a new <code class="docutils literal notranslate"><span class="pre">Item</span></code> in the database using the provided <code class="docutils literal notranslate"><span class="pre">data</span></code> dictionary.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.save()</span></code></p></td>
+<td><p>saves the current <code class="docutils literal notranslate"><span class="pre">Item</span></code> to the database.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.load(</span> <span class="pre">_id</span> <span class="pre">:str</span> <span class="pre">)</span></code></p></td>
+<td><p>loads an <code class="docutils literal notranslate"><span class="pre">Item</span></code> from the database by its <code class="docutils literal notranslate"><span class="pre">_id</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.reload()</span></code></p></td>
+<td><p>reloads the current <code class="docutils literal notranslate"><span class="pre">Item</span></code> from the database.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.delete()</span></code></p></td>
+<td><p>deletes the current <code class="docutils literal notranslate"><span class="pre">Item</span></code> from the database.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.new()</span></code></p></td>
+<td><p>creates a new empty <code class="docutils literal notranslate"><span class="pre">Item</span></code> (must be populated with <code class="docutils literal notranslate"><span class="pre">.set()</span></code> and then saved).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.select()</span></code></p></td>
+<td><p>retrieves a selection of <code class="docutils literal notranslate"><span class="pre">Item</span></code> from the database based on the selection criteria.</p></td>
+</tr>
+</tbody>
+</table>
+<p>For each function above, an error is triggered in case of something went wrong.</p>
+</section>
+</section>
+<section id="cardinalities">
+<h3>Cardinalities<a class="headerlink" href="#cardinalities" title="Link to this heading"></a></h3>
+<p>Relations cardinalities are expressed by the mean of <code class="docutils literal notranslate"><span class="pre">Ref()</span></code> and <code class="docutils literal notranslate"><span class="pre">RefsList()</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Ref()</span></code>: for <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">or</span> <span class="pre">1</span></code> or <code class="docutils literal notranslate"><span class="pre">exactly</span> <span class="pre">1</span></code> relations.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">RefsList()</span></code>: for <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">or</span> <span class="pre">more</span></code> or <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">or</span> <span class="pre">more</span></code> relations.</p></li>
+</ul>
+<section id="options">
+<h4>Options<a class="headerlink" href="#options" title="Link to this heading"></a></h4>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option for Ref</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">coll=</span></code></p></td>
+<td><p>None</p></td>
+<td><p>the collection to make the ref</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">table=</span></code></p></td>
+<td><p>None</p></td>
+<td><p>similar to <code class="docutils literal notranslate"><span class="pre">coll</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">field=</span></code></p></td>
+<td><p>None</p></td>
+<td><p>The reverse field in the targeted collection (use <a class="reference external" href="https://github.com/bwallrich/stricto?tab=readme-ov-file#selectors">selector</a> to target it)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rev=</span></code></p></td>
+<td><p>None</p></td>
+<td><p>similar to <code class="docutils literal notranslate"><span class="pre">field</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ods=</span></code></p></td>
+<td><p>None</p></td>
+<td><p><em>On Delete Strategy</em> see <a class="reference internal" href="#deletion-strategies-ods">ods</a></p></td>
+</tr>
+</tbody>
+</table>
+<p>And all options availables in <a class="reference external" href="https://github.com/bwallrich/stricto?tab=readme-ov-file#string">stricto String()</a> fields.</p>
+</section>
+<section id="deletion-strategies-ods">
+<h4>Deletion strategies (<code class="docutils literal notranslate"><span class="pre">ods</span></code>)<a class="headerlink" href="#deletion-strategies-ods" title="Link to this heading"></a></h4>
+<p>ods define the behaviour of the database when a delete occure and the object contain some <code class="docutils literal notranslate"><span class="pre">RefList</span></code>. For each  <code class="docutils literal notranslate"><span class="pre">RefList</span></code>, you can define the strategy :</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DeleteStrategy.MUST_BE_EMPTY</span></code> (by default)
+Requires the RefList to be empty before allowing the object to be deleted.
+If the RefList contains items, the deletion will be blocked and an error will be raised.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DeleteStrategy.DELETE_REFERENCED_ITEMS</span></code>
+When deleting the parent object, this strategy also deletes all objects referenced in the RefList.
+[!Warning] Use with caution, as this causes cascading deletes and may remove many related objects unintentionally.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">DeleteStrategy.UNLINK_REFERENCED_ITEMS</span></code>
+Instead of deleting the referenced objects, this strategy removes the reference to the deleted object from each referenced item.
+This is commonly used for many-to-many relationships where you want to delete the parent object but keep the referenced objects intact, but simply cleaning up their links.</p></li>
+</ul>
+</section>
+<section id="relationship-example-books-and-authors">
+<h4>Relationship example: Books and Authors<a class="headerlink" href="#relationship-example-books-and-authors" title="Link to this heading"></a></h4>
+<p>An author can write 0 or many books.</p>
+<p>A book can be written only by 1 author.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Authors write books</span>
+<span class="n">author</span> <span class="o">=</span> <span class="n">Item</span><span class="p">({</span>
+    <span class="s1">&#39;name&#39;</span> <span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
+    <span class="c1"># An author may have written 0 or many books</span>
+    <span class="s1">&#39;books&#39;</span> <span class="p">:</span> <span class="n">RefsList</span><span class="p">(</span> <span class="n">coll</span><span class="o">=</span><span class="s1">&#39;book&#39;</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s2">&quot;$.autor&quot;</span> <span class="p">)</span>
+<span class="p">},</span> <span class="n">db_connector</span><span class="p">)</span>
+
+<span class="c1"># A book is written by on author</span>
+<span class="n">book</span> <span class="o">=</span> <span class="n">Item</span><span class="p">({</span>
+    <span class="o">...</span> <span class="c1"># Some attibutes</span>
+    <span class="c1"># A book may have 1 or more authors</span>
+    <span class="n">authors</span> <span class="o">=</span> <span class="n">RefsList</span><span class="p">(</span> <span class="n">coll</span><span class="o">=</span><span class="s1">&#39;author&#39;</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s2">&quot;$.books&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span> <span class="p">)</span>
+<span class="p">},</span> <span class="n">db_connector</span> <span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="current-user">
+<h3>current_user<a class="headerlink" href="#current-user" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">current_user</span></code>is a object containing information of the authenticated user currently connected.</p>
+<section id="usage">
+<h4>usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># anywhere in your code</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">backo</span><span class="w"> </span><span class="kn">import</span> <span class="n">current_user</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">current_user</span><span class="o">.</span><span class="n">_id</span><span class="p">)</span> <span class="c1"># The id of the current connected user</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">current_user</span><span class="o">.</span><span class="n">login</span><span class="p">)</span> <span class="c1"># A login name or whatever you store as &quot;login&quot;</span>
+
+<span class="c1"># check if the user has the given role</span>
+<span class="k">if</span> <span class="n">current_user</span><span class="o">.</span><span class="n">has_role</span><span class="p">(</span><span class="s1">&#39;teamManager&#39;</span><span class="p">):</span>
+  <span class="k">return</span> <span class="kc">True</span>
+</pre></div>
+</div>
+</section>
+<section id="how-to-set-values-to-the-current-user">
+<h4>How to set values to the current_user ?<a class="headerlink" href="#how-to-set-values-to-the-current-user" title="Link to this heading"></a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">backo</span></code> doesnt manage authentication, because there is so much way to authenticate a user (or an app). So you have to do the auth by yourself.</p>
+<p>However, using jwt is a goot solution. See <a class="reference internal" href="#authentication">Authentication</a> for that.</p>
+</section>
+<section id="current-user-api">
+<h4>current_user api<a class="headerlink" href="#current-user-api" title="Link to this heading"></a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">current_user</span></code> is a very simple <a class="reference external" href="https://github.com/bwallrich/stricto?tab=readme-ov-file#dict">Stricto Dict</a> (but can be <a class="reference internal" href="#extend-current-user">extended</a>). It contains :</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>key</p></th>
+<th class="head"><p>type</p></th>
+<th class="head"><p>usage</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>_id</p></td>
+<td><p><a class="reference external" href="https://github.com/bwallrich/stricto?tab=readme-ov-file#string">Stricto String()</a></p></td>
+<td><p>the _id of the user.</p></td>
+</tr>
+<tr class="row-odd"><td><p>login</p></td>
+<td><p><a class="reference external" href="https://github.com/bwallrich/stricto?tab=readme-ov-file#string">Stricto String()</a></p></td>
+<td><p>the login or whatever you store .</p></td>
+</tr>
+<tr class="row-even"><td><p>roles</p></td>
+<td><p><a class="reference external" href="https://github.com/bwallrich/stricto?tab=readme-ov-file#list">Stricto List( String() )</a></p></td>
+<td><p>the list of roles for this users. A <em>role</em> is a kid of group the user belongs to</p></td>
+</tr>
+<tr class="row-odd"><td><p>has_role()</p></td>
+<td><p>function</p></td>
+<td><p>return True or false to the role givent in param</p></td>
+</tr>
+<tr class="row-even"><td><p>reset()</p></td>
+<td><p>function</p></td>
+<td><p>change the current_user object type. See <a class="reference internal" href="#extend-current-user">extend current_user</a> for that</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="extend-current-user">
+<h4>extend current_user<a class="headerlink" href="#extend-current-user" title="Link to this heading"></a></h4>
+<p>You can extend <code class="docutils literal notranslate"><span class="pre">current_user</span></code>, adding stuff in its schema, functions… etc.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">backo</span><span class="w"> </span><span class="kn">import</span> <span class="n">current_user</span><span class="p">,</span> <span class="n">CurrentUser</span><span class="p">,</span> <span class="n">CurrentUserWrapper</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyCurrentUser</span><span class="p">(</span><span class="n">CurrentUser</span><span class="p">):</span>
+
+
+      <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">CurrentUser</span><span class="p">):</span>
+
+        <span class="n">CurrentUser</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_to_model</span><span class="p">(</span> <span class="s1">&#39;email&#39;</span> <span class="p">,</span> <span class="n">String</span><span class="p">()</span> <span class="p">)</span>
+
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    a new class child of CuurrentUser</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">my_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        a Dummy function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;user </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">login</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_id</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+<span class="n">current_user</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">MyCurrentUser</span><span class="p">())</span>
+
+<span class="c1"># Later in the code</span>
+<span class="n">current_user</span><span class="o">.</span><span class="n">email</span> <span class="o">=</span> <span class="s2">&quot;toto@titi.com&quot;</span>
+<span class="n">current_user</span><span class="o">.</span><span class="n">my_function</span><span class="p">()</span> <span class="c1"># return the string &quot;user ...&quot;</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="authentication">
+<h2>Authentication<a class="headerlink" href="#authentication" title="Link to this heading"></a></h2>
+<p>This is an short and uncompleted example to authenticate and fill <a class="reference internal" href="#current-user">current_user</a>.</p>
+<p>first, the login part. a <code class="docutils literal notranslate"><span class="pre">/login</span></code> route in flas to make the login, and return a jwt</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">app</span><span class="o">.</span><span class="n">secret_key</span> <span class="o">=</span> <span class="s2">&quot;super secret key&quot;</span>
+<span class="c1"># Set the login route</span>
+<span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/login&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">login</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    login load the user from the DB, verify the password and if</span>
+<span class="sd">    Ok generate a JWT an return it to the client.</span>
+<span class="sd">    At this point, current_user is not used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">json</span>
+    <span class="n">login</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;login&quot;</span><span class="p">]</span>
+    <span class="n">password</span> <span class="o">=</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;password&quot;</span><span class="p">]</span>
+    <span class="c1"># find the user by your way</span>
+    <span class="n">user</span> <span class="o">=</span> <span class="n">load_from_db_by_login</span><span class="p">(</span> <span class="n">login</span> <span class="p">)</span>
+    <span class="c1"># Do the check of the password</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">user</span><span class="o">.</span><span class="n">check_password</span><span class="p">(</span> <span class="n">password</span> <span class="p">):</span>
+      <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Invalid email or password&quot;</span><span class="p">}),</span> <span class="mi">401</span>
+
+    <span class="n">token</span> <span class="o">=</span> <span class="n">jwt</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;exp&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+            <span class="s2">&quot;user_id&quot;</span><span class="p">:</span> <span class="n">user</span><span class="o">.</span><span class="n">_id</span> <span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;myappsecretkey&quot;</span><span class="p">,</span>
+        <span class="n">algorithm</span><span class="o">=</span><span class="s2">&quot;HS256&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">make_response</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="s2">&quot;ok&quot;</span><span class="p">}))</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">set_cookie</span><span class="p">(</span><span class="s2">&quot;jwt_token&quot;</span><span class="p">,</span> <span class="n">token</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">response</span>
+</pre></div>
+</div>
+<p>Second par : The decorator for authenticate the route and fill <a class="reference internal" href="#current-user">current_user</a></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">token_required</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">decorated</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">cookies</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;jwt_token&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">token</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Token is missing!&quot;</span><span class="p">}),</span> <span class="mi">401</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">jwt</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="s2">&quot;myappsecretkey&quot;</span><span class="p">,</span> <span class="n">algorithms</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;HS256&quot;</span><span class="p">])</span>
+        <span class="k">except</span><span class="p">:</span>  <span class="c1"># pylint: disable=bare-except</span>
+            <span class="k">return</span> <span class="n">jsonify</span><span class="p">({</span><span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Token is invalid!&quot;</span><span class="p">}),</span> <span class="mi">401</span>
+
+        <span class="c1"># Load the user from the DB and fill current_user</span>
+        <span class="c1"># we supose roles are store in your user_db</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">load_from_db_by_id</span><span class="p">(</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">]</span> <span class="p">)</span>
+        <span class="n">current_user</span><span class="o">.</span><span class="n">set</span><span class="p">(</span> <span class="p">{</span> <span class="s2">&quot;_id&quot;</span> <span class="p">:</span> <span class="n">user</span><span class="o">.</span><span class="n">_id</span><span class="p">,</span> <span class="s2">&quot;login&quot;</span> <span class="p">:</span> <span class="n">user</span><span class="o">.</span><span class="n">login</span><span class="p">,</span> <span class="s2">&quot;roles&quot;</span> <span class="p">:</span> <span class="n">user</span><span class="o">.</span><span class="n">roles</span> <span class="p">})</span>
+
+        <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">decorated</span>
+</pre></div>
+</div>
+</section>
+<section id="routes">
+<h2>Routes<a class="headerlink" href="#routes" title="Link to this heading"></a></h2>
+<p>Automatic routes creation provide the following resources</p>
+<section id="get-coll-collection-name-id-view-view-name">
+<h3>GET /coll/&lt;collection name&gt;/&lt;_id&gt; ?_view=&lt;view name&gt;<a class="headerlink" href="#get-coll-collection-name-id-view-view-name" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">_view</span></code> are defined in <a class="reference external" href="https://github.com/bwallrich/stricto?tab=readme-ov-file#views">stricto views</a></p>
+<p>Return the object of this collection <em>by _id</em>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span><span class="s1">&#39;http://localhost/myApp/coll/users/123&#39;</span>
+
+<span class="c1"># Equivalent (by default _view=client)</span>
+curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span><span class="s1">&#39;http://localhost/myApp/coll/users/123?_view=client&#39;</span>
+
+<span class="c1"># Another view</span>
+curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span><span class="s1">&#39;http://localhost/myApp/coll/users/123?_view=otherviewname&#39;</span>
+</pre></div>
+</div>
+<p>Answers can be :</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>code</p></th>
+<th class="head"><p>data</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>200</p></td>
+<td><p>JSON object data</p></td>
+<td><p>the requested item</p></td>
+</tr>
+<tr class="row-odd"><td><p>401</p></td>
+<td><p>None</p></td>
+<td><p>you are not authorized to view this item</p></td>
+</tr>
+<tr class="row-even"><td><p>404</p></td>
+<td><p>None</p></td>
+<td><p>item not found</p></td>
+</tr>
+<tr class="row-odd"><td><p>500</p></td>
+<td><p>None</p></td>
+<td><p>server-side error</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="get-coll-collection-name-query-string">
+<h3>GET /coll/&lt;collection name&gt;?&lt;query_string&gt;<a class="headerlink" href="#get-coll-collection-name-query-string" title="Link to this heading"></a></h3>
+<p>Get a list of objects matching the query string. The query string can be with this format</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>key</p></th>
+<th class="head"><p>value</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>&lt;field&gt;</p></td>
+<td><p>&lt;value&gt;</p></td>
+<td><p>matches items where <code class="docutils literal notranslate"><span class="pre">&lt;field&gt;</span></code> equals <code class="docutils literal notranslate"><span class="pre">&lt;value&gt;</span></code>. Example: <code class="docutils literal notranslate"><span class="pre">surname=donald</span></code> finds all items where surname equals to “donald”.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;field&gt;.&lt;operator&gt;</p></td>
+<td><p>&lt;value&gt;</p></td>
+<td><p>matches items where <code class="docutils literal notranslate"><span class="pre">&lt;field&gt;</span></code> satisfies <code class="docutils literal notranslate"><span class="pre">&lt;operator&gt;</span></code> with <code class="docutils literal notranslate"><span class="pre">&lt;value&gt;</span></code>. Example: <code class="docutils literal notranslate"><span class="pre">age.$lt=12</span></code> finds items where age is less than 12.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;field&gt;.&lt;subfield&gt;</p></td>
+<td><p>&lt;value&gt;</p></td>
+<td><p>Matches items where <code class="docutils literal notranslate"><span class="pre">&lt;field&gt;</span></code> is a nested dictionary containing <code class="docutils literal notranslate"><span class="pre">&lt;subfield&gt;</span></code> equal to <code class="docutils literal notranslate"><span class="pre">&lt;value&gt;</span></code>. Example: <code class="docutils literal notranslate"><span class="pre">address.number=1</span></code> matches items where address.number equals to 1.</p></td>
+</tr>
+</tbody>
+</table>
+<p><a class="reference external" href="https://github.com/bwallrich/stricto?tab=readme-ov-file#filtering-and-matching">list of available operators</a></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>key</p></th>
+<th class="head"><p>value</p></th>
+<th class="head"><p>default</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>_view</p></td>
+<td><p>string</p></td>
+<td><p>“client”</p></td>
+<td><p>selects the view (<a class="reference external" href="https://github.com/bwallrich/stricto?tab=readme-ov-file#views">stricto views</a>)</p></td>
+</tr>
+<tr class="row-odd"><td><p>_page</p></td>
+<td><p>int</p></td>
+<td><p>-</p></td>
+<td><p>sets the desired number of items per page in paginated data presentation</p></td>
+</tr>
+<tr class="row-even"><td><p>_skip</p></td>
+<td><p>int</p></td>
+<td><p>-</p></td>
+<td><p>skips the n-first items of the result list in paginated data presentation.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The request returns a HTTP status <code class="docutils literal notranslate"><span class="pre">200</span></code> with that JSON object:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;result&quot;</span><span class="p">:</span> <span class="c1"># list of dict containing objects matched</span>
+    <span class="s2">&quot;total&quot;</span><span class="p">:</span> <span class="c1"># (int) total number of object matched</span>
+    <span class="s2">&quot;_view&quot;</span><span class="p">:</span> <span class="c1"># the _view given in the request</span>
+    <span class="s2">&quot;_skip&quot;</span><span class="p">:</span> <span class="c1"># the _skip given in the request</span>
+    <span class="s2">&quot;_page&quot;</span><span class="p">:</span> <span class="c1"># the _page given in the request</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="id1">
+<h4>Example<a class="headerlink" href="#id1" title="Link to this heading"></a></h4>
+<p>Select all users whose name includes ‘do’ and present the result list with 10 items per page.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span><span class="s1">&#39;http://localhost/myApp/coll/users/?name.$re=do&amp;_page=10&#39;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="post-coll-collection-name">
+<h3>POST /coll/&lt;collection name&gt;<a class="headerlink" href="#post-coll-collection-name" title="Link to this heading"></a></h3>
+<p>Create a new item for the collection <code class="docutils literal notranslate"><span class="pre">collection</span> <span class="pre">name</span></code>.</p>
+<section id="id2">
+<h4>Example<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s1">&#39;http://localhost/myApp/coll/users/&#39;</span><span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;name&quot;:&quot;John&quot;,&quot;surname&quot;:&quot;Rambo&quot;}&#39;</span>
+</pre></div>
+</div>
+<p>It returns the created <em>user</em> JSON object with a generated unique identifier <code class="docutils literal notranslate"><span class="pre">_id</span></code> and some _metadatas or an error otherwise.</p>
+</section>
+</section>
+<section id="put-coll-collection-name-id">
+<h3>PUT /coll/&lt;collection name&gt;/&lt;_id&gt;<a class="headerlink" href="#put-coll-collection-name-id" title="Link to this heading"></a></h3>
+<p>Modify an existing object whose id is <code class="docutils literal notranslate"><span class="pre">_id</span></code>.</p>
+<section id="id3">
+<h4>Example<a class="headerlink" href="#id3" title="Link to this heading"></a></h4>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>PUT<span class="w"> </span><span class="s1">&#39;http://localhost/myApp/coll/users/1234&#39;</span><span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;name&quot;:&quot;Johnny&quot;}&#39;</span>
+</pre></div>
+</div>
+<p>Modify the users with _id <em>1234</em> and return the modified object.</p>
+</section>
+</section>
+<section id="delete-coll-collection-name-id">
+<h3>DELETE /coll/&lt;collection name&gt;/&lt;_id&gt;<a class="headerlink" href="#delete-coll-collection-name-id" title="Link to this heading"></a></h3>
+<p>Delete an existing object whose id is <code class="docutils literal notranslate"><span class="pre">_id</span></code>.</p>
+<section id="id4">
+<h4>Example<a class="headerlink" href="#id4" title="Link to this heading"></a></h4>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>DELETE<span class="w"> </span><span class="s1">&#39;http://localhost/myApp/coll/users/1234&#39;</span>
+</pre></div>
+</div>
+<p>Delete the user that has _id = <em>1234</em>.</p>
+</section>
+</section>
+<section id="patch-coll-collection-name-id">
+<h3>PATCH /coll/&lt;collection name&gt;/&lt;_id&gt;<a class="headerlink" href="#patch-coll-collection-name-id" title="Link to this heading"></a></h3>
+<p>Partial change of an existing object whose id is <code class="docutils literal notranslate"><span class="pre">_id</span></code>.
+Please refer to the <a class="reference external" href="https://github.com/bwallrich/stricto?tab=readme-ov-file#patch">Stricto patch method</a>.</p>
+<section id="id5">
+<h4>Example<a class="headerlink" href="#id5" title="Link to this heading"></a></h4>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>PATCH<span class="w">  </span><span class="s1">&#39;http://localhost/myApp/coll/users/1234&#39;</span><span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;op&quot;: &quot;replace&quot;, &quot;path&quot; : &quot;$.name&quot;, &quot;value&quot;: &quot;Gilda&quot;}&#39;</span>
+</pre></div>
+</div>
+<p>Partial modification of the user with _id <em>1234</em> with the patch.</p>
+<p>Patch content can be a <em>list of patch operations</em>.</p>
+</section>
+</section>
+<section id="post-check-collection-name">
+<h3>POST /check/&lt;collection name&gt;<a class="headerlink" href="#post-check-collection-name" title="Link to this heading"></a></h3>
+<p>Check the validity a field of the item</p>
+<p>Please refer to <a class="reference external" href="https://github.com/bwallrich/stricto#selectors">stricto selectors</a> for more details on selectors.</p>
+<p>get must provide a json structure in the body :</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>field</p></th>
+<th class="head"><p>type</p></th>
+<th class="head"><p>descrimtion</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>item</p></td>
+<td><p>dict</p></td>
+<td><p>the data to check. It can be partial, see examples belowv</p></td>
+</tr>
+<tr class="row-odd"><td><p>path</p></td>
+<td><p>string</p></td>
+<td><p>the field to check in the item. This is a selector. Please refer to <a class="reference external" href="https://github.com/bwallrich/stricto#selectors">stricto selectors</a> for more details</p></td>
+</tr>
+</tbody>
+</table>
+<p>The answer is a status 200 message with a json structure :</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>field</p></th>
+<th class="head"><p>type</p></th>
+<th class="head"><p>descrimtion</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>error</p></td>
+<td><p>string or null</p></td>
+<td><p>if null ther is no error, otherwise the error message</p></td>
+</tr>
+</tbody>
+</table>
+<p>Examples :</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s1">&#39;http://localhost/myApp/check/users&#39;</span><span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;{ &quot;item&quot; : { &quot;name&quot; : &quot;John&quot;, &quot;surname&quot; : 32 }, &quot;path&quot; : &quot;$.surname&quot; }&#39;</span>
+<span class="c1"># will check surname an return a response.data like</span>
+<span class="o">{</span>
+<span class="w">    </span><span class="s1">&#39;error&#39;</span><span class="w"> </span>:<span class="w"> </span><span class="s2">&quot;Must be a string&quot;</span>
+<span class="o">}</span>
+</pre></div>
+</div>
+<p>The response is a <em>status 200</em> even if the check return an error. The request is correct.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s1">&#39;http://localhost/myApp/check/users&#39;</span><span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;{ &quot;item&quot; : { &quot;surname&quot; : &quot;Johnny&quot; }, &quot;path&quot; : &quot;$.surname&quot; }&#39;</span>
+<span class="c1"># will check surname an return a response.data like</span>
+<span class="o">{</span>
+<span class="w">    </span><span class="s1">&#39;error&#39;</span><span class="w"> </span>:<span class="w"> </span>null
+<span class="o">}</span>
+
+
+curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span><span class="s1">&#39;http://localhost/myApp/check/users&#39;</span><span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;{ &quot;item&quot; : { &quot;name&quot; : 23, &quot;surname&quot; : &quot;Johnny&quot; }, &quot;path&quot; : &quot;$.surname&quot; }&#39;</span>
+<span class="c1"># (only the surname is tested. don&#39;t car if name is correct or not)</span>
+<span class="o">{</span>
+<span class="w">    </span><span class="s1">&#39;error&#39;</span><span class="w"> </span>:<span class="w"> </span>null
+<span class="o">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="meta-routes">
+<h2>Meta routes<a class="headerlink" href="#meta-routes" title="Link to this heading"></a></h2>
+<p>there is some route availables to get informations on the applications (its structure, rights, etc)</p>
+<section id="get-meta">
+<h3>GET /_meta<a class="headerlink" href="#get-meta" title="Link to this heading"></a></h3>
+<p>Return the structure of the application as a json with thoses keys :</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>key</p></th>
+<th class="head"><p>type</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>string</p></td>
+<td><p>The name of the application</p></td>
+</tr>
+<tr class="row-odd"><td><p>collections</p></td>
+<td><p>array of <em>collection description</em></p></td>
+<td><p>list of all collections description</p></td>
+</tr>
+</tbody>
+</table>
+<section id="collection-description">
+<h4>collection description<a class="headerlink" href="#collection-description" title="Link to this heading"></a></h4>
+<p>Describe a collection</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>key</p></th>
+<th class="head"><p>type</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>string</p></td>
+<td><p>The name ov the collection</p></td>
+</tr>
+<tr class="row-odd"><td><p>item</p></td>
+<td><p><a class="reference internal" href="#meta-element-description">meta element description</a></p></td>
+<td><p>description of an item</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="meta-element-description">
+<h4>meta element description<a class="headerlink" href="#meta-element-description" title="Link to this heading"></a></h4>
+<p>Describe an element (an item, a key in an item)</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>key</p></th>
+<th class="head"><p>type</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>type</p></td>
+<td><p>string</p></td>
+<td><p>the type of this element. For example <em>“&lt;class ‘backo.item.Item’&gt;”</em> or <em>“&lt;class ‘stricto.string.String’&gt;”</em></p></td>
+</tr>
+<tr class="row-odd"><td><p>type_short</p></td>
+<td><p>string</p></td>
+<td><p>the type of this element, but a short version like <em>“Item”</em> or <em>“String”</em></p></td>
+</tr>
+<tr class="row-even"><td><p>description</p></td>
+<td><p>string</p></td>
+<td><p>a sort of comment. (optional) or null</p></td>
+</tr>
+<tr class="row-odd"><td><p>require</p></td>
+<td><p>boolean</p></td>
+<td><p>mean this element is required or not</p></td>
+</tr>
+<tr class="row-even"><td><p>in</p></td>
+<td><p>array of values</p></td>
+<td><p>if the element must be in a list of value, or null if not.</p></td>
+</tr>
+<tr class="row-odd"><td><p>constraints</p></td>
+<td><p>boolean</p></td>
+<td><p>means if there is one or more constraints on this value</p></td>
+</tr>
+<tr class="row-even"><td><p>default</p></td>
+<td><p>–</p></td>
+<td><p>the default value for this field (= null if no default value)</p></td>
+</tr>
+<tr class="row-odd"><td><p>transform</p></td>
+<td><p>boolean</p></td>
+<td><p>say there is a transformation function</p></td>
+</tr>
+<tr class="row-even"><td><p>exists</p></td>
+<td><p>boolean</p></td>
+<td><p>false mean this field does not exist and must not be displayed</p></td>
+</tr>
+<tr class="row-odd"><td><p>rights</p></td>
+<td><p><a class="reference internal" href="#meta-rights-description">meta rights description</a></p></td>
+<td><p>the description of rights</p></td>
+</tr>
+<tr class="row-even"><td><p>sub_scheme</p></td>
+<td><p><a class="reference internal" href="#meta-element-description">meta element description</a></p></td>
+<td><p>reccusive description for childs if this object is a <a class="reference external" href="https://github.com/bwallrich/stricto?tab=readme-ov-file#dict">Dict</a> or an Item</p></td>
+</tr>
+<tr class="row-odd"><td><p>sub_type</p></td>
+<td><p><a class="reference internal" href="#meta-element-description">meta element description</a></p></td>
+<td><p>description of the content if this object is a <a class="reference external" href="https://github.com/bwallrich/stricto?tab=readme-ov-file#list">List</a></p></td>
+</tr>
+<tr class="row-even"><td><p>sub_types</p></td>
+<td><p>array of <a class="reference internal" href="#meta-element-description">meta element description</a></p></td>
+<td><p>description of the tuple content if this object is a <a class="reference external" href="https://github.com/bwallrich/stricto?tab=readme-ov-file#tuple">Tuple</a></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="meta-rights-description">
+<h4>meta rights description<a class="headerlink" href="#meta-rights-description" title="Link to this heading"></a></h4>
+</section>
+<section id="id6">
+<h4>Example<a class="headerlink" href="#id6" title="Link to this heading"></a></h4>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w">  </span><span class="s1">&#39;http://localhost/myApp/_meta&#39;</span>
+<span class="c1"># Will return for example</span>
+
+<span class="o">{</span>
+<span class="w">  </span><span class="s2">&quot;name&quot;</span>:<span class="w"> </span><span class="s2">&quot;myApp&quot;</span>,
+<span class="w">  </span><span class="s2">&quot;collections&quot;</span>:<span class="w"> </span><span class="o">[</span>
+<span class="w">    </span><span class="o">{</span>
+<span class="w">      </span><span class="s2">&quot;name&quot;</span>:<span class="w"> </span><span class="s2">&quot;users&quot;</span>,
+<span class="w">      </span><span class="s2">&quot;item&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">        </span><span class="s2">&quot;type&quot;</span>:<span class="w"> </span><span class="s2">&quot;&lt;class &#39;backo.item.Item&#39;&gt;&quot;</span>,
+<span class="w">        </span><span class="s2">&quot;type_short&quot;</span>:<span class="w"> </span><span class="s2">&quot;Item&quot;</span>,
+<span class="w">        </span><span class="s2">&quot;description&quot;</span>:<span class="w"> </span>null,
+<span class="w">        </span><span class="s2">&quot;required&quot;</span>:<span class="w"> </span>false,
+<span class="w">        </span><span class="s2">&quot;in&quot;</span>:<span class="w"> </span>null,
+<span class="w">        </span><span class="s2">&quot;constraints&quot;</span>:<span class="w"> </span><span class="o">[]</span>,
+<span class="w">        </span><span class="s2">&quot;default&quot;</span>:<span class="w"> </span>null,
+<span class="w">        </span><span class="s2">&quot;transform&quot;</span>:<span class="w"> </span>null,
+<span class="w">        </span><span class="s2">&quot;exists&quot;</span>:<span class="w"> </span>true,
+<span class="w">        </span><span class="s2">&quot;rights&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">          </span><span class="s2">&quot;read&quot;</span>:<span class="w"> </span>null,
+<span class="w">          </span><span class="s2">&quot;modify&quot;</span>:<span class="w"> </span>null
+<span class="w">        </span><span class="o">}</span>,
+<span class="w">        </span><span class="s2">&quot;sub_scheme&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">          </span><span class="s2">&quot;name&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">            </span><span class="s2">&quot;type&quot;</span>:<span class="w"> </span><span class="s2">&quot;&lt;class &#39;stricto.string.String&#39;&gt;&quot;</span>,
+<span class="w">            </span><span class="s2">&quot;type_short&quot;</span>:<span class="w"> </span><span class="s2">&quot;String&quot;</span>,
+<span class="w">            </span><span class="s2">&quot;description&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;required&quot;</span>:<span class="w"> </span>false,
+<span class="w">            </span><span class="s2">&quot;in&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;constraints&quot;</span>:<span class="w"> </span><span class="o">[]</span>,
+<span class="w">            </span><span class="s2">&quot;default&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;transform&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;exists&quot;</span>:<span class="w"> </span>true,
+<span class="w">            </span><span class="s2">&quot;rights&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">              </span><span class="s2">&quot;read&quot;</span>:<span class="w"> </span>null,
+<span class="w">              </span><span class="s2">&quot;modify&quot;</span>:<span class="w"> </span>null
+<span class="w">            </span><span class="o">}</span>,
+<span class="w">            </span><span class="s2">&quot;regexp&quot;</span>:<span class="w"> </span><span class="o">[]</span>
+<span class="w">          </span><span class="o">}</span>,
+<span class="w">          </span><span class="s2">&quot;surname&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">            </span><span class="s2">&quot;type&quot;</span>:<span class="w"> </span><span class="s2">&quot;&lt;class &#39;stricto.string.String&#39;&gt;&quot;</span>,
+<span class="w">            </span><span class="s2">&quot;type_short&quot;</span>:<span class="w"> </span><span class="s2">&quot;String&quot;</span>,
+<span class="w">            </span><span class="s2">&quot;description&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;required&quot;</span>:<span class="w"> </span>false,
+<span class="w">            </span><span class="s2">&quot;in&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;constraints&quot;</span>:<span class="w"> </span><span class="o">[]</span>,
+<span class="w">            </span><span class="s2">&quot;default&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;transform&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;exists&quot;</span>:<span class="w"> </span>true,
+<span class="w">            </span><span class="s2">&quot;rights&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">              </span><span class="s2">&quot;read&quot;</span>:<span class="w"> </span>null,
+<span class="w">              </span><span class="s2">&quot;modify&quot;</span>:<span class="w"> </span>null
+<span class="w">            </span><span class="o">}</span>,
+<span class="w">            </span><span class="s2">&quot;regexp&quot;</span>:<span class="w"> </span><span class="o">[]</span>
+<span class="w">          </span><span class="o">}</span>,
+<span class="w">          </span><span class="s2">&quot;age&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">            </span><span class="s2">&quot;type&quot;</span>:<span class="w"> </span><span class="s2">&quot;&lt;class &#39;stricto.int.Int&#39;&gt;&quot;</span>,
+<span class="w">            </span><span class="s2">&quot;type_short&quot;</span>:<span class="w"> </span><span class="s2">&quot;Int&quot;</span>,
+<span class="w">            </span><span class="s2">&quot;description&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;required&quot;</span>:<span class="w"> </span>false,
+<span class="w">            </span><span class="s2">&quot;in&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;constraints&quot;</span>:<span class="w"> </span><span class="o">[</span>
+<span class="w">              </span><span class="s2">&quot;func&quot;</span>
+<span class="w">            </span><span class="o">]</span>,
+<span class="w">            </span><span class="s2">&quot;default&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;transform&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;exists&quot;</span>:<span class="w"> </span>true,
+<span class="w">            </span><span class="s2">&quot;rights&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">              </span><span class="s2">&quot;read&quot;</span>:<span class="w"> </span>null,
+<span class="w">              </span><span class="s2">&quot;modify&quot;</span>:<span class="w"> </span>null
+<span class="w">            </span><span class="o">}</span>,
+<span class="w">            </span><span class="s2">&quot;min&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;max&quot;</span>:<span class="w"> </span>null
+<span class="w">          </span><span class="o">}</span>,
+<span class="w">          </span><span class="s2">&quot;site&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">            </span><span class="s2">&quot;type&quot;</span>:<span class="w"> </span><span class="s2">&quot;&lt;class &#39;backo.reference.Ref&#39;&gt;&quot;</span>,
+<span class="w">            </span><span class="s2">&quot;type_short&quot;</span>:<span class="w"> </span><span class="s2">&quot;Ref&quot;</span>,
+<span class="w">            </span><span class="s2">&quot;description&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;required&quot;</span>:<span class="w"> </span>false,
+<span class="w">            </span><span class="s2">&quot;in&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;constraints&quot;</span>:<span class="w"> </span><span class="o">[]</span>,
+<span class="w">            </span><span class="s2">&quot;default&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;transform&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;exists&quot;</span>:<span class="w"> </span>true,
+<span class="w">            </span><span class="s2">&quot;rights&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">              </span><span class="s2">&quot;read&quot;</span>:<span class="w"> </span>null,
+<span class="w">              </span><span class="s2">&quot;modify&quot;</span>:<span class="w"> </span>null
+<span class="w">            </span><span class="o">}</span>,
+<span class="w">            </span><span class="s2">&quot;regexp&quot;</span>:<span class="w"> </span><span class="o">[]</span>
+<span class="w">          </span><span class="o">}</span>,
+<span class="w">          </span><span class="s2">&quot;_id&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">            </span><span class="s2">&quot;type&quot;</span>:<span class="w"> </span><span class="s2">&quot;&lt;class &#39;stricto.string.String&#39;&gt;&quot;</span>,
+<span class="w">            </span><span class="s2">&quot;type_short&quot;</span>:<span class="w"> </span><span class="s2">&quot;String&quot;</span>,
+<span class="w">            </span><span class="s2">&quot;description&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;required&quot;</span>:<span class="w"> </span>false,
+<span class="w">            </span><span class="s2">&quot;in&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;constraints&quot;</span>:<span class="w"> </span><span class="o">[]</span>,
+<span class="w">            </span><span class="s2">&quot;default&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;transform&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;exists&quot;</span>:<span class="w"> </span>true,
+<span class="w">            </span><span class="s2">&quot;rights&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">              </span><span class="s2">&quot;read&quot;</span>:<span class="w"> </span>null,
+<span class="w">              </span><span class="s2">&quot;modify&quot;</span>:<span class="w"> </span>null
+<span class="w">            </span><span class="o">}</span>,
+<span class="w">            </span><span class="s2">&quot;regexp&quot;</span>:<span class="w"> </span><span class="o">[]</span>
+<span class="w">          </span><span class="o">}</span>
+<span class="w">        </span><span class="o">}</span>
+<span class="w">      </span><span class="o">}</span>
+<span class="w">    </span><span class="o">}</span>
+<span class="w">  </span><span class="o">]</span>
+<span class="o">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="post-meta-collection-name">
+<h3>POST /meta/&lt;collection name&gt;<a class="headerlink" href="#post-meta-collection-name" title="Link to this heading"></a></h3>
+<p>Ask the backoffice the currents meta information for this collection object.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>        &quot;type&quot;: ty,
+        &quot;type_short&quot; : re.sub(&quot;.*\.|\&#39;&gt;&quot;, &#39;&#39;, ty),
+        &quot;description&quot;: self.get_as_string(self._description),
+        &quot;required&quot;: self.get_as_string(self._not_none),
+        &quot;in&quot;: self.get_as_string(self._union),
+        &quot;constraints&quot;: self.get_as_string(self._constraints),
+        &quot;default&quot;: self.get_as_string(self._default),
+        &quot;exists&quot;: self.exists( self.get_value() ),
+        &quot;rights&quot;: rights,
+</pre></div>
+</div>
+<section id="id7">
+<h4>Example<a class="headerlink" href="#id7" title="Link to this heading"></a></h4>
+<p>For this structure :</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">can_see_and_modify_salary</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    return true if can read the salary</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">current_user_name</span>
+    <span class="k">if</span> <span class="n">current_user_name</span> <span class="o">==</span> <span class="n">o</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span>
+
+<span class="n">my_backoffice</span><span class="o">.</span><span class="n">add_collection</span><span class="p">(</span>
+    <span class="s2">&quot;users&quot;</span><span class="p">,</span>
+    <span class="n">Item</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span> <span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
+            <span class="s2">&quot;salary&quot;</span> <span class="p">:</span> <span class="n">Int</span><span class="p">(</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">can_read</span><span class="o">=</span><span class="n">can_see_and_modify_salary</span><span class="p">,</span> <span class="n">can_modify</span><span class="o">=</span><span class="n">can_see_and_modify_salary</span> <span class="p">),</span>
+        <span class="p">},</span>
+        <span class="n">yml_users</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Logged as &quot;Hector&quot;</span>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s1">&#39;http://localhost/myApp/meta/users&#39;</span><span class="w"> </span>-d<span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="s1">&#39;name&#39;</span><span class="w"> </span>:<span class="w"> </span><span class="s2">&quot;John&quot;</span><span class="w"> </span><span class="o">}</span>
+<span class="c1"># Will return this structure.</span>
+<span class="c1"># rights &quot;read&quot; and &quot;modify&quot; are set to false for the salary</span>
+<span class="o">{</span>
+<span class="w">      </span><span class="s2">&quot;name&quot;</span>:<span class="w"> </span><span class="s2">&quot;users&quot;</span>,
+<span class="w">      </span><span class="s2">&quot;item&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">        </span><span class="s2">&quot;type&quot;</span>:<span class="w"> </span><span class="s2">&quot;&lt;class &#39;backo.item.Item&#39;&gt;&quot;</span>,
+<span class="w">        </span><span class="s2">&quot;type_short&quot;</span>:<span class="w"> </span><span class="s2">&quot;Item&quot;</span>,
+<span class="w">        </span><span class="s2">&quot;description&quot;</span>:<span class="w"> </span>null,
+<span class="w">        </span><span class="s2">&quot;required&quot;</span>:<span class="w"> </span>false,
+<span class="w">        </span><span class="s2">&quot;in&quot;</span>:<span class="w"> </span>null,
+<span class="w">        </span><span class="s2">&quot;constraints&quot;</span>:<span class="w"> </span><span class="o">[]</span>,
+<span class="w">        </span><span class="s2">&quot;default&quot;</span>:<span class="w"> </span>null,
+<span class="w">        </span><span class="s2">&quot;transform&quot;</span>:<span class="w"> </span>null,
+<span class="w">        </span><span class="s2">&quot;exists&quot;</span>:<span class="w"> </span>true,
+<span class="w">        </span><span class="s2">&quot;rights&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">          </span><span class="s2">&quot;read&quot;</span>:<span class="w"> </span>null,
+<span class="w">          </span><span class="s2">&quot;modify&quot;</span>:<span class="w"> </span>null
+<span class="w">        </span><span class="o">}</span>,
+<span class="w">        </span><span class="s2">&quot;sub_scheme&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">          </span><span class="s2">&quot;name&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">            </span><span class="s2">&quot;type&quot;</span>:<span class="w"> </span><span class="s2">&quot;&lt;class &#39;stricto.string.String&#39;&gt;&quot;</span>,
+<span class="w">            </span><span class="s2">&quot;type_short&quot;</span>:<span class="w"> </span><span class="s2">&quot;String&quot;</span>,
+<span class="w">            </span><span class="s2">&quot;description&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;required&quot;</span>:<span class="w"> </span>false,
+<span class="w">            </span><span class="s2">&quot;in&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;constraints&quot;</span>:<span class="w"> </span><span class="o">[]</span>,
+<span class="w">            </span><span class="s2">&quot;default&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;transform&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;exists&quot;</span>:<span class="w"> </span>true,
+<span class="w">            </span><span class="s2">&quot;rights&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">              </span><span class="s2">&quot;read&quot;</span>:<span class="w"> </span>true,
+<span class="w">              </span><span class="s2">&quot;modify&quot;</span>:<span class="w"> </span><span class="nb">true</span>
+<span class="w">            </span><span class="o">}</span>,
+<span class="w">            </span><span class="s2">&quot;regexp&quot;</span>:<span class="w"> </span><span class="o">[]</span>
+<span class="w">          </span><span class="o">}</span>,
+<span class="w">          </span><span class="s2">&quot;salary&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">            </span><span class="s2">&quot;type&quot;</span>:<span class="w"> </span><span class="s2">&quot;&lt;class &#39;stricto.string.Int&#39;&gt;&quot;</span>,
+<span class="w">            </span><span class="s2">&quot;type_short&quot;</span>:<span class="w"> </span><span class="s2">&quot;Int&quot;</span>,
+<span class="w">            </span><span class="s2">&quot;description&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;required&quot;</span>:<span class="w"> </span>false,
+<span class="w">            </span><span class="s2">&quot;in&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;constraints&quot;</span>:<span class="w"> </span><span class="o">[]</span>,
+<span class="w">            </span><span class="s2">&quot;default&quot;</span>:<span class="w"> </span><span class="m">0</span>,
+<span class="w">            </span><span class="s2">&quot;transform&quot;</span>:<span class="w"> </span>null,
+<span class="w">            </span><span class="s2">&quot;exists&quot;</span>:<span class="w"> </span>true,
+<span class="w">            </span><span class="s2">&quot;rights&quot;</span>:<span class="w"> </span><span class="o">{</span>
+<span class="w">              </span><span class="s2">&quot;read&quot;</span>:<span class="w"> </span>false,
+<span class="w">              </span><span class="s2">&quot;modify&quot;</span>:<span class="w"> </span><span class="nb">false</span>
+<span class="w">            </span><span class="o">}</span>,
+<span class="w">            </span><span class="s2">&quot;regexp&quot;</span>:<span class="w"> </span><span class="o">[]</span>
+<span class="w">          </span><span class="o">}</span>
+<span class="w">        </span><span class="o">}</span>
+<span class="w">    </span><span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="internal-usage">
+<h2>Internal usage<a class="headerlink" href="#internal-usage" title="Link to this heading"></a></h2>
+<p>Typical use case for users and theirs addresses.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create an adress, save it in the DB and provide the object with a unique id.</span>
+<span class="n">moon_address</span> <span class="o">=</span> <span class="n">backoffice</span><span class="o">.</span><span class="n">addrs</span><span class="o">.</span><span class="n">create</span><span class="p">({</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;moon&quot;</span><span class="p">,</span> <span class="s2">&quot;address&quot;</span><span class="p">:</span> <span class="s2">&quot;far&quot;</span><span class="p">})</span>
+
+<span class="c1"># Create a user with this address</span>
+<span class="n">astro</span> <span class="o">=</span> <span class="n">backoffice</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">create</span><span class="p">({</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;neil&quot;</span><span class="p">,</span> <span class="s2">&quot;surname&quot;</span><span class="p">:</span> <span class="s2">&quot;amstrong&quot;</span><span class="p">,</span> <span class="s2">&quot;addr&quot;</span><span class="p">:</span> <span class="n">moon_address</span><span class="o">.</span><span class="n">_id</span><span class="p">})</span>
+
+<span class="n">moon_address</span><span class="o">.</span><span class="n">users</span> <span class="c1"># -&gt; return []</span>
+<span class="n">moon_address</span><span class="o">.</span><span class="n">reload</span><span class="p">()</span> <span class="c1"># reload data from the DB so that crossed references are updated</span>
+<span class="n">moon_address</span><span class="o">.</span><span class="n">users</span> <span class="c1"># -&gt; return [ astro._id ]</span>
+</pre></div>
+</div>
+<section id="id">
+<h3>_id<a class="headerlink" href="#id" title="Link to this heading"></a></h3>
+<p>You dont’t have to care about <em>_ids</em> in your item description. Backo will alter schema to add <code class="docutils literal notranslate"><span class="pre">_id</span></code> for each Item (see <a class="reference external" href="https://github.com/bwallrich/stricto?tab=readme-ov-file#schemas">stricto schemas</a> for details).</p>
+</section>
+<section id="meta">
+<h3>_meta<a class="headerlink" href="#meta" title="Link to this heading"></a></h3>
+<p>the db_connector adds meta data to each item by <a class="reference external" href="https://github.com/bwallrich/stricto?tab=readme-ov-file#schemas">altering its schema</a>.</p>
+<p>The provided <em>meta_data_handler</em> give this Dict() :</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Dict</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;ctime&quot;</span><span class="p">:</span> <span class="n">Datetime</span><span class="p">(),</span>
+        <span class="s2">&quot;mtime&quot;</span><span class="p">:</span> <span class="n">Datetime</span><span class="p">(),</span>
+        <span class="s2">&quot;created_by&quot;</span><span class="p">:</span> <span class="n">Dict</span><span class="p">(</span>
+            <span class="p">{</span><span class="s2">&quot;_id&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span> <span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">()}</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;modified_by&quot;</span><span class="p">:</span> <span class="n">Dict</span><span class="p">(</span>
+            <span class="p">{</span><span class="s2">&quot;_id&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span> <span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">()}</span>
+        <span class="p">),</span>
+    <span class="p">},</span>
+<span class="p">),</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="workflow-and-events">
+<h2>Workflow and events<a class="headerlink" href="#workflow-and-events" title="Link to this heading"></a></h2>
+<p>Each Item has a specific workflow and triggers specific events.</p>
+<section id="workflow">
+<h3>workflow<a class="headerlink" href="#workflow" title="Link to this heading"></a></h3>
+<p>The defined states for each item are following:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>State</p></th>
+<th class="head"><p>descripion</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>UNSET</p></td>
+<td><p>The Item result of a <code class="docutils literal notranslate"><span class="pre">.new()</span></code> function. It can’t be saved in this state</p></td>
+</tr>
+<tr class="row-odd"><td><p>UNSAVED</p></td>
+<td><p>The Item has been modified and must be saved</p></td>
+</tr>
+<tr class="row-even"><td><p>SAVED</p></td>
+<td><p>The Item is saved in the DB and has not been changed since last save</p></td>
+</tr>
+</tbody>
+</table>
+<pre  class="mermaid">
+        stateDiagram
+    [*] --&gt; UNSET : .new()
+
+    UNSET --&gt; SAVED : .load()
+    UNSET --&gt; UNSAVED : .set()
+    UNSAVED --&gt; SAVED : .save()
+    SAVED --&gt; UNSAVED : .set()
+    SAVED --&gt; UNSET : .delete()
+    UNSAVED --&gt; UNSET : .delete()
+
+    </pre></section>
+<section id="events">
+<h3>Events<a class="headerlink" href="#events" title="Link to this heading"></a></h3>
+<p>The following events are triggered when the functions above are called:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>function</p></th>
+<th class="head"><p>event before</p></th>
+<th class="head"><p>event after</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>.load()</p></td>
+<td><p></p></td>
+<td><p>“loaded”</p></td>
+</tr>
+<tr class="row-odd"><td><p>.save()</p></td>
+<td><p>“before_save”</p></td>
+<td><p>“saved”</p></td>
+</tr>
+<tr class="row-even"><td><p>.delete()</p></td>
+<td><p>“before_delete”</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p>.create()</p></td>
+<td><p>None</p></td>
+<td><p>“created”</p></td>
+</tr>
+</tbody>
+</table>
+<section id="id8">
+<h4>Example<a class="headerlink" href="#id8" title="Link to this heading"></a></h4>
+<p>Below is a simple use case on how to use these events:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>        <span class="k">def</span><span class="w"> </span><span class="nf">rip</span><span class="p">(</span> <span class="n">event_name</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">me</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span> <span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            event_name = &quot;before_delete&quot;</span>
+<span class="sd">            root = cat Item</span>
+<span class="sd">            me = cat Item too</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="c1"># Do what you want</span>
+
+        <span class="n">cat</span> <span class="o">=</span> <span class="n">Item</span><span class="p">(</span> <span class="p">{</span>
+                <span class="s1">&#39;name&#39;</span> <span class="p">:</span> <span class="n">String</span><span class="p">()</span>
+                <span class="s1">&#39;birth&#39;</span> <span class="p">:</span> <span class="n">Datetime</span><span class="p">()</span>
+            <span class="p">}</span>
+            <span class="n">on</span><span class="o">=</span><span class="p">[</span> <span class="p">(</span> <span class="s2">&quot;before_delete&quot;</span><span class="p">,</span> <span class="n">rip</span> <span class="p">)</span> <span class="p">]</span>
+        <span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="transactions">
+<h2>Transactions<a class="headerlink" href="#transactions" title="Link to this heading"></a></h2>
+<p><em>Soon</em></p>
+</section>
+<section id="currentuser">
+<h2>CurrentUser<a class="headerlink" href="#currentuser" title="Link to this heading"></a></h2>
+<p><em>Soon</em></p>
+</section>
+<section id="logs">
+<h2>Logs<a class="headerlink" href="#logs" title="Link to this heading"></a></h2>
+<p>The log system is based on <a class="reference external" href="https://docs.python.org/3/library/logging.html">logging Python module</a></p>
+<p>You must first design your logging system with handlers. Then you can write the logs outputs.</p>
+<section id="id9">
+<h3>Example<a class="headerlink" href="#id9" title="Link to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">backo</span><span class="w"> </span><span class="kn">import</span> <span class="n">log_system</span>
+
+<span class="c1"># To write all file to stderr</span>
+<span class="n">log_system</span><span class="o">.</span><span class="n">add_handler</span><span class="p">(</span> <span class="n">log_system</span><span class="o">.</span><span class="n">set_streamhandler</span><span class="p">()</span> <span class="p">)</span>
+
+<span class="c1"># To write in a file</span>
+<span class="n">log_system</span><span class="o">.</span><span class="n">add_handler</span><span class="p">(</span> <span class="n">log_system</span><span class="o">.</span><span class="n">set_filehandler</span><span class="p">(</span><span class="s2">&quot;/var/log/mylog.log&quot;</span><span class="p">)</span> <span class="p">)</span>
+
+<span class="c1"># Set the level</span>
+<span class="n">log_system</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span> <span class="p">)</span>
+
+<span class="c1"># create your own sub logger with its specific logging level</span>
+<span class="n">log</span> <span class="o">=</span> <span class="n">log_system</span><span class="o">.</span><span class="n">get_or_create_logger</span><span class="p">(</span><span class="s2">&quot;custom&quot;</span><span class="p">)</span>
+<span class="n">log</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">loggind</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+
+<span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;hey this is my first debug message&quot;</span><span class="p">)</span>
+
+</pre></div>
+</div>
+</section>
+<section id="advanced-use">
+<h3>Advanced use<a class="headerlink" href="#advanced-use" title="Link to this heading"></a></h3>
+<p>You can select a specific <code class="docutils literal notranslate"><span class="pre">logger</span></code> and modify it by adding/removing handlers and changing its level.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">log</span> <span class="o">=</span> <span class="n">log_system</span><span class="o">.</span><span class="n">get_or_create_logger</span><span class="p">(</span><span class="s2">&quot;custom&quot;</span><span class="p">)</span>
+<span class="n">log</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">loggind</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+<span class="n">log</span><span class="o">.</span><span class="n">addHandler</span> <span class="p">(</span> <span class="n">my_own_handler</span> <span class="p">)</span>
+<span class="c1"># ...</span>
+</pre></div>
+</div>
+</section>
+<section id="current-loggers">
+<h3>current loggers<a class="headerlink" href="#current-loggers" title="Link to this heading"></a></h3>
+<p>Currently available loggers are :</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>logger</p></th>
+<th class="head"><p>description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>backoffice</p></td>
+<td><p>The main Backoffice system</p></td>
+</tr>
+<tr class="row-odd"><td><p>Item</p></td>
+<td><p>The database itself (CRUD operations )</p></td>
+</tr>
+<tr class="row-even"><td><p>ref</p></td>
+<td><p>Ref and RefsList objects</p></td>
+</tr>
+<tr class="row-odd"><td><p>transaction</p></td>
+<td><p>transactions and roolback</p></td>
+</tr>
+<tr class="row-even"><td><p>yml</p></td>
+<td><p>yaml database connector</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="tests-co">
+<h2>Tests &amp; co<a class="headerlink" href="#tests-co" title="Link to this heading"></a></h2>
+<p>For personal use only.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># all tests</span>
+python<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>tests
+<span class="c1"># or for a specific test</span>
+python<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>tests.TestDict.test_simple_type
+
+<span class="c1"># reformat</span>
+python<span class="w"> </span>-m<span class="w"> </span>black<span class="w"> </span>.
+
+<span class="c1"># pylint</span>
+pylint<span class="w"> </span><span class="k">$(</span>git<span class="w"> </span>ls-files<span class="w"> </span><span class="s1">&#39;*.py&#39;</span><span class="k">)</span>
+
+<span class="c1"># coverage</span>
+coverage<span class="w"> </span>run<span class="w"> </span>-m<span class="w"> </span>unittest<span class="w"> </span>tests
+coverage<span class="w"> </span>html<span class="w"> </span><span class="c1"># report under htmlcov/index.html</span>
+firefox<span class="w"> </span>htmlcov/index.html
+</pre></div>
+</div>
+<section id="building-a-new-release">
+<h3>Building a new release<a class="headerlink" href="#building-a-new-release" title="Link to this heading"></a></h3>
+<p>For personal use only.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Modify changelog</span>
+<span class="c1"># modify pyproject.toml</span>
+git<span class="w"> </span>add<span class="w"> </span>-u
+git<span class="w"> </span>commit<span class="w"> </span>-am<span class="w"> </span><span class="s1">&#39;preparing 0.0.x&#39;</span>
+git<span class="w"> </span>push
+git<span class="w"> </span>tag<span class="w"> </span>-a<span class="w"> </span><span class="m">0</span>.0.x<span class="w"> </span>-m<span class="w"> </span><span class="s1">&#39;0.0.x&#39;</span>
+git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>tag<span class="w"> </span><span class="m">0</span>.0.x
+
+<span class="c1"># publish a new relase in github interface, based on tag</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="backo (Back Office Low Code) documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api_reference.html" class="btn btn-neutral float-right" title="References" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Bertrand Wallrich.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

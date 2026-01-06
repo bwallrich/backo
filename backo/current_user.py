@@ -16,14 +16,20 @@ ANONYMOUS_DATA = {"_id": "000", "login": "ANONYMOUS", "roles": []}
 
 
 class CurrentUser(Dict):  # pylint: disable=too-few-public-methods
-    """
-    The current user Object
+    """the current connected user object
+
+    the current user is a `Dict <https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict>`_ with
+            - _id (`String <https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.String>`_) : The _id of the user
+            - login (`String <https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.String>`_) : The login as a string
+            - roles (`List <https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.List>`_ of `String <https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.String>`_) : \
+            The list of roles for this user. A role is a string which can be used for rights.
+
+    :param ``**kwargs``: see https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict
+
     """
 
     def __init__(self, **kwargs):
-        """
-        available arguments
-        """
+        """Constructor"""
         Dict.__init__(
             self,
             {
@@ -36,7 +42,21 @@ class CurrentUser(Dict):  # pylint: disable=too-few-public-methods
 
     def has_role(self, role: str) -> bool:
         """
-        return true if has the role
+        Return if the currentUser has the role given in param
+
+        :param role: the role
+        :type role: str
+        :return: a boolean if the user as the role has the role
+        :rtype: bool
+
+        .. code-block:: python
+
+            # example
+            if current_user.has_role( "Admin" ):
+                return True
+            else:
+                return False
+
         """
         return role in self.roles
 

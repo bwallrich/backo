@@ -22,7 +22,14 @@ DEFAULT_ID = "NULL_ID"
 
 class DeleteStrategy(Enum):
     """
-    Specifics strategy for deletion for Refs
+    Specifics strategy for deletion for :py:class:`RefsList`
+
+    when the user want to delete the object, if the object contains a :py:class:`RefsList`. Say how to handle the deletion
+
+        - ``MUST_BE_EMPTY`` = The RefsList must be empty otherwise the delete action will raise an error.
+        - ``DELETE_REFERENCED_ITEMS`` = All objects targeted with this RefsList will be deleted too. Caution !
+        - ``UNLINK_REFERENCED_ITEMS`` = The reverse field of all objects targeted with this RefsList will be cleaned
+
     """
 
     MUST_BE_EMPTY = auto()
@@ -37,9 +44,9 @@ class FillStrategy(Enum):
     """
     Specifics strategy for fill RefsList in case of one_to_many or many_to_many links
 
-    FILL : The reverse is a List of _ids. Usefull to manage which is pointing to me.
-    NOT_FILL : Whe don't want to fill because the list is to big (for example person -> nationality)
-    but is important to keep the information of this link.
+    - ``FILL`` = The reverse is a List of _ids. Usefull to manage which is pointing to me.
+    - ``NOT_FILL`` = Whe don't want to fill because the list is to big (for example person -> nationality) but is important to keep the information of this link.
+
     """
 
     FILL = auto()  # The default
@@ -48,24 +55,53 @@ class FillStrategy(Enum):
     def __repr__(self):
         return self.name
 
+# pylint: disable=pointless-string-statement
+"""
+██████╗ ███████╗███████╗
+██╔══██╗██╔════╝██╔════╝
+██████╔╝█████╗  █████╗
+██╔══██╗██╔══╝  ██╔══╝
+██║  ██║███████╗██║
+╚═╝  ╚═╝╚══════╝╚═╝
+A reference to another table
+"""
+
 
 class Ref(String):  # pylint: disable=too-many-instance-attributes
-    """
+    """Ref 0 or 1 to many to another :py:class:`Collection`
 
-    ██████╗ ███████╗███████╗
-    ██╔══██╗██╔════╝██╔════╝
-    ██████╔╝█████╗  █████╗
-    ██╔══██╗██╔══╝  ██╔══╝
-    ██║  ██║███████╗██║
-    ╚═╝  ╚═╝╚══════╝╚═╝
+    :param ``**kwargs``:
+        - *collection|coll=* ``str`` -- The target collection
+        - *reverse|rev|field=* ``str`` -- The field in the target collection which reference my collection. Must be a RFC 9535 path (https://datatracker.ietf.org/doc/rfc9535/)
 
-    A reference to another table
+
+    .. code-block:: python
+
+        from backo import Item, Ref, RefsList
+
+        # example
+        book_item = Item({
+            "title": String(),
+            "author": Ref(collection="authors", field="$.books", required=True),
+        })
+        author_item = Item({
+            "name": String(),
+            "surname": String(),
+            "books": RefsList(collection="books", field="$.author"),
+        })
+
+        books = Collection( "books", book_item, database_for_books )
+        authors = Collection( "authors", author_item, database_for_authors )
+
+        my_bookstore = Backoffice("bookstore")
+        my_bookstore.register_collection(books)
+        my_bookstore.register_collection(authors)
+
+
     """
 
     def __init__(self, **kwargs):
-        """
-        available arguments
-        """
+        """Constructor"""
         self._collection = kwargs.pop(
             "collection", kwargs.pop("coll", kwargs.pop("table", None))
         )
@@ -93,8 +129,10 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         )
 
     def set_collection_reference(self):
-        """
-        Set the reference to the Item object to the collection referenced.
+        """Set the reference to the Item object to the collection referenced.
+
+        :meta private:
+
         """
         # Already set
         if self._coll_ref is not None:
@@ -115,6 +153,9 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         """
         Before saving, check if the reference
         as changed from an old value
+
+        :meta private:
+
         """
         log.debug(
             "%r/%r save. Check for changes in Ref %r",
@@ -176,6 +217,9 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         """
         The object as been created
         check for the reverse field and modify it
+
+        :meta private:
+
         """
         log.debug(
             "Creation %r/%r.%r=%r ", root._collection.name, root._id, me.path_name(), me
@@ -237,6 +281,9 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         """
         The object will be deleted
         clean structure
+
+        :meta private:
+
         """
 
         if not me._reverse:
@@ -313,6 +360,9 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
     def get_selectors(self, index_or_slice, sel: Selector):
         """
         rewrite get_selector to populate the sub-object and continue
+
+        :meta private:
+
         """
         # Cannot have index or slice on a Ref
         if index_or_slice:
@@ -341,41 +391,60 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
     def get_view(self, view_name, final=True):  # pylint: disable=protected-access
         """
         Return all elements belonging to view_name
-        tue return is a subset of this Dict
+        true return is a subset of this Dict
+
+        :meta private:
+
         """
         return String.get_view(self, view_name, final)
 
 
-class RefsList(List):
-    """
+"""
+██████╗ ███████╗███████╗███████╗██╗     ██╗███████╗████████╗
+██╔══██╗██╔════╝██╔════╝██╔════╝██║     ██║██╔════╝╚══██╔══╝
+██████╔╝█████╗  █████╗  ███████╗██║     ██║███████╗   ██║
+██╔══██╗██╔══╝  ██╔══╝  ╚════██║██║     ██║╚════██║   ██║
+██║  ██║███████╗██║     ███████║███████╗██║███████║   ██║
+╚═╝  ╚═╝╚══════╝╚═╝     ╚══════╝╚══════╝╚═╝╚══════╝   ╚═╝
+A list of reference to another table
+"""
 
-    ██████╗ ███████╗███████╗███████╗██╗     ██╗███████╗████████╗
-    ██╔══██╗██╔════╝██╔════╝██╔════╝██║     ██║██╔════╝╚══██╔══╝
-    ██████╔╝█████╗  █████╗  ███████╗██║     ██║███████╗   ██║
-    ██╔══██╗██╔══╝  ██╔══╝  ╚════██║██║     ██║╚════██║   ██║
-    ██║  ██║███████╗██║     ███████║███████╗██║███████║   ██║
-    ╚═╝  ╚═╝╚══════╝╚═╝     ╚══════╝╚══════╝╚═╝╚══════╝   ╚═╝
-    A list of reference to another table
+
+class RefsList(List):
+    """Ref 0 or 1 to many to another :py:class:`Collection`
+
+    :param ``**kwargs``:
+        - *collection|coll=* ``str`` -- The target collection
+        - *reverse|rev|field=* ``str`` -- The field in the target collection which reference my collection. Must be a RFC 9535 path (https://datatracker.ietf.org/doc/rfc9535/)
+        - *on_delete|ods=* :py:class:`DeleteStrategy` -- The deletion strategy :py:class:`DeleteStrategy`. By default =``DeleteStrategy.MUST_BE_EMPTY``
+
+    .. code-block:: python
+
+        from backo import Item, Ref, RefsList, DeleteStrategy
+
+        # example
+        book_item = Item({
+            "title": String(),
+            "author": Ref(collection="authors", field="$.books", required=True),
+        })
+        author_item = Item({
+            "name": String(),
+            "surname": String(),
+            "books": RefsList(collection="books", field="$.author", ods=DeleteStrategy.DELETE_REFERENCED_ITEMS),
+        })
+
+        books = Collection( "books", book_item, database_for_books )
+        authors = Collection( "authors", author_item, database_for_authors )
+
+        my_bookstore = Backoffice("bookstore")
+        my_bookstore.register_collection(books)
+        my_bookstore.register_collection(authors)
+
+
     """
 
     def __init__(self, **kwargs):
-        r"""Fetches and returns this thing
-
-        :param first:
-            The first parameter
-        :type first: ``int``
-        :param second:
-            The second parameter
-        :type second: ``str``
-        :param \**kwargs:
-            See below
-             :Keyword Arguments:
-            * *extra* (``list``) --
-              Extra stuff
-            * *supplement* (``dict``) --
-              Additional content
-
-        """
+        """Constructor"""
         self._collection = kwargs.pop(
             "collection", kwargs.pop("coll", kwargs.pop("table", None))
         )
@@ -417,8 +486,10 @@ class RefsList(List):
         )
 
     def set_collection_reference(self):
-        """
-        Set the reference to the Item object to the collection referenced.
+        """Set the reference to the Item object to the collection referenced.
+
+        :meta private:
+
         """
         # Already set
         if self._coll_ref is not None:
@@ -439,6 +510,9 @@ class RefsList(List):
         """
         The object will be deleted only if this list is empty
         otherwist error
+
+        :meta private:
+
         """
         log.debug(
             "%r/%r deleted with RefsList %r=%r and must be empty",
@@ -467,6 +541,9 @@ class RefsList(List):
         """
         The ref object object will be deleted too
         otherwist error
+
+        :meta private:
+
         """
         log.debug(
             "%r/%r deleted with RefsList %r=%r and delete reverses too",
@@ -493,6 +570,9 @@ class RefsList(List):
     ):  # pylint: disable=unused-argument
         """
         The reflecting object is cleaned too
+
+        :meta private:
+
         """
         log.debug(
             "%r/%r deleted with RefsList %r=%r and clean reverses",
@@ -510,6 +590,9 @@ class RefsList(List):
         me   : the currente RefList
         list_of_refs : an Array of Ref to set to new_ref
         new_ref : the new reverence (can be None)
+
+        :meta private:
+
         """
 
         # set the _coll_ref (in case of)
@@ -626,6 +709,9 @@ class RefsList(List):
     ):  # pylint: disable=unused-argument
         """
         A creation object with reflists
+
+        :meta private:
+
         """
         log.debug(
             "%r/%r created with RefsList %r=%r",
@@ -642,6 +728,9 @@ class RefsList(List):
     ):  # pylint: disable=unused-argument
         """
         The reflecting object is set to the new one
+
+        :meta private:
+
         """
         # get the olf object
         old = kwargs.get("old_object")
@@ -687,6 +776,9 @@ class RefsList(List):
     def get_selectors(self, index_or_slice, sel: Selector):
         """
         rewrite get_selector to populate the sub-object and continue
+
+        :meta private:
+
         """
 
         # No need to continue, return self or slice of lists
