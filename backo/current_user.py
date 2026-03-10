@@ -40,12 +40,22 @@ class CurrentUser(Dict):  # pylint: disable=too-few-public-methods
             **kwargs,
         )
 
-    def has_role(self, role: str) -> bool:
+    def is_anonymous(self) -> bool:
+        """Return True if the current_user is ANONYMOUS
+
+        :return: the result of the check anonymous
+        :rtype: bool
+        """
+        if self._id == "000":
+            return True
+        return False
+
+    def has_role(self, role: str | list[str]) -> bool:
         """
         Return if the currentUser has the role given in param
 
         :param role: the role
-        :type role: str
+        :type role: str or list[str]
         :return: a boolean if the user as the role has the role
         :rtype: bool
 
@@ -58,6 +68,11 @@ class CurrentUser(Dict):  # pylint: disable=too-few-public-methods
                 return False
 
         """
+        if isinstance(role, list):
+            for r in role:
+                if r in self.roles:
+                    return True
+            return False
         return role in self.roles
 
 

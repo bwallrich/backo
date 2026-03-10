@@ -32,4 +32,6 @@ jobs:
       run: |
         coverage run -m unittest tests
     - name: Coverage Badge
-      uses: tj-actions/coverage-badge-py@v2    
+      run: |
+        pip install -U genbadge defusedxml
+        genbadge coverage -i  coverage.xml -o coverage.svg

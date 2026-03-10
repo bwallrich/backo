@@ -10,7 +10,7 @@ from flask import Flask
 
 from backo import Item, Collection
 from backo import DBYmlConnector
-from backo import Backoffice, current_user
+from backo import Backoffice, current_user, Action
 
 from stricto import String, Bool
 
@@ -55,6 +55,21 @@ class TestRoutes(unittest.TestCase):
             self.yml_users,
         )
         self.users_coll.define_view("!surname_only", ["$.name"])
+
+        # ACTION
+        def change_surname(action, o):  # pylint: disable=unused-argument
+            """
+            Do the increment
+            """
+            o.surname = action.new_surname
+            o.save()
+
+        change_surname_action = Action(
+            {"new_surname": String(required=True)},
+            change_surname,
+            can_execute=lambda self, right_name, action, o: True,
+        )
+        self.users_coll.register_action("change_surname", change_surname_action)
 
         self.backo.register_collection(self.users_coll)
 
@@ -101,7 +116,10 @@ class TestRoutes(unittest.TestCase):
             "/myApp/coll/users", json={"name": 23, "surname": "bert3"}
         )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(str(response.data, "utf-8"), 'TypeError("Must be a string")')
+        self.assertEqual(
+            str(response.data, "utf-8"),
+            'TypeError("$.name: Must be a string (value="23")")',
+        )
 
         response = self.client.post(
             "/myApp/coll/users", json={"name": "bert3", "surname": "bert3"}
@@ -298,7 +316,7 @@ class TestRoutes(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200)
         results = json.loads(response.data)
-        self.assertEqual(results["error"], "Must be a string")
+        self.assertEqual(results["error"], '$.surname: Must be a string (value="21")')
 
     def test_current_meta_route(self):
         """
@@ -311,3 +329,60 @@ class TestRoutes(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         results = json.loads(response.data)
         self.assertEqual(results["exists"], True)
+
+    def test_error_action_route(self):
+        """
+        test an arror on actions route
+        """
+        response = self.client.post(
+            "/myApp/coll/users/_actions/false_action_name/123",
+            json={"new_surname": "bert_new"},
+        )
+        self.assertEqual(response.status_code, 424)
+
+    def test_error_action_route_false_id(self):
+        """
+        test an arror on actions route
+        """
+        response = self.client.post(
+            "/myApp/coll/users/_actions/change_surname/123",
+            json={"new_surname": "bert_new"},
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_error_action_route_wrong_content(self):
+        """
+        test an arror on actions route
+        """
+        response = self.client.post(
+            "/myApp/coll/users/_actions/change_surname/123",
+            json={"new_surname_error": "bert_new"},
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test__action_route(self):
+        """
+        test an arror on actions route
+        """
+
+        response = self.client.post(
+            "/myApp/coll/users",
+            json={"name": "action_name", "surname": "action_surname"},
+        )
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.post(
+            "/myApp/coll/users/_actions/change_surname/User_action_name_action_surname",
+            json={"new_surname": "bert_new"},
+        )
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get("/myApp/coll/users/User_action_name_action_surname")
+        self.assertEqual(response.status_code, 200)
+
+        u = self.backo.users.new_item()
+        u.set(json.loads(response.data))
+        self.assertEqual(u.surname, "bert_new")
+
+        response = self.client.delete(f"/myApp/coll/users/{u._id}")
+        self.assertEqual(response.status_code, 200)

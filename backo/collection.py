@@ -19,7 +19,7 @@ from stricto import (
     Dict,
     String,
     STypeError,
-    SAttributError,
+    SAttributeError,
     SSyntaxError,
     SConstraintError,
     SError,
@@ -115,6 +115,8 @@ class Collection:
             a = re.findall(r"^can_(.*)$", key)
             if a:
                 self._permissions.add_or_modify_permission(a[0], right)
+
+        self._permissions.enable()
 
         # For filtering
         self.refuse_filter = kwargs.pop("refuse_filter", None)
@@ -216,12 +218,6 @@ class Collection:
 
         """
 
-        if self._permissions.is_allowed_to("create", None) is not True:
-            raise Error(
-                ErrorType.UNAUTHORIZED,
-                f"No permission to create in collection {self.name}.",
-            )
-
         item = self.new_item()
         item.create(obj, **kwargs)
         item.enable_permissions()
@@ -304,6 +300,30 @@ class Collection:
         obj.load(_id)
         obj.enable_permissions()
         return obj
+
+    def select(self, filter_for_selection: dict) -> list[Item]:
+        """Do a selection directly with a filter
+
+        :param filter_for_selection: a filter
+        :type filter_for_selection: dict
+        :return: a list of Items
+        :rtype: list[Item]
+        """
+        result = self._selections["_all"].select(filter_for_selection, 0, 0)
+        return result["result"]
+
+    def select_one(self, filter_for_selection: dict) -> Item:
+        """select one item (if only one)
+
+        :param filter_for_selection: a filter
+        :type filter_for_selection: dict
+        :return: The one Item matching the filter
+        :rtype: Item
+        """
+        result = self._selections["_all"].select(filter_for_selection, 0, 0)
+        if len(result["result"]) != 1:
+            return None
+        return result["result"][0]
 
     def create_routes(self) -> Blueprint:
         """Add CRUD/_meta/_check routes
@@ -395,7 +415,47 @@ class Collection:
                 self.http_delete
             )
 
+        # Actions
+        if self._permissions.is_strictly_allowed_to("read") is not False:
+            log.debug("Add routes action /_actions/<string:_action_name>/<string:_id>")
+            collection_blueprint.add_url_rule(
+                "/_actions/<string:_action_name>/<string:_id>",
+                "go",
+                methods=["POST"],
+            )
+            collection_blueprint.view_functions[f"{self.name}.go"] = self.action_go
+
         return collection_blueprint
+
+    @error_to_http_handler
+    def action_go(self, _action_name: str, _id: str):
+        """_summary_
+
+        :param _id: The _id
+        :type _id: str
+        :raises Error: _description_
+        :return: _description_
+        :rtype: _type_
+        """
+
+        if _action_name not in self._actions:
+            raise Error(
+                ErrorType.ACTION_NOT_AVAILABLE,
+                f"collection {self.name} has no action {_action_name}",
+            )
+
+        # Set the action
+        action = self._actions.get(_action_name)
+        action.set(request.json)
+
+        # set the object
+        obj = self.new_item()
+        obj.load(_id)
+
+        log.debug(f"lauch action {_action_name} for {_id}")
+        action.go(obj)
+
+        return ("action done", 200)
 
     @error_to_http_handler
     def http_get_by_id(self, _id: str):
@@ -530,7 +590,7 @@ class Collection:
             STypeError,
             SSyntaxError,
             SConstraintError,
-            SAttributError,
+            SAttributeError,
             SRightError,
             SError,
         ) as e:

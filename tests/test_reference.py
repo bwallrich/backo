@@ -628,7 +628,9 @@ class TestReferences(unittest.TestCase):
         up.totem = aa._id
         with self.assertRaises(SConstraintError) as e:
             up.save()
-        self.assertEqual(repr(e.exception), 'ConstraintsError("Cannot be empty")')
+        self.assertEqual(
+            repr(e.exception), 'ConstraintsError("$.totem: Cannot be empty "None"")'
+        )
 
     def test_references_many_to_many_empty_empty(self):
         """

@@ -167,7 +167,9 @@ class TestCRUD(unittest.TestCase):
 
         with self.assertRaises(SRightError) as e:
             v._meta.ctime = datetime.now() + timedelta(minutes=1)
-        self.assertEqual(repr(e.exception), 'RightsError("cannot modify value")')
+        self.assertEqual(
+            repr(e.exception), 'RightsError("$._meta.ctime: cannot modify value")'
+        )
 
     def test_crud_no_meta(self):
         """

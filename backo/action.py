@@ -63,7 +63,17 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
     """
 
     def __init__(self, schema: dict, on_trig: Callable, **kwargs):
-        """Constructor"""
+        """
+                :param schema: The data schema needed for this action (see `Dict <https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict>`)
+        :type schema: dict
+        :param on_trig: the function to trig on the action
+        :type on_trig: Callable
+        :param ``**kwargs``: see https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict
+            - *can_see=* ``[func]|bool`` -- a function to say if this action exists
+            - *can_execute=* ``[func]|bool`` -- a function to say if the :py:class:`CurrentUser` can execute this action.
+
+
+        """
         self.backoffice = None
         self.name = None
         self.collection = None
@@ -107,7 +117,7 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
 
 
         """
-        return self._permissions.is_allowed_to("see", self, o)
+        return self._permissions.is_allowed_to("see", o)
 
     def can_execute(self, o: Item) -> bool:
         """
@@ -124,15 +134,15 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
 
 
         """
-        return self._permissions.is_allowed_to("execute", self, o)
+        return self._permissions.is_allowed_to("execute", o)
 
     def go(self, o: Item) -> None:
         """
-        Launch the action
+                Launch the action
+        elf,
+                object is the object (if exists)
 
-        object is the object (if exists)
-
-        :meta private:
+                :meta private:
 
         """
 

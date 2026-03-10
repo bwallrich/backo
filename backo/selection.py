@@ -90,6 +90,7 @@ class Selection(CollectionAddon):
         for obj in db_list:
             obj["_id"] = str(obj["_id"])
             o = self.collection.new_item()
+
             o.set(obj)
             o.enable_permissions()
             o.set_status_saved()

@@ -14,7 +14,7 @@ from backo import Item, Collection
 from backo import DBYmlConnector
 from backo import Backoffice, current_user, CurrentUser
 
-from stricto import String, Bool, STypeError, SAttributError
+from stricto import String, Bool, STypeError, SAttributeError
 
 
 YML_DIR = "/tmp/backo_tests_current_user"
@@ -216,11 +216,15 @@ class TestCurrentUser(unittest.TestCase):
 
         with self.assertRaises(STypeError) as e:
             current_user.email = 22
-        self.assertEqual(repr(e.exception), 'TypeError("Must be a string")')
+        self.assertEqual(
+            repr(e.exception), 'TypeError("$.email: Must be a string (value="22")")'
+        )
 
-        with self.assertRaises(SAttributError) as e:
+        with self.assertRaises(SAttributeError) as e:
             current_user.anythingelse = 22
-        self.assertEqual(repr(e.exception), 'AttributeError("locked")')
+        self.assertEqual(
+            repr(e.exception), 'AttributeError("$: Key "anythingelse" locked")'
+        )
 
         self.assertEqual(current_user.dummy_function(), "yeah")
         with self.assertRaises(AttributeError) as e:

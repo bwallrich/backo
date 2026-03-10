@@ -12,7 +12,7 @@ from flask import request
 
 sys.path.insert(1, "../../stricto")
 from stricto import (
-    SAttributError,
+    SAttributeError,
     SError,
     STypeError,
     SSyntaxError,
@@ -57,7 +57,7 @@ def error_to_http_handler(f):
         try:
             return f(*args, **kwargs)
         except BackError as e:
-            log.error(f" Error Backo {e.error_code}")
+            log.error(f"{e.error_code}: {e.message}")
             log.error(traceback.print_exc())
             if e.error_code == BackoErrorType.UNAUTHORIZED:
                 return return_http_error(403, e.message)
@@ -75,7 +75,7 @@ def error_to_http_handler(f):
             log.error(repr(e))
             return return_http_error(403, repr(e))
         except (
-            SAttributError,
+            SAttributeError,
             STypeError,
             SSyntaxError,
             SConstraintError,

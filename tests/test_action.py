@@ -43,14 +43,14 @@ class TestAction(unittest.TestCase):
 
         self.yml_sites.drop()
 
-    def is_available(self, right_name, action, o):  # pylint: disable=unused-argument
+    def is_available(self, right_name, o):  # pylint: disable=unused-argument
         """
         return available
         """
         return self.available
 
     def has_right_to_execute(
-        self, right_name, action, o
+        self, right_name, o
     ):  # pylint: disable=unused-argument
         """
         return if can exec

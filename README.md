@@ -31,12 +31,12 @@ erDiagram
     classDef className fill:#f9f,stroke:#333,stroke-width:4px
     Users |o--o{ Addresses : live
     Users {
-        String name UK
+        String name
         String surname
         Bool male
     }
     Addresses {
-        String name UK
+        String name
         String address
     }
 ```
@@ -49,13 +49,13 @@ erDiagram
     classDef className fill:#f9f,stroke:#333,stroke-width:4px
     Users |o--o{ Addresses : live
     Users {
-        String name UK
+        String name
         String surname
         Bool male
         Ref addr "link one-to-many to Addresses"
     }
     Addresses {
-        String name UK
+        String name
         String address
         Refs users "link many-to-one to Usres"
     }
@@ -357,7 +357,7 @@ def token_required(f):
 
 Automatic routes creation provide the following resources
 
-### GET /coll/\<collection name\>/\<_id\> \?_view=\<view name\>
+### GET \<my-app-name\>/coll/\<collection name\>/\<_id\> \?_view=\<view name\>
 
 ```_view``` are defined in [stricto views](https://github.com/bwallrich/stricto?tab=readme-ov-file#views)
 
@@ -382,7 +382,7 @@ Answers can be :
 | 404 | None | item not found |
 | 500 | None | server-side error |
 
-### GET /coll/\<collection name\>?\<query_string\>
+### GET \<my-app-name\>/coll/\<collection name\>?\<query_string\>
 
 Get a list of objects matching the query string. The query string can be with this format
 
@@ -421,7 +421,7 @@ Select all users whose name includes 'do' and present the result list with 10 it
 curl -X GET 'http://localhost/myApp/coll/users/?name.$re=do&_page=10'  
 ```
 
-### POST /coll/\<collection name\>
+### POST \<my-app-name\>/coll/\<collection name\>
 Create a new item for the collection `collection name`.
 
 #### Example
@@ -432,7 +432,7 @@ curl -X POST 'http://localhost/myApp/coll/users/' -d '{"name":"John","surname":"
 It returns the created *user* JSON object with a generated unique identifier `_id` and some _metadatas or an error otherwise.
 
 
-### PUT /coll/\<collection name\>/\<_id\>
+### PUT /\<my-app-name\>/coll/\<collection name\>/\<_id\>
 Modify an existing object whose id is `_id`.
 
 #### Example
@@ -444,7 +444,7 @@ Modify the users with _id *1234* and return the modified object.
 
 
 
-### DELETE /coll/\<collection name\>/\<_id\>
+### DELETE /\<my-app-name\>/coll/\<collection name\>/\<_id\>
 Delete an existing object whose id is `_id`.
 
 #### Example
@@ -455,7 +455,7 @@ curl -X DELETE 'http://localhost/myApp/coll/users/1234'
 Delete the user that has _id = *1234*.
 
 
-### PATCH /coll/\<collection name\>/\<_id\>
+### PATCH /\<my-app-name\>/coll/\<collection name\>/\<_id\>
 Partial change of an existing object whose id is `_id`.
 Please refer to the [Stricto patch method](https://github.com/bwallrich/stricto?tab=readme-ov-file#patch).
 
@@ -470,7 +470,7 @@ Patch content can be a *list of patch operations*.
 
 
 
-### POST /check/\<collection name\>
+### POST /\<my-app-name\>/coll/\<collection name\>/_check
 
 
 Check the validity a field of the item
@@ -495,7 +495,7 @@ Examples :
 
 
 ```bash
-curl -X POST 'http://localhost/myApp/check/users' -d '{ "item" : { "name" : "John", "surname" : 32 }, "path" : "$.surname" }'
+curl -X POST 'http://localhost/myApp/coll/users/_check' -d '{ "item" : { "name" : "John", "surname" : 32 }, "path" : "$.surname" }'
 # will check surname an return a response.data like 
 {
     'error' : "Must be a string"
@@ -505,25 +505,35 @@ curl -X POST 'http://localhost/myApp/check/users' -d '{ "item" : { "name" : "J
 The response is a *status 200* even if the check return an error. The request is correct.
 
 ```bash
-curl -X POST 'http://localhost/myApp/check/users' -d '{ "item" : { "surname" : "Johnny" }, "path" : "$.surname" }' 
+curl -X POST 'http://localhost/myApp/coll/users/_check' -d '{ "item" : { "surname" : "Johnny" }, "path" : "$.surname" }' 
 # will check surname an return a response.data like 
 {
     'error' : null
 }
 
 
-curl -X GET 'http://localhost/myApp/check/users' -d '{ "item" : { "name" : 23, "surname" : "Johnny" }, "path" : "$.surname" }'
+curl -X GET 'http://localhost/myApp/coll/users/_check' -d '{ "item" : { "name" : 23, "surname" : "Johnny" }, "path" : "$.surname" }'
 # (only the surname is tested. don't car if name is correct or not)
 {
     'error' : null
 }
 ```
 
+## Actions routes
+
+Each collection has routes for its actions.
+
+### POST /\<my-app-name\>/coll/\<collection name\>/_actions/<action_name>/<_id>
+
+
+is used to call an action.
+
+
 ## Meta routes
 
 there is some route availables to get informations on the applications (its structure, rights, etc)
 
-### GET /_meta
+### GET /\<my-app-name\>/_meta
 
 Return the structure of the application as a json with thoses keys :
 
@@ -681,7 +691,7 @@ curl -X GET  'http://localhost/myApp/_meta'
 
 ```
 
-### POST /meta/\<collection name\>
+### POST /\<my-app-name\>/coll/\<collection name\>/_meta
 
 Ask the backoffice the currents meta information for this collection object.
 
@@ -702,7 +712,7 @@ Ask the backoffice the currents meta information for this collection object.
 For this structure :
 
 ```python
-def can_see_and_modify_salary(value, o):
+def can_see_and_modify_salary(right_name, o, other):
 
     """
     return true if can read the salary
@@ -727,7 +737,7 @@ my_backoffice.add_collection(
 
 ```bash
 # Logged as "Hector"
-curl -X POST 'http://localhost/myApp/meta/users' -d { 'name' : "John" }
+curl -X POST 'http://localhost/myApp/coll/users/_meta' -d { 'name' : "John" }
 # Will return this structure.
 # rights "read" and "modify" are set to false for the salary
 {

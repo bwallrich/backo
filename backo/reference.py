@@ -55,6 +55,7 @@ class FillStrategy(Enum):
     def __repr__(self):
         return self.name
 
+
 # pylint: disable=pointless-string-statement
 """
 ██████╗ ███████╗███████╗
@@ -291,6 +292,10 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
             return
 
         if me == DEFAULT_ID:
+            return
+
+        # if me.get_value() == None:
+        if me.get_value() is None:
             return
 
         # check if in a loop on m_path
