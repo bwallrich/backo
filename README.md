@@ -9,6 +9,10 @@
 Jump to [Quickstart](#quickstart) for a basic setup.
 
 
+
+See [Documentation](https://backo.readthedocs.io/en/latest/) for all details
+
+
 ## What is backo
 It aims at providing a simple and efficient way to create a backend application that exposes a set of REST API routes. 
 
