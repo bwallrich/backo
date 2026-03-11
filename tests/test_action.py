@@ -49,9 +49,7 @@ class TestAction(unittest.TestCase):
         """
         return self.available
 
-    def has_right_to_execute(
-        self, right_name, o
-    ):  # pylint: disable=unused-argument
+    def has_right_to_execute(self, right_name, o):  # pylint: disable=unused-argument
         """
         return if can exec
         """

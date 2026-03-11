@@ -51,20 +51,20 @@ erDiagram
 python ./backoffice.py
 
 # As test
-python -m unittest ./backoffice.py
+python -m unittest ./tests.py
 ```
 
 It contains the login procedure and the auth procedure with jwt
 
 ### users.py
 
-```Collections/users.py``` is dedicated to **users**
+```collection_set/users.py``` is dedicated to **users**
 
 it contain an action **toggle_role** to change the role of a user.
 
 ### books.py
 
-```Collections/books.py``` is dedicated to **books**
+```collection_set/books.py``` is dedicated to **books**
 
 it contain an action **borrow** to handle borrow of books.
 

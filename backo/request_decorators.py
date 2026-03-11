@@ -58,7 +58,7 @@ def error_to_http_handler(f):
             return f(*args, **kwargs)
         except BackError as e:
             log.error(f"{e.error_code}: {e.message}")
-            log.error(traceback.print_exc())
+            # log.error(traceback.print_exc())
             if e.error_code == BackoErrorType.UNAUTHORIZED:
                 return return_http_error(403, e.message)
             if e.error_code == BackoErrorType.NOTFOUND:

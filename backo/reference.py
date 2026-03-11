@@ -294,7 +294,7 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         if me == DEFAULT_ID:
             return
 
-        # if me.get_value() == None:
+        # if me.get_value() == None:
         if me.get_value() is None:
             return
 

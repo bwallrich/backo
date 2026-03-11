@@ -1,4 +1,9 @@
+"""Users module"""
+
+# pylint: disable=unused-argument, logging-fstring-interpolation
+
 import logging
+from stricto import String, List, Dict
 from backo import (
     Collection,
     Item,
@@ -8,7 +13,6 @@ from backo import (
     log_system,
     RefsList,
 )
-from stricto import String, List, Dict
 
 log = log_system.get_or_create_logger("user", logging.DEBUG)
 
@@ -47,9 +51,9 @@ def can_modify_roles(right_name: str, user: Item) -> bool:
 
 
 # ------------------------------------
-# Description of the Item 
+# Description of the Item
 #
-# The item is the object in the collection
+# The item is the object in the collection
 # ------------------------------------
 item = Item(
     {
@@ -90,7 +94,7 @@ def can_create(right_name: str, user: Item) -> bool:
 
     if current_user.has_role("ADMIN"):
         return True
-    
+
     # In this case, current_user.is_anonymous() is authorized to create a user
     # because anonymous user is used during auto creation in the login attempt
     # (if the user doesn't exist, he is created)
@@ -117,7 +121,6 @@ def can_read(right_name: str, user: Item) -> bool:
     if user._id == current_user._id:
         return True
 
-
     # In this case, current_user.is_anonymous() is authorized to read a user
     # because anonymous user is used during auto creation in the login attempt
     # (must check if the user exist in the db before his creation)
@@ -133,7 +136,7 @@ def can_modify(right_name: str, user: Item) -> bool:
 
     if current_user.has_role(["ADMIN", "EMPLOYEE"]):
         return True
-    
+
     # I can modify myself
     if user._id == current_user._id:
         return True
@@ -147,7 +150,7 @@ def can_delete(right_name: str, user: Item) -> bool:
 
     if current_user.has_role("ADMIN"):
         return True
-    
+
     # auto_deletion is possible
     if user._id == current_user._id:
         return True
@@ -155,11 +158,11 @@ def can_delete(right_name: str, user: Item) -> bool:
     return False
 
 
-# 
-# The collection creation
 #
-# Association of Item, collector, rights
-# 
+# The collection creation
+#
+# Association of Item, collector, rights
+#
 users = Collection(
     "users",
     item,
@@ -173,8 +176,8 @@ users = Collection(
 
 # ------------------------------------------------
 # ACTIONS
-# 
-# Actions are a specific fuction with parameters we apply on an Item
+#
+# Actions are a specific fuction with parameters we apply on an Item
 # ------------------------------------------------
 def toggle_role(action: Action, user: Item) -> None:
     """Change roles for a user
@@ -204,6 +207,8 @@ def can_toggle_role(right_name: str, user: Item) -> bool:
     """
     if current_user.has_role("ADMIN"):
         return True
+    return False
+
 
 #
 # Definition of the action
@@ -214,7 +219,7 @@ add_role_action = Action(
     can_see=can_toggle_role,
 )
 
-# Add the action to the users collection
+# Add the action to the users collection
 users.register_action("toggle_role", toggle_role)
 
 

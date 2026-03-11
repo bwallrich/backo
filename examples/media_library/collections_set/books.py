@@ -1,5 +1,10 @@
+"""Books module"""
+
+# pylint: disable=unused-argument, logging-fstring-interpolation
+
 import logging
 from datetime import datetime
+from stricto import Int, String, Dict, Datetime, Bool
 from backo import (
     Collection,
     Item,
@@ -9,7 +14,6 @@ from backo import (
     Ref,
     Action,
 )
-from stricto import Int, String, Dict, Datetime, Bool
 
 log = log_system.get_or_create_logger("books", logging.DEBUG)
 
@@ -24,12 +28,13 @@ def set_borrowed(book: Item) -> bool:
 
     :param book: the current book
     :type book: Item
-    :return: _description_borrowed or not
+    :return: borrowed or not
     :rtype: bool
     """
     if book.borrow is None:
         return False
-    if book.borrow.return_date == None:
+    # if book.borrow.return_date == None:
+    if book.borrow.return_date is not None:
         return False
     if book.borrow.return_date > datetime.now().replace(microsecond=0):
         return True
@@ -37,6 +42,15 @@ def set_borrowed(book: Item) -> bool:
 
 
 def can_read_borrow_user(right_name: str, book: Item) -> bool:
+    """Tel if current_user can read the name of the personne who borrow the book
+
+    :param right_name: The name of the right (here ="read")
+    :type right_name: str
+    :param book: the book
+    :type book: Item
+    :return: True if current_user can read
+    :rtype: bool
+    """
     if current_user.has_role(["ADMIN", "EMPLOYEE"]):
         return True
     # print(f'book borrewed = {book}')
@@ -46,6 +60,15 @@ def can_read_borrow_user(right_name: str, book: Item) -> bool:
 
 
 def can_modify_borrow(right_name: str, book: Item) -> bool:
+    """Tel if current_user can modify the borrow part of the book
+
+    :param right_name: The name of the right (here ="modify")
+    :type right_name: str
+    :param book: The book
+    :type book: Item
+    :return: True if can modify
+    :rtype: bool
+    """
     if current_user.has_role(["ADMIN", "EMPLOYEE"]):
         return True
 
@@ -55,6 +78,9 @@ def can_modify_borrow(right_name: str, book: Item) -> bool:
     return False
 
 
+# --------------------
+# Description of "what is a book"
+# --------------------
 books_item = Item(
     {
         "title": String(require=True),
@@ -95,10 +121,6 @@ def can_create(right_name: str, book: Item) -> bool:
     return False
 
 
-def can_read(right_name: str, book: Item) -> bool:
-    return True
-
-
 def can_modify(right_name: str, book: Item) -> bool:
     """Check if can modify a book"""
 
@@ -123,7 +145,6 @@ books = Collection(
     "books",
     books_item,
     connector,
-    can_read=can_read,
     can_create=can_create,
     can_modify=can_modify,
     can_delete=can_delete,
@@ -144,13 +165,34 @@ def borrow(action: Action, book: Item) -> None:
 
 
 def can_borrow(right_name: str, book: Item) -> bool:
+    """Tel if current_user can execute the borrow action
+
+    :param right_name: The name of the right (here="execute")
+    :type right_name: str
+    :param book: The book
+    :type book: Item
+    :return: True if he can
+    :rtype: bool
+    """
     if current_user.has_role("EMPLOYEE"):
         return True
     return False
 
 
 def can_see_borrow_action(right_name: str, book: Item) -> bool:
+    """Tel the borrow action is a nonsense ?
+
+    you can borrow a book which is not borrowed.
+
+    :param right_name: The name of the right (here="see")
+    :type right_name: str
+    :param book: the book
+    :type book: Item
+    :return: True if borrowed field is false
+    :rtype: bool
+    """
     return not book.borrowed
+
 
 #
 # Definition of the action
@@ -161,7 +203,7 @@ borrow_action = Action(
     can_see=can_see_borrow_action,
 )
 
-# Add the action to the book collection
+# Add the action to the book collection
 books.register_action("borrow", borrow_action)
 
 

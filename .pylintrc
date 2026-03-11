@@ -27,6 +27,7 @@ ignore-imports=no
 
 [MESSAGES CONTROL]
 disable = 
+    import-error,
     wrong-import-position,
     dangerous-default-value,
     super-init-not-called, # Bug ?
