@@ -8,7 +8,9 @@ import sys
 import logging
 from enum import Enum, auto
 
+# used for developpement
 sys.path.insert(1, "../../stricto")
+
 from stricto import String, List, Selector
 
 from .error import Error, ErrorType

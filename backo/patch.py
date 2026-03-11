@@ -8,7 +8,9 @@ import sys
 import re
 
 
+# used for developpement
 sys.path.insert(1, "../../stricto")
+
 from stricto import Dict, String
 
 

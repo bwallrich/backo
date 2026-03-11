@@ -6,7 +6,9 @@ The Collection module
 import logging
 import sys
 
+# used for developpement
 sys.path.insert(1, "../../stricto")
+
 from stricto import Permissions
 
 from .log import log_system

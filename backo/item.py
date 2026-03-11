@@ -18,7 +18,9 @@ from .status import StatusType
 
 log = log_system.get_or_create_logger("Item")
 
+# used for developpement
 sys.path.insert(1, "../../stricto")
+
 from stricto import Dict, String
 
 

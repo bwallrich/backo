@@ -11,7 +11,9 @@ from typing import Self
 
 from flask import request, Blueprint
 
+# used for developpement
 sys.path.insert(1, "../../stricto")
+
 from stricto import (
     Permissions,
     StrictoEncoder,

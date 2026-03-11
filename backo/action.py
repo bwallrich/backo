@@ -8,7 +8,9 @@ Module providing the action
 import sys
 from typing import Callable
 
+# used for developpement
 sys.path.insert(1, "../../stricto")
+
 from stricto import Dict
 
 from .log import log_system

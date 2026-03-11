@@ -7,6 +7,7 @@ This class must not be used directly
 import sys
 from flask import session
 
+# used for developpement
 sys.path.insert(1, "../../stricto/stricto")
 
 from stricto import Dict, String, List

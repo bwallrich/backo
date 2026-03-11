@@ -2,4 +2,4 @@ pyyaml
 mongo
 flask
 pyjwt
-stricto @ git+https://github.com/bwallrich/stricto@main
+stricto>=0.0.8

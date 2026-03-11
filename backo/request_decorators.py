@@ -10,7 +10,9 @@ import traceback
 from functools import wraps
 from flask import request
 
+# used for developpement
 sys.path.insert(1, "../../stricto")
+
 from stricto import (
     SAttributeError,
     SError,

@@ -11,7 +11,9 @@ from .current_user import current_user
 
 # from .status import StatusType
 
+# used for developpement
 sys.path.insert(1, "../../stricto")
+
 from stricto import Dict, String, Datetime
 
 

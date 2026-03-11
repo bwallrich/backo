@@ -11,7 +11,6 @@ import jwt
 from flask import Flask, request, jsonify, make_response, Response
 
 sys.path.insert(1, "../../../backo")
-sys.path.insert(1, "../../../stricto")
 
 
 from collections_set import books, users
