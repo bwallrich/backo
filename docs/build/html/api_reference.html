@@ -46,7 +46,10 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="readme.html">Back Office Low Code (backo)</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">References</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#backo.Action"><code class="docutils literal notranslate"><span class="pre">Action</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#backo.Action"><code class="docutils literal notranslate"><span class="pre">Action</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#backo.Action.go"><code class="docutils literal notranslate"><span class="pre">Action.go()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#backo.Backoffice"><code class="docutils literal notranslate"><span class="pre">Backoffice</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#backo.Backoffice.add_collection"><code class="docutils literal notranslate"><span class="pre">Backoffice.add_collection()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#backo.Backoffice.add_routes"><code class="docutils literal notranslate"><span class="pre">Backoffice.add_routes()</span></code></a></li>
@@ -54,6 +57,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#backo.Collection"><code class="docutils literal notranslate"><span class="pre">Collection</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#backo.Collection.action_go"><code class="docutils literal notranslate"><span class="pre">Collection.action_go()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#backo.Collection.add_action"><code class="docutils literal notranslate"><span class="pre">Collection.add_action()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#backo.Collection.create"><code class="docutils literal notranslate"><span class="pre">Collection.create()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#backo.Collection.get_by_id"><code class="docutils literal notranslate"><span class="pre">Collection.get_by_id()</span></code></a></li>
@@ -61,10 +65,13 @@
 <li class="toctree-l3"><a class="reference internal" href="#backo.Collection.new_item"><code class="docutils literal notranslate"><span class="pre">Collection.new_item()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#backo.Collection.register_action"><code class="docutils literal notranslate"><span class="pre">Collection.register_action()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#backo.Collection.register_selection"><code class="docutils literal notranslate"><span class="pre">Collection.register_selection()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backo.Collection.select"><code class="docutils literal notranslate"><span class="pre">Collection.select()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backo.Collection.select_one"><code class="docutils literal notranslate"><span class="pre">Collection.select_one()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#backo.CurrentUser"><code class="docutils literal notranslate"><span class="pre">CurrentUser</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#backo.CurrentUser.has_role"><code class="docutils literal notranslate"><span class="pre">CurrentUser.has_role()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#backo.CurrentUser.is_anonymous"><code class="docutils literal notranslate"><span class="pre">CurrentUser.is_anonymous()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#backo.Item"><code class="docutils literal notranslate"><span class="pre">Item</span></code></a><ul>
@@ -169,7 +176,7 @@ export all classes</p>
 </dl>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">backo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Item</span><span class="p">,</span> <span class="n">Collection</span><span class="p">,</span> <span class="n">Backoffice</span><span class="p">,</span> <span class="n">Action</span><span class="p">,</span> <span class="n">Ref</span><span class="p">,</span> <span class="n">DBMongoConnector</span>
 
-<span class="c1"># example </span>
+<span class="c1"># example</span>
 <span class="n">book_item</span> <span class="o">=</span> <span class="n">Item</span><span class="p">({</span>
     <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
     <span class="s2">&quot;subtitle&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
@@ -183,7 +190,7 @@ export all classes</p>
     <span class="n">o</span><span class="o">.</span><span class="n">number_of_voter</span> <span class="o">+=</span> <span class="mi">1</span>
 
 
-<span class="n">vote_action</span> <span class="o">=</span> <span class="n">Action</span><span class="p">(</span> <span class="p">{</span> 
+<span class="n">vote_action</span> <span class="o">=</span> <span class="n">Action</span><span class="p">(</span> <span class="p">{</span>
     <span class="s2">&quot;score&quot;</span> <span class="p">:</span> <span class="n">Float</span><span class="p">(</span> <span class="nb">max</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mf">0.0</span> <span class="p">)</span>
 <span class="p">},</span> <span class="n">do_vote</span><span class="p">)</span>
 
@@ -196,6 +203,22 @@ export all classes</p>
 <span class="c1"># ...</span>
 </pre></div>
 </div>
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.Action.go">
+<span class="sig-name descname"><span class="pre">go</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">o</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#backo.Item" title="backo.item.Item"><span class="pre">Item</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#backo.Action.go" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Launch the action</p>
+</div></blockquote>
+<dl class="simple">
+<dt>elf,</dt><dd><p>object is the object (if exists)</p>
+<dl class="field-list simple">
+<dt class="field-odd">meta private<span class="colon">:</span></dt>
+<dd class="field-odd"><p></p></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -210,7 +233,7 @@ export all classes</p>
 </dl>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">backo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Backoffice</span>
 
-<span class="c1"># example </span>
+<span class="c1"># example</span>
 <span class="n">my_app</span> <span class="o">=</span> <span class="n">Backoffice</span><span class="p">(</span><span class="s2">&quot;customer_app&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -288,7 +311,7 @@ a function to say if the <a class="reference internal" href="#backo.CurrentUser"
 </dl>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">backo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Item</span><span class="p">,</span> <span class="n">Collection</span><span class="p">,</span> <span class="n">Backoffice</span><span class="p">,</span> <span class="p">,</span> <span class="n">DBMongoConnector</span>
 
-<span class="c1"># example </span>
+<span class="c1"># example</span>
 <span class="n">book_item</span> <span class="o">=</span> <span class="n">Item</span><span class="p">({</span>
     <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
     <span class="s2">&quot;subtitle&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
@@ -304,6 +327,26 @@ a function to say if the <a class="reference internal" href="#backo.CurrentUser"
 <span class="c1"># ...</span>
 </pre></div>
 </div>
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.Collection.action_go">
+<span class="sig-name descname"><span class="pre">action_go</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_action_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.Collection.action_go" title="Link to this definition"></a></dt>
+<dd><p>_summary_</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>_id</strong> (<em>str</em>) – The _id</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="errors.html#backo.Error" title="backo.Error"><strong>Error</strong></a> – _description_</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>_description_</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>_type_</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="backo.Collection.add_action">
 <span class="sig-name descname"><span class="pre">add_action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#backo.Action" title="backo.action.Action"><span class="pre">Action</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#backo.Collection.add_action" title="Link to this definition"></a></dt>
@@ -410,6 +453,40 @@ a function to say if the <a class="reference internal" href="#backo.CurrentUser"
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.Collection.select">
+<span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter_for_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#backo.Item" title="backo.item.Item"><span class="pre">Item</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#backo.Collection.select" title="Link to this definition"></a></dt>
+<dd><p>Do a selection directly with a filter</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filter_for_selection</strong> (<em>dict</em>) – a filter</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a list of Items</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[<a class="reference internal" href="#backo.Item" title="backo.Item">Item</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.Collection.select_one">
+<span class="sig-name descname"><span class="pre">select_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter_for_selection</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#backo.Item" title="backo.item.Item"><span class="pre">Item</span></a></span></span><a class="headerlink" href="#backo.Collection.select_one" title="Link to this definition"></a></dt>
+<dd><p>select one item (if only one)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filter_for_selection</strong> (<em>dict</em>) – a filter</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The one Item matching the filter</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#backo.Item" title="backo.Item">Item</a></p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -432,11 +509,11 @@ a function to say if the <a class="reference internal" href="#backo.CurrentUser"
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="backo.CurrentUser.has_role">
-<span class="sig-name descname"><span class="pre">has_role</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">role</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#backo.CurrentUser.has_role" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">has_role</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">role</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#backo.CurrentUser.has_role" title="Link to this definition"></a></dt>
 <dd><p>Return if the currentUser has the role given in param</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>role</strong> (<em>str</em>) – the role</p>
+<dd class="field-odd"><p><strong>role</strong> (<em>str</em><em> or </em><em>list</em><em>[</em><em>str</em><em>]</em>) – the role</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>a boolean if the user as the role has the role</p>
@@ -445,13 +522,27 @@ a function to say if the <a class="reference internal" href="#backo.CurrentUser"
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># example </span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># example</span>
 <span class="k">if</span> <span class="n">current_user</span><span class="o">.</span><span class="n">has_role</span><span class="p">(</span> <span class="s2">&quot;Admin&quot;</span> <span class="p">):</span>
     <span class="k">return</span> <span class="kc">True</span>
 <span class="k">else</span><span class="p">:</span>
     <span class="k">return</span> <span class="kc">False</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="backo.CurrentUser.is_anonymous">
+<span class="sig-name descname"><span class="pre">is_anonymous</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#backo.CurrentUser.is_anonymous" title="Link to this definition"></a></dt>
+<dd><p>Return True if the current_user is ANONYMOUS</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the result of the check anonymous</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -471,7 +562,7 @@ a function to say if the <a class="reference internal" href="#backo.CurrentUser"
 </dl>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">backo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Item</span><span class="p">,</span> <span class="n">Collection</span><span class="p">,</span> <span class="n">Backoffice</span><span class="p">,</span> <span class="n">DBMongoConnector</span>
 
-<span class="c1"># example </span>
+<span class="c1"># example</span>
 <span class="n">book</span> <span class="o">=</span> <span class="n">Item</span><span class="p">({</span>
     <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
     <span class="s2">&quot;subtitle&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
@@ -614,7 +705,7 @@ a function to say if the <a class="reference internal" href="#backo.CurrentUser"
 </dl>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">backo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Item</span><span class="p">,</span> <span class="n">Ref</span><span class="p">,</span> <span class="n">RefsList</span>
 
-<span class="c1"># example </span>
+<span class="c1"># example</span>
 <span class="n">book_item</span> <span class="o">=</span> <span class="n">Item</span><span class="p">({</span>
     <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
     <span class="s2">&quot;author&quot;</span><span class="p">:</span> <span class="n">Ref</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="s2">&quot;authors&quot;</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s2">&quot;$.books&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
@@ -645,14 +736,14 @@ a function to say if the <a class="reference internal" href="#backo.CurrentUser"
 <dd class="field-odd"><p><strong>**kwargs</strong> – <ul class="simple">
 <li><p><em>collection|coll=</em> <code class="docutils literal notranslate"><span class="pre">str</span></code> – The target collection</p></li>
 <li><p><em>reverse|rev|field=</em> <code class="docutils literal notranslate"><span class="pre">str</span></code> – The field in the target collection which reference my collection. Must be a RFC 9535 path (<a class="reference external" href="https://datatracker.ietf.org/doc/rfc9535/">https://datatracker.ietf.org/doc/rfc9535/</a>)</p></li>
-<li><p><em>on_delete|ods=</em> <a class="reference internal" href="#backo.DeleteStrategy" title="backo.DeleteStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">DeleteStrategy</span></code></a> – The deletion strategy <a class="reference internal" href="#backo.DeleteStrategy" title="backo.DeleteStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">DeleteStrategy</span></code></a>. By default <code class="docutils literal notranslate"><span class="pre">DeleteStrategy.MUST_BE_EMPTY</span></code></p></li>
+<li><p><em>on_delete|ods=</em> <a class="reference internal" href="#backo.DeleteStrategy" title="backo.DeleteStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">DeleteStrategy</span></code></a> – The deletion strategy <a class="reference internal" href="#backo.DeleteStrategy" title="backo.DeleteStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">DeleteStrategy</span></code></a>. By default =``DeleteStrategy.MUST_BE_EMPTY``</p></li>
 </ul>
 </p>
 </dd>
 </dl>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">backo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Item</span><span class="p">,</span> <span class="n">Ref</span><span class="p">,</span> <span class="n">RefsList</span><span class="p">,</span> <span class="n">DeleteStrategy</span>
 
-<span class="c1"># example </span>
+<span class="c1"># example</span>
 <span class="n">book_item</span> <span class="o">=</span> <span class="n">Item</span><span class="p">({</span>
     <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">String</span><span class="p">(),</span>
     <span class="s2">&quot;author&quot;</span><span class="p">:</span> <span class="n">Ref</span><span class="p">(</span><span class="n">collection</span><span class="o">=</span><span class="s2">&quot;authors&quot;</span><span class="p">,</span> <span class="n">field</span><span class="o">=</span><span class="s2">&quot;$.books&quot;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
@@ -735,7 +826,7 @@ not used yet</p></li>
 <dt class="sig sig-object py" id="backo.DBConnector.generate_id">
 <span class="sig-name descname"><span class="pre">generate_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">o</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#backo.DBConnector.generate_id" title="Link to this definition"></a></dt>
 <dd><p>The function to generate an Id.</p>
-<p>Mainly, not used, because the database itself do the job (like mongo). 
+<p>Mainly, not used, because the database itself do the job (like mongo).
 But for other cases, you must generate by yourself the uniq <em>_id</em> for the object</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

@@ -435,39 +435,43 @@ window.addEventListener("load", load);
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#authentication">Authentication</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#routes">Routes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#get-coll-collection-name-id-view-view-name">GET /coll/&lt;collection name&gt;/&lt;_id&gt; ?_view=&lt;view name&gt;</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#get-coll-collection-name-query-string">GET /coll/&lt;collection name&gt;?&lt;query_string&gt;</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#get-my-app-name-coll-collection-name-id-view-view-name">GET &lt;my-app-name&gt;/coll/&lt;collection name&gt;/&lt;_id&gt; ?_view=&lt;view name&gt;</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#get-my-app-name-coll-collection-name-query-string">GET &lt;my-app-name&gt;/coll/&lt;collection name&gt;?&lt;query_string&gt;</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#id1">Example</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#post-coll-collection-name">POST /coll/&lt;collection name&gt;</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#post-my-app-name-coll-collection-name">POST &lt;my-app-name&gt;/coll/&lt;collection name&gt;</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#id2">Example</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#put-coll-collection-name-id">PUT /coll/&lt;collection name&gt;/&lt;_id&gt;</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#put-my-app-name-coll-collection-name-id">PUT /&lt;my-app-name&gt;/coll/&lt;collection name&gt;/&lt;_id&gt;</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#id3">Example</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#delete-coll-collection-name-id">DELETE /coll/&lt;collection name&gt;/&lt;_id&gt;</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#delete-my-app-name-coll-collection-name-id">DELETE /&lt;my-app-name&gt;/coll/&lt;collection name&gt;/&lt;_id&gt;</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#id4">Example</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#patch-coll-collection-name-id">PATCH /coll/&lt;collection name&gt;/&lt;_id&gt;</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#patch-my-app-name-coll-collection-name-id">PATCH /&lt;my-app-name&gt;/coll/&lt;collection name&gt;/&lt;_id&gt;</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#id5">Example</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#post-check-collection-name">POST /check/&lt;collection name&gt;</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#post-my-app-name-coll-collection-name-check">POST /&lt;my-app-name&gt;/coll/&lt;collection name&gt;/_check</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#actions-routes">Actions routes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#post-my-app-name-coll-collection-name-actions-action-name-id">POST /&lt;my-app-name&gt;/coll/&lt;collection name&gt;/_actions/&lt;action_name&gt;/&lt;_id&gt;</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#meta-routes">Meta routes</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#get-meta">GET /_meta</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#get-my-app-name-meta">GET /&lt;my-app-name&gt;/_meta</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#collection-description">collection description</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#meta-element-description">meta element description</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#meta-rights-description">meta rights description</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#id6">Example</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#post-meta-collection-name">POST /meta/&lt;collection name&gt;</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#post-my-app-name-coll-collection-name-meta">POST /&lt;my-app-name&gt;/coll/&lt;collection name&gt;/_meta</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#id7">Example</a></li>
 </ul>
 </li>
@@ -555,12 +559,12 @@ window.addEventListener("load", load);
     classDef className fill:#f9f,stroke:#333,stroke-width:4px
     Users |o--o{ Addresses : live
     Users {
-        String name UK
+        String name
         String surname
         Bool male
     }
     Addresses {
-        String name UK
+        String name
         String address
     }
     </pre><p>You only will add <a class="reference internal" href="#cardinalities">Ref</a> and <a class="reference internal" href="#cardinalities">Refs</a> to exprime the relationship.</p>
@@ -570,13 +574,13 @@ window.addEventListener("load", load);
     classDef className fill:#f9f,stroke:#333,stroke-width:4px
     Users |o--o{ Addresses : live
     Users {
-        String name UK
+        String name
         String surname
         Bool male
         Ref addr &quot;link one-to-many to Addresses&quot;
     }
     Addresses {
-        String name UK
+        String name
         String address
         Refs users &quot;link many-to-one to Usres&quot;
     }
@@ -919,8 +923,8 @@ This is commonly used for many-to-many relationships where you want to delete th
 <section id="routes">
 <h2>Routes<a class="headerlink" href="#routes" title="Link to this heading"></a></h2>
 <p>Automatic routes creation provide the following resources</p>
-<section id="get-coll-collection-name-id-view-view-name">
-<h3>GET /coll/&lt;collection name&gt;/&lt;_id&gt; ?_view=&lt;view name&gt;<a class="headerlink" href="#get-coll-collection-name-id-view-view-name" title="Link to this heading"></a></h3>
+<section id="get-my-app-name-coll-collection-name-id-view-view-name">
+<h3>GET &lt;my-app-name&gt;/coll/&lt;collection name&gt;/&lt;_id&gt; ?_view=&lt;view name&gt;<a class="headerlink" href="#get-my-app-name-coll-collection-name-id-view-view-name" title="Link to this heading"></a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">_view</span></code> are defined in <a class="reference external" href="https://github.com/bwallrich/stricto?tab=readme-ov-file#views">stricto views</a></p>
 <p>Return the object of this collection <em>by _id</em>.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span><span class="s1">&#39;http://localhost/myApp/coll/users/123&#39;</span>
@@ -960,8 +964,8 @@ curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span
 </tbody>
 </table>
 </section>
-<section id="get-coll-collection-name-query-string">
-<h3>GET /coll/&lt;collection name&gt;?&lt;query_string&gt;<a class="headerlink" href="#get-coll-collection-name-query-string" title="Link to this heading"></a></h3>
+<section id="get-my-app-name-coll-collection-name-query-string">
+<h3>GET &lt;my-app-name&gt;/coll/&lt;collection name&gt;?&lt;query_string&gt;<a class="headerlink" href="#get-my-app-name-coll-collection-name-query-string" title="Link to this heading"></a></h3>
 <p>Get a list of objects matching the query string. The query string can be with this format</p>
 <table class="docutils align-default">
 <thead>
@@ -1030,8 +1034,8 @@ curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span
 </div>
 </section>
 </section>
-<section id="post-coll-collection-name">
-<h3>POST /coll/&lt;collection name&gt;<a class="headerlink" href="#post-coll-collection-name" title="Link to this heading"></a></h3>
+<section id="post-my-app-name-coll-collection-name">
+<h3>POST &lt;my-app-name&gt;/coll/&lt;collection name&gt;<a class="headerlink" href="#post-my-app-name-coll-collection-name" title="Link to this heading"></a></h3>
 <p>Create a new item for the collection <code class="docutils literal notranslate"><span class="pre">collection</span> <span class="pre">name</span></code>.</p>
 <section id="id2">
 <h4>Example<a class="headerlink" href="#id2" title="Link to this heading"></a></h4>
@@ -1041,8 +1045,8 @@ curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span
 <p>It returns the created <em>user</em> JSON object with a generated unique identifier <code class="docutils literal notranslate"><span class="pre">_id</span></code> and some _metadatas or an error otherwise.</p>
 </section>
 </section>
-<section id="put-coll-collection-name-id">
-<h3>PUT /coll/&lt;collection name&gt;/&lt;_id&gt;<a class="headerlink" href="#put-coll-collection-name-id" title="Link to this heading"></a></h3>
+<section id="put-my-app-name-coll-collection-name-id">
+<h3>PUT /&lt;my-app-name&gt;/coll/&lt;collection name&gt;/&lt;_id&gt;<a class="headerlink" href="#put-my-app-name-coll-collection-name-id" title="Link to this heading"></a></h3>
 <p>Modify an existing object whose id is <code class="docutils literal notranslate"><span class="pre">_id</span></code>.</p>
 <section id="id3">
 <h4>Example<a class="headerlink" href="#id3" title="Link to this heading"></a></h4>
@@ -1052,8 +1056,8 @@ curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span
 <p>Modify the users with _id <em>1234</em> and return the modified object.</p>
 </section>
 </section>
-<section id="delete-coll-collection-name-id">
-<h3>DELETE /coll/&lt;collection name&gt;/&lt;_id&gt;<a class="headerlink" href="#delete-coll-collection-name-id" title="Link to this heading"></a></h3>
+<section id="delete-my-app-name-coll-collection-name-id">
+<h3>DELETE /&lt;my-app-name&gt;/coll/&lt;collection name&gt;/&lt;_id&gt;<a class="headerlink" href="#delete-my-app-name-coll-collection-name-id" title="Link to this heading"></a></h3>
 <p>Delete an existing object whose id is <code class="docutils literal notranslate"><span class="pre">_id</span></code>.</p>
 <section id="id4">
 <h4>Example<a class="headerlink" href="#id4" title="Link to this heading"></a></h4>
@@ -1063,8 +1067,8 @@ curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span
 <p>Delete the user that has _id = <em>1234</em>.</p>
 </section>
 </section>
-<section id="patch-coll-collection-name-id">
-<h3>PATCH /coll/&lt;collection name&gt;/&lt;_id&gt;<a class="headerlink" href="#patch-coll-collection-name-id" title="Link to this heading"></a></h3>
+<section id="patch-my-app-name-coll-collection-name-id">
+<h3>PATCH /&lt;my-app-name&gt;/coll/&lt;collection name&gt;/&lt;_id&gt;<a class="headerlink" href="#patch-my-app-name-coll-collection-name-id" title="Link to this heading"></a></h3>
 <p>Partial change of an existing object whose id is <code class="docutils literal notranslate"><span class="pre">_id</span></code>.
 Please refer to the <a class="reference external" href="https://github.com/bwallrich/stricto?tab=readme-ov-file#patch">Stricto patch method</a>.</p>
 <section id="id5">
@@ -1076,8 +1080,8 @@ Please refer to the <a class="reference external" href="https://github.com/bwall
 <p>Patch content can be a <em>list of patch operations</em>.</p>
 </section>
 </section>
-<section id="post-check-collection-name">
-<h3>POST /check/&lt;collection name&gt;<a class="headerlink" href="#post-check-collection-name" title="Link to this heading"></a></h3>
+<section id="post-my-app-name-coll-collection-name-check">
+<h3>POST /&lt;my-app-name&gt;/coll/&lt;collection name&gt;/_check<a class="headerlink" href="#post-my-app-name-coll-collection-name-check" title="Link to this heading"></a></h3>
 <p>Check the validity a field of the item</p>
 <p>Please refer to <a class="reference external" href="https://github.com/bwallrich/stricto#selectors">stricto selectors</a> for more details on selectors.</p>
 <p>get must provide a json structure in the body :</p>
@@ -1115,7 +1119,7 @@ Please refer to the <a class="reference external" href="https://github.com/bwall
 </tbody>
 </table>
 <p>Examples :</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s1">&#39;http://localhost/myApp/check/users&#39;</span><span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;{ &quot;item&quot; : { &quot;name&quot; : &quot;John&quot;, &quot;surname&quot; : 32 }, &quot;path&quot; : &quot;$.surname&quot; }&#39;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s1">&#39;http://localhost/myApp/coll/users/_check&#39;</span><span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;{ &quot;item&quot; : { &quot;name&quot; : &quot;John&quot;, &quot;surname&quot; : 32 }, &quot;path&quot; : &quot;$.surname&quot; }&#39;</span>
 <span class="c1"># will check surname an return a response.data like</span>
 <span class="o">{</span>
 <span class="w">    </span><span class="s1">&#39;error&#39;</span><span class="w"> </span>:<span class="w"> </span><span class="s2">&quot;Must be a string&quot;</span>
@@ -1123,14 +1127,14 @@ Please refer to the <a class="reference external" href="https://github.com/bwall
 </pre></div>
 </div>
 <p>The response is a <em>status 200</em> even if the check return an error. The request is correct.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s1">&#39;http://localhost/myApp/check/users&#39;</span><span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;{ &quot;item&quot; : { &quot;surname&quot; : &quot;Johnny&quot; }, &quot;path&quot; : &quot;$.surname&quot; }&#39;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s1">&#39;http://localhost/myApp/coll/users/_check&#39;</span><span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;{ &quot;item&quot; : { &quot;surname&quot; : &quot;Johnny&quot; }, &quot;path&quot; : &quot;$.surname&quot; }&#39;</span>
 <span class="c1"># will check surname an return a response.data like</span>
 <span class="o">{</span>
 <span class="w">    </span><span class="s1">&#39;error&#39;</span><span class="w"> </span>:<span class="w"> </span>null
 <span class="o">}</span>
 
 
-curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span><span class="s1">&#39;http://localhost/myApp/check/users&#39;</span><span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;{ &quot;item&quot; : { &quot;name&quot; : 23, &quot;surname&quot; : &quot;Johnny&quot; }, &quot;path&quot; : &quot;$.surname&quot; }&#39;</span>
+curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span><span class="s1">&#39;http://localhost/myApp/coll/users/_check&#39;</span><span class="w"> </span>-d<span class="w"> </span><span class="s1">&#39;{ &quot;item&quot; : { &quot;name&quot; : 23, &quot;surname&quot; : &quot;Johnny&quot; }, &quot;path&quot; : &quot;$.surname&quot; }&#39;</span>
 <span class="c1"># (only the surname is tested. don&#39;t car if name is correct or not)</span>
 <span class="o">{</span>
 <span class="w">    </span><span class="s1">&#39;error&#39;</span><span class="w"> </span>:<span class="w"> </span>null
@@ -1139,11 +1143,19 @@ curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span
 </div>
 </section>
 </section>
+<section id="actions-routes">
+<h2>Actions routes<a class="headerlink" href="#actions-routes" title="Link to this heading"></a></h2>
+<p>Each collection has routes for its actions.</p>
+<section id="post-my-app-name-coll-collection-name-actions-action-name-id">
+<h3>POST /&lt;my-app-name&gt;/coll/&lt;collection name&gt;/_actions/&lt;action_name&gt;/&lt;_id&gt;<a class="headerlink" href="#post-my-app-name-coll-collection-name-actions-action-name-id" title="Link to this heading"></a></h3>
+<p>is used to call an action.</p>
+</section>
+</section>
 <section id="meta-routes">
 <h2>Meta routes<a class="headerlink" href="#meta-routes" title="Link to this heading"></a></h2>
 <p>there is some route availables to get informations on the applications (its structure, rights, etc)</p>
-<section id="get-meta">
-<h3>GET /_meta<a class="headerlink" href="#get-meta" title="Link to this heading"></a></h3>
+<section id="get-my-app-name-meta">
+<h3>GET /&lt;my-app-name&gt;/_meta<a class="headerlink" href="#get-my-app-name-meta" title="Link to this heading"></a></h3>
 <p>Return the structure of the application as a json with thoses keys :</p>
 <table class="docutils align-default">
 <thead>
@@ -1371,8 +1383,8 @@ curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span
 </div>
 </section>
 </section>
-<section id="post-meta-collection-name">
-<h3>POST /meta/&lt;collection name&gt;<a class="headerlink" href="#post-meta-collection-name" title="Link to this heading"></a></h3>
+<section id="post-my-app-name-coll-collection-name-meta">
+<h3>POST /&lt;my-app-name&gt;/coll/&lt;collection name&gt;/_meta<a class="headerlink" href="#post-my-app-name-coll-collection-name-meta" title="Link to this heading"></a></h3>
 <p>Ask the backoffice the currents meta information for this collection object.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>        &quot;type&quot;: ty,
         &quot;type_short&quot; : re.sub(&quot;.*\.|\&#39;&gt;&quot;, &#39;&#39;, ty),
@@ -1388,7 +1400,7 @@ curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span
 <section id="id7">
 <h4>Example<a class="headerlink" href="#id7" title="Link to this heading"></a></h4>
 <p>For this structure :</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">can_see_and_modify_salary</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">can_see_and_modify_salary</span><span class="p">(</span><span class="n">right_name</span><span class="p">,</span> <span class="n">o</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
 
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    return true if can read the salary</span>
@@ -1412,7 +1424,7 @@ curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span
 </pre></div>
 </div>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Logged as &quot;Hector&quot;</span>
-curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s1">&#39;http://localhost/myApp/meta/users&#39;</span><span class="w"> </span>-d<span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="s1">&#39;name&#39;</span><span class="w"> </span>:<span class="w"> </span><span class="s2">&quot;John&quot;</span><span class="w"> </span><span class="o">}</span>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span><span class="s1">&#39;http://localhost/myApp/coll/users/_meta&#39;</span><span class="w"> </span>-d<span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="s1">&#39;name&#39;</span><span class="w"> </span>:<span class="w"> </span><span class="s2">&quot;John&quot;</span><span class="w"> </span><span class="o">}</span>
 <span class="c1"># Will return this structure.</span>
 <span class="c1"># rights &quot;read&quot; and &quot;modify&quot; are set to false for the salary</span>
 <span class="o">{</span>

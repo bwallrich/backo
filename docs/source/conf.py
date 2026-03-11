@@ -3,7 +3,7 @@ import os
 import sys
 import toml
 
-sys.path.insert(0, os.path.abspath("../../../stricto/"))
+sys.path.insert(0, os.path.abspath("../../../backo/"))
 sys.path.insert(0, os.path.abspath("../../"))
 
 # Configuration file for the Sphinx documentation builder.
