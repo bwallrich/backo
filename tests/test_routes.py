@@ -10,7 +10,7 @@ from flask import Flask
 
 from backo import Item, Collection
 from backo import DBYmlConnector
-from backo import Backoffice, current_user, Action
+from backo import Backoffice, current_user, Action, Selection
 
 from stricto import String, Bool
 
@@ -55,6 +55,10 @@ class TestRoutes(unittest.TestCase):
             self.yml_users,
         )
         self.users_coll.define_view("!surname_only", ["$.name"])
+
+        # SELECTION
+        sel = Selection(["$.surname"], filter={"name": ("$reg", r"bert")})
+        self.users_coll.register_selection("bert_only", sel)
 
         # ACTION
         def change_surname(action, o):  # pylint: disable=unused-argument
@@ -293,6 +297,21 @@ class TestRoutes(unittest.TestCase):
 
         l = self.backo.users.set(results["result"])
         self.assertEqual(len(l), 1)
+
+    def test_select_route_filter_sel(self):
+        """
+        do a select on a selection
+        """
+        response = self.client.get("/myApp/coll/users/_selections/bert_only")
+        self.assertEqual(response.status_code, 200)
+        results = json.loads(response.data)
+        self.assertEqual(results["total"], 2)
+        response = self.client.get(
+            "/myApp/coll/users/_selections/bert_only?name.$reg=.*1"
+        )
+        self.assertEqual(response.status_code, 200)
+        results = json.loads(response.data)
+        self.assertEqual(results["total"], 1)
 
     def test_check_route_filter(self):
         """

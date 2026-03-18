@@ -26,6 +26,7 @@ class ErrorType(Enum):
     MONGO_CONNECT_ERROR = auto()
     SELECT_ERROR = auto()
     ACTION_NOT_AVAILABLE = auto()
+    SELECTION_NOT_AVAILABLE = auto()
     ACTION_FORBIDDEN = auto()
     UNAUTHORIZED = auto()
     NOT_DIR = auto()

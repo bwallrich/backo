@@ -154,4 +154,15 @@ class TestBackoffice(unittest.TestCase):
         response = self.client.get(f"/media_library/coll/users/{user['_id']}")
         u = json.loads(response.data)
         self.assertEqual(u["rent"]["books"][0], book["_id"])
-        # print(json.dumps(json.loads(response.data), indent=2)
+
+        # verify book has borrowed = True
+        response = self.client.get(f"/media_library/coll/books/{book['_id']}")
+        b = json.loads(response.data)
+        self.assertEqual(b["borrowed"], True)
+
+        # Do the selection on borrowed books
+        response = self.client.get("/media_library/coll/books/_selections/borrowed")
+        self.assertEqual(response.status_code, 200)
+        results = json.loads(response.data)
+        self.assertEqual(results["total"], 1)
+        self.assertEqual(results["result"][0][2], "toto1")

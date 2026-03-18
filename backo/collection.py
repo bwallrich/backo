@@ -338,13 +338,13 @@ class Collection:
         # read datas
         if self._permissions.is_strictly_allowed_to("read") is not False:
             # GET / - The selection
-            log.debug(f"Add routes GET {self.name}/")
+            log.info(f"Add routes GET {self.name}/")
             collection_blueprint.add_url_rule("", "select", methods=["GET"])
             collection_blueprint.view_functions[f"{self.name}.select"] = self.filtering
 
         # POST / Create data
         if self._permissions.is_strictly_allowed_to("create") is not False:
-            log.debug(f"Add routes POST {self.name}/")
+            log.info(f"Add routes POST {self.name}/")
             collection_blueprint.add_url_rule("", "create", methods=["POST"])
             collection_blueprint.view_functions[f"{self.name}.create"] = (
                 self.http_create
@@ -352,7 +352,7 @@ class Collection:
 
         # CHECK / Check values
         if self._permissions.is_strictly_allowed_to("modify") is not False:
-            log.debug(f"Add routes POST {self.name}/_check")
+            log.info(f"Add routes POST {self.name}/_check")
             collection_blueprint.add_url_rule(
                 "/_check",
                 "check",
@@ -362,7 +362,7 @@ class Collection:
 
         # META /> Check values
         if self._permissions.is_strictly_allowed_to("modify") is not False:
-            log.debug(f"Add routes GET {self.name}/_meta")
+            log.info(f"Add routes GET {self.name}/_meta")
             collection_blueprint.add_url_rule(
                 "/_meta",
                 "meta",
@@ -372,7 +372,7 @@ class Collection:
 
         if self._permissions.is_strictly_allowed_to("read") is not False:
             # GET /<_id>
-            log.debug(f"Add routes GET {self.name}/<string:_id>")
+            log.info(f"Add routes GET {self.name}/<string:_id>")
 
             collection_blueprint.add_url_rule(
                 "/<string:_id>",
@@ -385,7 +385,7 @@ class Collection:
 
         # PUT /<_id> Modify Data
         if self._permissions.is_strictly_allowed_to("modify") is not False:
-            log.debug(f"Add routes PUT {self.name}/<string:_id>")
+            log.info(f"Add routes PUT {self.name}/<string:_id>")
             collection_blueprint.add_url_rule(
                 "/<string:_id>",
                 "put",
@@ -395,7 +395,7 @@ class Collection:
 
         # PATCH /<_id> Modify Data
         if self._permissions.is_strictly_allowed_to("modify") is not False:
-            log.debug(f"Add routes PATCH {self.name}/<string:_id>")
+            log.info(f"Add routes PATCH {self.name}/<string:_id>")
             collection_blueprint.add_url_rule(
                 "/<string:_id>",
                 "patch_one",
@@ -407,7 +407,7 @@ class Collection:
 
         # DELETE /<_id> Delete Data
         if self._permissions.is_strictly_allowed_to("delete") is not False:
-            log.debug(f"Add routes DELETE {self.name}/<string:_id>")
+            log.info(f"Add routes DELETE {self.name}/<string:_id>")
             collection_blueprint.add_url_rule(
                 "/<string:_id>",
                 "delete",
@@ -419,13 +419,25 @@ class Collection:
 
         # Actions
         if self._permissions.is_strictly_allowed_to("read") is not False:
-            log.debug("Add routes action /_actions/<string:_action_name>/<string:_id>")
+            log.info("Add routes action /_actions/<string:_action_name>/<string:_id>")
             collection_blueprint.add_url_rule(
                 "/_actions/<string:_action_name>/<string:_id>",
                 "go",
                 methods=["POST"],
             )
             collection_blueprint.view_functions[f"{self.name}.go"] = self.action_go
+
+        # Selections
+        if self._permissions.is_strictly_allowed_to("read") is not False:
+            log.info("Add routes selections /_selections/<string:_selection_name>")
+            collection_blueprint.add_url_rule(
+                "/_selections/<string:_selection_name>",
+                "do_selection",
+                methods=["GET"],
+            )
+            collection_blueprint.view_functions[f"{self.name}.do_selection"] = (
+                self.do_selection
+            )
 
         return collection_blueprint
 
@@ -464,7 +476,6 @@ class Collection:
         """
         GET HTTP
 
-
         :meta private:
 
         """
@@ -485,7 +496,6 @@ class Collection:
         """
         SELECT HTTP
 
-
         :meta private:
 
         """
@@ -496,12 +506,42 @@ class Collection:
 
         match_filter = multidict_to_filter(query)
 
-        log.debug(f"filtering {self.name} with filter={match_filter}")
+        log.debug(f"filtering {self.name}/_all with filter={match_filter}")
 
         result = self._selections["_all"].select(match_filter, _page, _skip)
 
         log.debug(
-            f"select in {self.name} {match_filter}/{_page} skip {_skip} -> {result}"
+            f"select in {self.name}/_all {match_filter}/{_page} skip {_skip} -> {result}"
+        )
+
+        return (json.dumps(result, cls=StrictoEncoder), 200)
+
+    @error_to_http_handler
+    def do_selection(self, _selection_name: str):
+        """_summary_
+
+        :param _selection_name: The name of the selection
+        :type _selection_name: str
+        :raises Error: _description_
+        :return: _description_
+        :rtype: _type_
+        """
+
+        if _selection_name not in self._selections:
+            raise Error(
+                ErrorType.SELECTION_NOT_AVAILABLE,
+                f"collection {self.name} has no selection {_selection_name}",
+            )
+
+        query = request.args
+        _page = int(query.get("_page", 10))
+        _skip = int(query.get("_skip", 0))
+
+        match_filter = multidict_to_filter(query)
+        result = self._selections[_selection_name].select(match_filter, _page, _skip)
+
+        log.debug(
+            f"select in {self.name}/{_selection_name} {match_filter}/{_page} skip {_skip} -> {result}"
         )
 
         return (json.dumps(result, cls=StrictoEncoder), 200)

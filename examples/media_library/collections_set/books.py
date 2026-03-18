@@ -13,6 +13,7 @@ from backo import (
     log_system,
     Ref,
     Action,
+    Selection,
 )
 
 log = log_system.get_or_create_logger("books", logging.DEBUG)
@@ -33,8 +34,7 @@ def set_borrowed(book: Item) -> bool:
     """
     if book.borrow is None:
         return False
-    # if book.borrow.return_date == None:
-    if book.borrow.return_date is not None:
+    if book.borrow.return_date == None:  # pylint: disable=singleton-comparison
         return False
     if book.borrow.return_date > datetime.now().replace(microsecond=0):
         return True
@@ -209,6 +209,8 @@ books.register_action("borrow", borrow_action)
 
 # ------------------------------------------------
 # SELECTIONS
-#
-# soon
 # ------------------------------------------------
+borrowed_book_select = Selection(
+    ["$.title", "$.borrow.user.login"], filter={"borrowed": True}
+)
+books.register_selection("borrowed", borrowed_book_select)

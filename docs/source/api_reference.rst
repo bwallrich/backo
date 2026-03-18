@@ -30,6 +30,10 @@ References
    :members:
    :show-inheritance: 
 
+.. autoclass:: Selection
+   :members:
+   :show-inheritance: 
+
 Ref & RefsList
 --------------
 
