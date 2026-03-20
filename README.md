@@ -906,9 +906,6 @@ Below is a simple use case on how to use these events:
 
 *Soon*
 
-## CurrentUser
-
-*Soon*
 
 ## Logs
 
