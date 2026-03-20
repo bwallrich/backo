@@ -981,6 +981,10 @@ coverage run -m unittest tests
 coverage html # report under htmlcov/index.html
 firefox htmlcov/index.html
 
+# docs
+cd docs
+make html
+
 ```
 
 

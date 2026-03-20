@@ -1,6 +1,8 @@
 *workspace
 __pycache__/
 *.pyc
+docs/build/
+docs/_build/
 dist/
 .coverage
 coverage.svg
