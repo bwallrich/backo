@@ -14,7 +14,7 @@ from stricto import Permissions
 from .log import log_system
 
 
-log = log_system.get_or_create_logger("select", logging.DEBUG)
+log = log_system.get_or_create_logger("select", logging.INFO)
 
 
 class CollectionAddon:

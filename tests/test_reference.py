@@ -2,13 +2,22 @@
 test for References()
 """
 
-# pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code
+# pylint: disable=too-many-lines, wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code
 
+import os
 import unittest
 from backo import Item, Collection
 from backo import DBYmlConnector
 from backo import Backoffice
-from backo import Ref, RefsList, DeleteStrategy, Error, log_system, current_user
+from backo import (
+    Ref,
+    RefsList,
+    DeleteStrategy,
+    FillStrategy,
+    Error,
+    log_system,
+    current_user,
+)
 
 ### --- For development ---
 log_system.add_handler(log_system.set_streamhandler())
@@ -31,22 +40,22 @@ class TestReferences(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         # --- DB for user
-        self.yml_users = DBYmlConnector(path=YML_DIR)
+        self.yml_users = DBYmlConnector(path=os.path.join(YML_DIR, "Users"))
         self.yml_users.generate_id = lambda o: f"User_{o.name}_{o.surname}"
 
         # --- DB for sites
-        self.yml_sites = DBYmlConnector(path=YML_DIR)
+        self.yml_sites = DBYmlConnector(path=os.path.join(YML_DIR, "Sites"))
         self.yml_sites.generate_id = lambda o: f"Site_{o.name}"
 
         # --- DB for humans
-        self.yml_humans = DBYmlConnector(path=YML_DIR)
+        self.yml_humans = DBYmlConnector(path=os.path.join(YML_DIR, "Humans"))
         self.yml_humans.generate_id = lambda o: f"Human_{o.name}"
 
         # --- DB for animals
-        self.yml_animals = DBYmlConnector(path=YML_DIR)
+        self.yml_animals = DBYmlConnector(path=os.path.join(YML_DIR, "Animals"))
         self.yml_animals.generate_id = lambda o: f"Animal_{o.desc}"
 
-    def test_references_one_to_many(self):
+    def test_references_one_to_many_fill(self):
         """
         creating an backoffice with ref one to many
         and delete
@@ -78,6 +87,7 @@ class TestReferences(unittest.TestCase):
                         "users": RefsList(
                             coll="users",
                             field="$.site",
+                            ofs=FillStrategy.FILL,
                             ods=DeleteStrategy.MUST_BE_EMPTY,
                         ),
                     }
@@ -87,8 +97,8 @@ class TestReferences(unittest.TestCase):
         )
 
         # Hard clean before tests
-        self.yml_sites.delete_by_id("Site_moon")
-        self.yml_users.delete_by_id("User_bebert_bebert")
+        self.yml_sites.drop()
+        self.yml_users.drop()
 
         current_user.standalone = True
         si = backoffice.sites.create({"name": "moon", "address": "far"})
@@ -101,6 +111,77 @@ class TestReferences(unittest.TestCase):
         si.reload()
         self.assertEqual(len(si.users), 1)
         self.assertEqual(si.users[0], u._id)
+
+        # -- check if deletion reverse is OK
+        u.delete()
+        si.reload()
+        self.assertEqual(len(si.users), 0)
+
+        # -- delete site
+        si.delete()
+
+    def test_references_one_to_many_nofill(self):
+        """
+        creating an backoffice with ref one to many
+        and delete with NOTFILL STRATEGY
+        """
+
+        backoffice = Backoffice("myApp")
+
+        backoffice.register_collection(
+            Collection(
+                "users",
+                Item(
+                    {
+                        "name": String(),
+                        "surname": String(),
+                        "site": Ref(coll="sites", field="$.users", required=True),
+                        "male": Bool(default=True),
+                    }
+                ),
+                self.yml_users,
+            )
+        )
+        backoffice.register_collection(
+            Collection(
+                "sites",
+                Item(
+                    {
+                        "name": String(),
+                        "address": String(),
+                        "users": RefsList(
+                            coll="users",
+                            field="$.site",
+                            ofs=FillStrategy.NOT_FILL,
+                            ods=DeleteStrategy.MUST_BE_EMPTY,
+                        ),
+                    }
+                ),
+                self.yml_sites,
+            )
+        )
+
+        # Hard clean before tests
+        self.yml_sites.drop()
+        self.yml_users.drop()
+
+        current_user.standalone = True
+        si = backoffice.sites.create({"name": "moon", "address": "far"})
+
+        u = backoffice.users.create(
+            {"name": "bebert", "surname": "bebert", "site": si._id}
+        )
+
+        # -- Check reverse must not be filled
+        si.reload()
+        self.assertEqual(len(si.users), 0)
+
+        # -- check error delete
+        with self.assertRaises(Error) as e:
+            si.delete()
+        self.assertEqual(
+            e.exception.message, 'Collection (not filled) "users" not empty'
+        )
 
         # -- check if deletion reverse is OK
         u.delete()
@@ -152,8 +233,8 @@ class TestReferences(unittest.TestCase):
         )
 
         # Hard clean before tests
-        self.yml_sites.delete_by_id("Site_moon")
-        self.yml_users.delete_by_id("User_bebert_bebert")
+        self.yml_sites.drop()
+        self.yml_users.drop()
 
         current_user.standalone = True
         si = backoffice.sites.create({"name": "moon", "address": "far"})
@@ -215,8 +296,8 @@ class TestReferences(unittest.TestCase):
         )
 
         # Hard clean before tests
-        self.yml_sites.delete_by_id("Site_moon")
-        self.yml_users.delete_by_id("User_bebert_bebert")
+        self.yml_sites.drop()
+        self.yml_users.drop()
 
         current_user.standalone = True
         si = backoffice.sites.create({"name": "moon", "address": "far"})
@@ -232,6 +313,73 @@ class TestReferences(unittest.TestCase):
         si.reload()
         self.assertEqual(len(si.users), 1)
         self.assertEqual(si.users[0], u._id)
+
+        # -- delete site
+        si.delete()
+
+        with self.assertRaises(Error) as e:
+            u.reload()
+        self.assertEqual(e.exception.message, '_id "User_bebert_bebert" not found')
+
+    def test_references_one_to_many_strategy_delete_nofill(self):
+        """
+        creating an backoffice with ref one to many
+        and delete
+        """
+
+        backoffice = Backoffice("myApp")
+        backoffice.register_collection(
+            Collection(
+                "users",
+                Item(
+                    {
+                        "name": String(),
+                        "surname": String(),
+                        "site": Ref(coll="sites", field="$.users"),
+                        "male": Bool(default=True),
+                    }
+                ),
+                self.yml_users,
+            )
+        )
+
+        # --- DB for sites
+        backoffice.register_collection(
+            Collection(
+                "sites",
+                Item(
+                    {
+                        "name": String(),
+                        "address": String(),
+                        "users": RefsList(
+                            coll="users",
+                            field="$.site",
+                            ofs=FillStrategy.NOT_FILL,
+                            ods=DeleteStrategy.DELETE_REFERENCED_ITEMS,
+                        ),
+                    }
+                ),
+                self.yml_sites,
+            )
+        )
+
+        # Hard clean before tests
+        self.yml_sites.drop()
+        self.yml_users.drop()
+
+        current_user.standalone = True
+        si = backoffice.sites.create({"name": "moon", "address": "far"})
+
+        u = backoffice.users.create(
+            {"name": "bebert", "surname": "bebert", "site": si._id}
+        )
+
+        u.reload()
+        self.assertEqual(u.site, si._id)
+
+        # -- Check reverse must not be filled (NO_FILL strategy)
+        si.reload()
+        self.assertEqual(len(si.users), 0)
 
         # -- delete site
         si.delete()
@@ -372,9 +520,8 @@ class TestReferences(unittest.TestCase):
         )
 
         # Hard clean before tests
-        self.yml_sites.delete_by_id("Site_moon")
-        self.yml_sites.delete_by_id("Site_mars")
-        self.yml_users.delete_by_id("User_bebert_bebert")
+        self.yml_sites.drop()
+        self.yml_users.drop()
 
         current_user.standalone = True
         si_mars = backoffice.sites.create({"name": "mars", "address": "very far"})
@@ -446,10 +593,8 @@ class TestReferences(unittest.TestCase):
         )
 
         # Hard clean before tests
-        self.yml_sites.delete_by_id("Site_moon")
-        self.yml_sites.delete_by_id("Site_mars")
-        self.yml_users.delete_by_id("User_bebert_bebert")
-        self.yml_users.delete_by_id("User_john_john")
+        self.yml_sites.drop()
+        self.yml_users.drop()
 
         current_user.standalone = True
         si_mars = backoffice.sites.create({"name": "mars", "address": "very far"})
@@ -524,10 +669,8 @@ class TestReferences(unittest.TestCase):
         )
 
         # Hard clean before tests
-        self.yml_humans.delete_by_id("Human_parker")
-        self.yml_humans.delete_by_id("Human_pym")
-        self.yml_animals.delete_by_id("Animal_spider")
-        self.yml_animals.delete_by_id("Animal_ant")
+        self.yml_humans.drop()
+        self.yml_animals.drop()
 
         current_user.standalone = True
 
@@ -600,10 +743,8 @@ class TestReferences(unittest.TestCase):
         )
 
         # Hard clean before tests
-        self.yml_humans.delete_by_id("Human_parker")
-        self.yml_humans.delete_by_id("Human_pym")
-        self.yml_animals.delete_by_id("Animal_spider")
-        self.yml_animals.delete_by_id("Animal_ant")
+        self.yml_humans.drop()
+        self.yml_animals.drop()
 
         current_user.standalone = True
         # ctreate animal totem related to humans
@@ -677,10 +818,8 @@ class TestReferences(unittest.TestCase):
         )
 
         # Hard clean before tests
-        self.yml_humans.delete_by_id("Human_parker")
-        self.yml_humans.delete_by_id("Human_pym")
-        self.yml_animals.delete_by_id("Animal_spider")
-        self.yml_animals.delete_by_id("Animal_ant")
+        self.yml_humans.drop()
+        self.yml_animals.drop()
 
         current_user.standalone = True
         # ctreate animal totem related to humans
@@ -723,6 +862,99 @@ class TestReferences(unittest.TestCase):
         with self.assertRaises(Error) as e:
             asp.delete()
         self.assertEqual(e.exception.message, 'Collection "humans" not empty')
+
+    def test_references_many_to_many_no_fill(self):
+        """
+        creating an backoffice with many to many refs
+        and delete
+        """
+
+        backoffice = Backoffice("myApp")
+
+        backoffice.register_collection(
+            Collection(
+                "humans",
+                Item(
+                    {
+                        "name": String(),
+                        "surname": String(),
+                        "totems": RefsList(
+                            coll="animals",
+                            field="$.humans",
+                            ods=DeleteStrategy.MUST_BE_EMPTY,
+                        ),
+                    }
+                ),
+                self.yml_humans,
+            )
+        )
+
+        # --- DB for animal
+        backoffice.register_collection(
+            Collection(
+                "animals",
+                Item(
+                    {
+                        "desc": String(),
+                        "humans": RefsList(
+                            coll="humans",
+                            field="$.totems",
+                            ofs=FillStrategy.NOT_FILL,
+                            ods=DeleteStrategy.MUST_BE_EMPTY,
+                        ),
+                    }
+                ),
+                self.yml_animals,
+            )
+        )
+
+        # Hard clean before tests
+        self.yml_humans.drop()
+        self.yml_animals.drop()
+
+        current_user.standalone = True
+        # ctreate animal totem related to humans
+        asp = backoffice.animals.create({"desc": "spider"})
+        aa = backoffice.animals.create({"desc": "ant"})
+
+        # create humans
+        up = backoffice.humans.create(
+            {"name": "parker", "surname": "peter", "totems": [asp._id, aa._id]}
+        )
+        uh = backoffice.humans.create(
+            {"name": "pym", "surname": "hank", "totems": [aa._id]}
+        )
+
+        # check human links
+        up.reload()
+        self.assertEqual(len(up.totems), 2)
+        uh.reload()
+        self.assertEqual(len(uh.totems), 1)
+        # check animals links
+        asp.reload()
+        self.assertEqual(len(asp.humans), 1)
+        aa.reload()
+        self.assertEqual(len(aa.humans), 2)
+
+        # modify links
+        asp.humans = []
+        asp.save()
+
+        log.debug("----------------")
+
+        up.reload()
+        self.assertEqual(len(up.totems), 1)
+        up.totems.append(asp._id)
+        up.save()
+        asp.reload()
+        self.assertEqual(len(asp.humans), 1)
+
+        # check if must be embty error
+        with self.assertRaises(Error) as e:
+            asp.delete()
+        self.assertEqual(
+            e.exception.message, 'Collection (not filled) "humans" not empty'
+        )
 
     def test_references_selector(self):
         """
@@ -767,10 +999,8 @@ class TestReferences(unittest.TestCase):
         )
 
         # Hard clean before tests
-        self.yml_sites.delete_by_id("Site_moon")
-        self.yml_sites.delete_by_id("Site_mars")
-        self.yml_users.delete_by_id("User_bebert_bebert")
-        self.yml_users.delete_by_id("User_john_john")
+        self.yml_humans.drop()
+        self.yml_animals.drop()
 
         current_user.standalone = True
 

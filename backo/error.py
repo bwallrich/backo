@@ -34,6 +34,8 @@ class ErrorType(Enum):
     DEVELOPPER = auto()
     NO_SESSION_ID = auto()
     SESSION_NOT_AUTHENTICATED = auto()
+    LOOP = auto()
+    MAX_LOOP = auto()
 
     def __repr__(self):
         return PREFIX + self.name

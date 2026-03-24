@@ -16,7 +16,7 @@ from backo import (
     Selection,
 )
 
-log = log_system.get_or_create_logger("books", logging.DEBUG)
+log = log_system.get_or_create_logger("books", logging.INFO)
 
 
 # ------------------------------------------------

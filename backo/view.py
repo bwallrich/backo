@@ -16,7 +16,7 @@ import logging
 from .error import Error, ErrorType
 from .log import log_system
 
-log = log_system.get_or_create_logger("collection", logging.DEBUG)
+log = log_system.get_or_create_logger("collection", logging.INFO)
 
 
 class View:
@@ -39,7 +39,6 @@ class View:
 
         for sel in selectors:
             obj = collection.model.select(sel)
-            print(f"obj {sel} {type(obj)}= {obj}")
             if obj is None:
                 raise Error(
                     ErrorType.SELECTOR_NOT_FOUND,

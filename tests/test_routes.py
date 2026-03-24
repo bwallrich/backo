@@ -266,7 +266,6 @@ class TestRoutes(unittest.TestCase):
         results = json.loads(response.data)
         self.assertEqual(results["total"], 1)
 
-        print(results)
         l = self.backo.users.set(results["result"])
         self.assertEqual(len(l), 1)
 
@@ -308,6 +307,21 @@ class TestRoutes(unittest.TestCase):
         self.assertEqual(results["total"], 2)
         response = self.client.get(
             "/myApp/coll/users/_selections/bert_only?name.$reg=.*1"
+        )
+        self.assertEqual(response.status_code, 200)
+        results = json.loads(response.data)
+        self.assertEqual(results["total"], 1)
+
+    def test_select_route_filter_post(self):
+        """
+        do a select on a selection with a post
+        """
+        response = self.client.post("/myApp/coll/users/_selections/bert_only", json={})
+        self.assertEqual(response.status_code, 200)
+        results = json.loads(response.data)
+        self.assertEqual(results["total"], 2)
+        response = self.client.post(
+            "/myApp/coll/users/_selections/bert_only", json={"name": ("$reg", ".*1")}
         )
         self.assertEqual(response.status_code, 200)
         results = json.loads(response.data)

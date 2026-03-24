@@ -14,7 +14,7 @@ from backo import (
     RefsList,
 )
 
-log = log_system.get_or_create_logger("user", logging.DEBUG)
+log = log_system.get_or_create_logger("user", logging.INFO)
 
 
 # ------------------------------------------------

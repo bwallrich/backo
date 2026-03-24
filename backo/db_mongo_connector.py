@@ -13,7 +13,7 @@ from .error import Error, ErrorType
 from .log import log_system
 
 log = log_system.get_or_create_logger("mongo")
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 
 class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attributes

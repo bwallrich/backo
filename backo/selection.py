@@ -19,7 +19,7 @@ from .log import log_system
 from .error import Error, ErrorType
 
 
-log = log_system.get_or_create_logger("select", logging.DEBUG)
+log = log_system.get_or_create_logger("select", logging.INFO)
 
 
 class Selection(CollectionAddon):

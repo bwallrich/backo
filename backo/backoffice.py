@@ -15,7 +15,7 @@ from .collection import Collection
 from .log import log_system
 
 
-log = log_system.get_or_create_logger("backoffice", logging.DEBUG)
+log = log_system.get_or_create_logger("backoffice", logging.INFO)
 
 
 class Backoffice:  # pylint: disable=too-many-instance-attributes

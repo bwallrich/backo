@@ -7,40 +7,56 @@ import re
 from werkzeug.datastructures import ImmutableMultiDict
 
 
-def _append_to_filter(filter_as_dict: dict, key, value: list):
-    """
-    adding key to dict with transformation to int or float if we can
-    """
+def append_path_to_filter(filter_as_dict: dict, key, value: list | tuple):
+    """transform a
 
-    # Transform string to int or float
-    typed_value = []
-    for v in value:
-        try:
-            vv = int(v)
-        except ValueError:
+    :param filter_as_dict: _description_
+    :type filter_as_dict: dict
+    :param key: _description_
+    :type key: _type_
+    :param value: _description_
+    :type value: list | tuple
+    """
+    changed_value = value
+    if isinstance(value, list):
+        # Transform string to int or float if we can
+        typed_value = []
+        for v in value:
             try:
-                vv = float(v)
+                vv = int(v)
             except ValueError:
-                vv = v
-        typed_value.append(vv)
+                try:
+                    vv = float(v)
+                except ValueError:
+                    vv = v
+            typed_value.append(vv)
 
-    val = typed_value[0] if len(typed_value) == 1 else typed_value
+        if len(typed_value) == 1:
+            changed_value = typed_value[0]
+        elif (
+            len(typed_value) == 2
+            and isinstance(typed_value[0], str)
+            and re.findall(r"^\$", typed_value[0])
+        ):
+            changed_value = (typed_value[0], typed_value[1])
+        else:
+            changed_value = typed_value
 
     match = re.search(r"^([^\.]+)\.(.*)", key)
     if not match:
-        filter_as_dict[key] = val
+        filter_as_dict[key] = changed_value
         return
 
     # a toto.$gt (with an operator)
     if re.findall(r"^\$", match.group(2)):
-        filter_as_dict[match.group(1)] = (match.group(2), val)
+        filter_as_dict[match.group(1)] = (match.group(2), changed_value)
         return
 
     sub = filter_as_dict.get(match.group(1), {})
     if not isinstance(sub, dict):
         sub = {}
 
-    _append_to_filter(sub, match.group(2), value)
+    append_path_to_filter(sub, match.group(2), value)
     filter_as_dict[match.group(1)] = sub
 
 
@@ -70,6 +86,6 @@ def multidict_to_filter(md: ImmutableMultiDict):
             continue
 
         value = md.getlist(key)
-        _append_to_filter(filter_as_dict, key, value)
+        append_path_to_filter(filter_as_dict, key, value)
 
     return filter_as_dict
