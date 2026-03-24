@@ -31,7 +31,7 @@ class DBYmlConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         DBConnector.__init__(self, **kwargs)
 
         if not os.path.exists(self._path):
-            os.mkdir(self._path)
+            os.makedirs(self._path)
 
         if not os.path.isdir(self._path):
             raise Error(
