@@ -9,7 +9,6 @@ import copy
 
 from .error import Error, ErrorType
 from .db_connector import DBConnector
-from .current_user import current_user
 from .transaction import OperatorType
 from .log import log_system
 from .meta_data_handler import StandardMetaDataHandler
@@ -259,13 +258,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
         self.db_handler.save(self._id.get_value(), dict_to_save)
 
-        log.info(
-            "%r/%r modified by %r/%r",
-            self._collection.name,
-            self._id,
-            current_user._id,
-            current_user.login,
-        )
+        log.info("%r/%r modified", self._collection.name, self._id)
 
         self.set_status_saved()
 
@@ -318,11 +311,9 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         self.db_handler.delete_by_id(self._id.get_value())
 
         log.info(
-            "%r/%r deleted by %r/%r",
+            "%r/%r deleted",
             self._collection.name,
             self._id,
-            current_user._id,
-            current_user.login,
         )
 
         self.set_status_unset()
@@ -410,10 +401,8 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
             kwargs["m_path"] = []
 
         log.info(
-            "%r/%r created by %r/%r",
+            "%r/%r created",
             self._collection.name,
             self._id,
-            current_user._id,
-            current_user.login,
         )
         self.trigg("created", id(self), **kwargs)

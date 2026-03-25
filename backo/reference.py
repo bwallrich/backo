@@ -548,6 +548,9 @@ class RefsList(List):
         :meta private:
 
         """
+        # No reverse => nothing to do.
+        if not self._reverse:
+            return
 
         log.debug(
             "%r/%r deleted with RefsList %r=%r and must be empty",
@@ -660,6 +663,11 @@ class RefsList(List):
         :meta private:
 
         """
+
+        # No reverse => nothing to do.
+        if not self._reverse:
+            return
+
         # Get looper or create it
         if "looper" not in kwargs:
             kwargs["looper"] = LoopPath()

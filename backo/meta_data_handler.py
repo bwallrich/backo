@@ -27,12 +27,12 @@ class GenericMetaDataHandler:  # pylint: disable=too-many-instance-attributes
         Nothing to do
         """
 
-    def update(self, o):
+    def update(self, o: Dict) -> None:
         """
         Modification of metadata when the object will be created
         """
 
-    def append_schema(self, o):
+    def append_schema(self, o: Dict) -> None:
         """
         Add to the schema
         """
