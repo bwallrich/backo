@@ -5,7 +5,6 @@ The decortators used for flask routes
 # pylint: disable=logging-fstring-interpolation
 
 import sys
-import logging
 import traceback
 from functools import wraps
 from flask import request
@@ -23,9 +22,9 @@ from stricto import (
     SRightError,
 )
 from .error import Error as BackError, ErrorType as BackoErrorType
-from .log import log_system
+from .log import log_system, Log_level
 
-log = log_system.get_or_create_logger("http", logging.ERROR)
+log = log_system.get_or_create_logger("http", Log_level.ERROR)
 
 
 def return_http_error(code, message):

@@ -3,7 +3,6 @@ The Collection module
 """
 
 # pylint: disable=logging-fstring-interpolation
-import logging
 
 # import sys
 # used for developpement
@@ -14,9 +13,9 @@ import logging
 # from .item import Item
 # from .action import Action
 from .error import Error, ErrorType
-from .log import log_system
+from .log import log_system, Log_level
 
-log = log_system.get_or_create_logger("collection", logging.INFO)
+log = log_system.get_or_create_logger("collection", Log_level.INFO)
 
 
 class View:

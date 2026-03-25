@@ -12,7 +12,7 @@ from backo import Item, Collection
 from backo import DBYmlConnector
 from backo import Backoffice, current_user, Action, Selection
 
-from stricto import String, Bool
+from backo import String, Bool
 
 YML_DIR = "/tmp/backo_tests_routes"
 

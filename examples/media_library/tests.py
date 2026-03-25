@@ -5,7 +5,6 @@ backoffice tests : The main application test
 import unittest
 import json
 import sys
-import logging
 from datetime import datetime, timedelta
 
 sys.path.insert(1, "../../../backo")
@@ -14,9 +13,9 @@ sys.path.insert(1, "../")
 
 
 from media_library import flask
-from backo import log_system
+from backo import log_system, Log_level
 
-log_system.setLevel(logging.ERROR)
+log_system.setLevel(Log_level.ERROR)
 
 
 class TestBackoffice(unittest.TestCase):

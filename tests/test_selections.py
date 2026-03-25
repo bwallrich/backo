@@ -9,6 +9,7 @@ from backo import Item, Collection
 from backo import DBYmlConnector
 from backo import Backoffice
 from backo import current_user, Selection
+from backo import String, Bool
 
 ### --- For development ---
 # import logging
@@ -17,7 +18,6 @@ from backo import current_user, Selection
 # log_system.add_handler(log_system.set_streamhandler())
 # log = log_system.get_or_create_logger("testing")
 
-from stricto import String, Bool
 
 YML_DIR = "/tmp/backo_tests_selections"
 

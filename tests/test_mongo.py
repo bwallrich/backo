@@ -12,7 +12,7 @@ from backo import Item, Collection
 from backo import DBMongoConnector
 from backo import Backoffice, Error, current_user
 
-from stricto import String, Bool  # , Error as StrictoError
+from backo import String, Bool  # , Error as StrictoError
 
 
 class TestMongo(unittest.TestCase):

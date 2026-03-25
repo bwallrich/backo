@@ -4,7 +4,6 @@ The Collection module
 
 # pylint: disable=logging-fstring-interpolation, too-many-public-methods
 import json
-import logging
 import re
 import sys
 from typing import Self
@@ -33,13 +32,12 @@ from .item import Item
 from .action import Action
 from .selection import Selection
 from .error import Error, ErrorType
-from .log import log_system
+from .log import log_system, Log_level
 from .request_decorators import error_to_http_handler
 from .api_toolbox import multidict_to_filter, append_path_to_filter
 from .patch import Patch
 
-
-log = log_system.get_or_create_logger("collection", logging.DEBUG)
+log = log_system.get_or_create_logger("collection", Log_level.INFO)
 
 check_model_request = Dict(
     {"path": String(required=True, default="$"), "item": FreeDict(default={})}

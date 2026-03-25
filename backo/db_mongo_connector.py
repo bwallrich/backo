@@ -3,17 +3,16 @@ Module providing the mongo DB like
 """
 
 # pylint: disable=logging-fstring-interpolation
-import logging
 from pymongo import MongoClient
 from pymongo.uri_parser import parse_uri
 from bson.objectid import ObjectId
 
 from .db_connector import DBConnector
 from .error import Error, ErrorType
-from .log import log_system
+from .log import log_system, Log_level
 
 log = log_system.get_or_create_logger("mongo")
-log.setLevel(logging.INFO)
+log.setLevel(Log_level.INFO)
 
 
 class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attributes

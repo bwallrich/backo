@@ -2,19 +2,21 @@
 
 # pylint: disable=unused-argument, logging-fstring-interpolation
 
-import logging
-from stricto import String, List, Dict
 from backo import (
+    String,
+    List,
+    Dict,
     Collection,
     Item,
     current_user,
     DBMongoConnector,
     Action,
     log_system,
+    Log_level,
     RefsList,
 )
 
-log = log_system.get_or_create_logger("user", logging.INFO)
+log = log_system.get_or_create_logger("user", Log_level.INFO)
 
 
 # ------------------------------------------------

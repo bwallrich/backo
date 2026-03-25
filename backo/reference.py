@@ -5,7 +5,6 @@ Ref and RefsLink class definition
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code, logging-fstring-interpolation
 
 import sys
-import logging
 import re
 from enum import Enum, auto
 from typing import Self
@@ -17,11 +16,11 @@ from stricto import String, List, Selector, Dict
 
 from .loop_path import LoopPath
 from .error import Error, ErrorType
-from .log import log_system
+from .log import log_system, Log_level
 from .api_toolbox import append_path_to_filter
 
 
-log = log_system.get_or_create_logger("ref", logging.INFO)
+log = log_system.get_or_create_logger("ref", Log_level.INFO)
 
 DEFAULT_ID = "NULL_ID"
 

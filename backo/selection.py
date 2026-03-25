@@ -3,7 +3,6 @@ The Collection module
 """
 
 # pylint: disable=logging-fstring-interpolation
-import logging
 import copy
 import sys
 
@@ -15,11 +14,11 @@ from stricto import Permissions
 # from .item import Item
 # from .action import Action
 from .collection_addon import CollectionAddon
-from .log import log_system
+from .log import log_system, Log_level
 from .error import Error, ErrorType
 
 
-log = log_system.get_or_create_logger("select", logging.INFO)
+log = log_system.get_or_create_logger("select", Log_level.INFO)
 
 
 class Selection(CollectionAddon):

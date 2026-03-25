@@ -3,7 +3,6 @@ The Collection module
 """
 
 # pylint: disable=logging-fstring-interpolation
-import logging
 import sys
 
 # used for developpement
@@ -11,10 +10,10 @@ sys.path.insert(1, "../../stricto")
 
 from stricto import Permissions
 
-from .log import log_system
+from .log import log_system, Log_level
 
 
-log = log_system.get_or_create_logger("select", logging.INFO)
+log = log_system.get_or_create_logger("select", Log_level.INFO)
 
 
 class CollectionAddon:

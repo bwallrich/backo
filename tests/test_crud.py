@@ -12,8 +12,7 @@ from datetime import datetime, timedelta
 from backo import Item, Collection
 from backo import DBYmlConnector
 from backo import Backoffice, Error, current_user
-
-from stricto import String, Bool, SRightError
+from backo import String, Bool, SRightError
 
 YML_DIR = "/tmp/backo_tests_crud"
 

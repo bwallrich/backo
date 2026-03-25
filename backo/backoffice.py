@@ -4,7 +4,6 @@ The Backoffice module
 
 # pylint: disable=logging-fstring-interpolation
 
-import logging
 import json
 from flask import Flask
 
@@ -12,10 +11,10 @@ from .item import Item
 from .request_decorators import error_to_http_handler
 from .transaction import Transaction, OperatorType
 from .collection import Collection
-from .log import log_system
+from .log import log_system, Log_level
 
 
-log = log_system.get_or_create_logger("backoffice", logging.INFO)
+log = log_system.get_or_create_logger("backoffice", Log_level.INFO)
 
 
 class Backoffice:  # pylint: disable=too-many-instance-attributes

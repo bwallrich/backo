@@ -3,6 +3,13 @@ Module backo.
 export all classes
 """
 
+import sys
+
+# used for developpement
+sys.path.insert(1, "../../stricto")
+
+from stricto import *
+
 from .item import Item
 from .db_yml_connector import DBYmlConnector
 from .db_mongo_connector import DBMongoConnector
@@ -12,7 +19,7 @@ from .error import Error, ErrorType
 from .backoffice import Backoffice
 from .collection import Collection
 from .selection import Selection
-from .log import Logger, log_system
+from .log import Logger, log_system, Log_level
 from .reference import Ref, RefsList, FillStrategy, DeleteStrategy
 from .meta_data_handler import GenericMetaDataHandler, StandardMetaDataHandler
 from .status import StatusType

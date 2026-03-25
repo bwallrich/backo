@@ -10,8 +10,7 @@ import unittest
 from backo import Item, Collection, Action
 from backo import DBYmlConnector
 from backo import Backoffice, Error
-
-from stricto import String, Int, List
+from backo import String, Int, List
 
 YML_DIR = "/tmp/backo_tests_actions"
 

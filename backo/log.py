@@ -6,6 +6,7 @@ import logging
 import logging.handlers
 import sys
 import types
+from enum import Enum
 
 
 def get_last_message_for_a_logger(self):
@@ -54,6 +55,23 @@ FORMATS_COLOR = {
 }
 
 
+class Log_level():
+    """
+    wrapper to logging.<level>
+
+    """
+
+    CRITICAL = logging.CRITICAL
+    FATAL = logging.FATAL
+    ERROR = logging.ERROR
+    WARNING = logging.WARNING
+    WARN = logging.WARN
+    INFO = logging.INFO
+    DEBUG = logging.DEBUG
+    NOTSET = logging.NOTSET
+
+
+
 class MyFormatter(logging.Formatter):
     """
     My custom format class depending on level
@@ -84,7 +102,7 @@ class Logger:
         self.loggers = {}
         self.handlers_for_all = []
 
-    def get_or_create_logger(self, name, level=logging.ERROR):
+    def get_or_create_logger(self, name, level=Log_level.ERROR):
         """
         Create a logger
         """
@@ -134,7 +152,7 @@ class Logger:
         """
         f = MyFormatter(True)
         streamhandler = logging.StreamHandler(kwargs.pop("stream", sys.stderr))
-        streamhandler.setLevel(kwargs.pop("loglevel", logging.DEBUG))
+        streamhandler.setLevel(kwargs.pop("loglevel", Log_level.DEBUG))
         streamhandler.setFormatter(f)
         return streamhandler
 
@@ -144,7 +162,7 @@ class Logger:
         """
         f = MyFormatter()
         filehandler = logging.FileHandler(filename)
-        filehandler.setLevel(kwargs.pop("loglevel", logging.DEBUG))
+        filehandler.setLevel(kwargs.pop("loglevel", Log_level.DEBUG))
         filehandler.setFormatter(f)
         return filehandler
 

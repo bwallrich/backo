@@ -2,14 +2,13 @@
 Loop path manipulation
 """
 
-import logging
 from .error import Error, ErrorType
 
 DEFAULT_MAX_LOOP = 40
 
-from .log import log_system
+from .log import log_system, Log_level
 
-log = log_system.get_or_create_logger("loop", logging.INFO)
+log = log_system.get_or_create_logger("loop", Log_level.INFO)
 
 
 class LoopPath:

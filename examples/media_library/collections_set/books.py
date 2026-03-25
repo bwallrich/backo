@@ -2,21 +2,25 @@
 
 # pylint: disable=unused-argument, logging-fstring-interpolation
 
-import logging
 from datetime import datetime
-from stricto import Int, String, Dict, Datetime, Bool
 from backo import (
+    Int,
+    Datetime,
+    Bool,
+    Dict,
+    String,
     Collection,
     Item,
     current_user,
     DBMongoConnector,
     log_system,
+    Log_level,
     Ref,
     Action,
     Selection,
 )
 
-log = log_system.get_or_create_logger("books", logging.INFO)
+log = log_system.get_or_create_logger("books", Log_level.INFO)
 
 
 # ------------------------------------------------

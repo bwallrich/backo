@@ -4,7 +4,6 @@ backoffice : The main application
 
 import json
 import sys
-import logging
 from functools import wraps
 from datetime import datetime, timezone, timedelta
 import jwt
@@ -14,10 +13,10 @@ sys.path.insert(1, "../../../backo")
 
 
 from collections_set import books, users
-from backo import Backoffice, current_user, log_system
+from backo import Backoffice, current_user, log_system, Log_level
 
 log_system.add_handler(log_system.set_streamhandler())
-log_system.setLevel(logging.ERROR)
+log_system.setLevel(Log_level.ERROR)
 
 
 # set the flask application route
