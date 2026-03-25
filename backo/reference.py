@@ -16,11 +16,11 @@ from stricto import String, List, Selector, Dict
 
 from .loop_path import LoopPath
 from .error import Error, ErrorType
-from .log import log_system, Log_level
+from .log import log_system, LogLevel
 from .api_toolbox import append_path_to_filter
 
 
-log = log_system.get_or_create_logger("ref", Log_level.INFO)
+log = log_system.get_or_create_logger("ref", LogLevel.INFO)
 
 DEFAULT_ID = "NULL_ID"
 

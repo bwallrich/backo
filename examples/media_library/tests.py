@@ -13,9 +13,9 @@ sys.path.insert(1, "../")
 
 
 from media_library import flask
-from backo import log_system, Log_level
+from backo import log_system, LogLevel
 
-log_system.setLevel(Log_level.ERROR)
+log_system.setLevel(LogLevel.ERROR)
 
 
 class TestBackoffice(unittest.TestCase):

@@ -5,7 +5,7 @@ test for CRUD()
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code
 
 import unittest
-from backo import Logger, Log_level
+from backo import Logger, LogLevel
 
 
 class TestLog(unittest.TestCase):
@@ -18,8 +18,8 @@ class TestLog(unittest.TestCase):
         log an error
         """
         log_system = Logger()
-        log1 = log_system.get_or_create_logger("test_1", Log_level.DEBUG)
-        log2 = log_system.get_or_create_logger("test_2", Log_level.DEBUG)
+        log1 = log_system.get_or_create_logger("test_1", LogLevel.DEBUG)
+        log2 = log_system.get_or_create_logger("test_2", LogLevel.DEBUG)
         filehandler = log_system.set_filehandler("/dev/null")
         log_system.add_handler(filehandler, "test_1")
         # must do nothing
@@ -34,6 +34,6 @@ class TestLog(unittest.TestCase):
         log1.debug("hey baby")
         self.assertEqual(log1.get_last_message().message, "hey baby")
         self.assertEqual(log2.get_last_message(), None)
-        log_system.setLevel(Log_level.INFO)
+        log_system.setLevel(LogLevel.INFO)
         log1.debug("hey baby 2")
         self.assertEqual(log1.get_last_message().message, "hey baby")

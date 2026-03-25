@@ -12,11 +12,11 @@ from backo import (
     DBMongoConnector,
     Action,
     log_system,
-    Log_level,
+    LogLevel,
     RefsList,
 )
 
-log = log_system.get_or_create_logger("user", Log_level.INFO)
+log = log_system.get_or_create_logger("user", LogLevel.INFO)
 
 
 # ------------------------------------------------

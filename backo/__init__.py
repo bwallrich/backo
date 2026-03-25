@@ -19,7 +19,7 @@ from .error import Error, ErrorType
 from .backoffice import Backoffice
 from .collection import Collection
 from .selection import Selection
-from .log import Logger, log_system, Log_level
+from .log import Logger, log_system, LogLevel
 from .reference import Ref, RefsList, FillStrategy, DeleteStrategy
 from .meta_data_handler import GenericMetaDataHandler, StandardMetaDataHandler
 from .status import StatusType

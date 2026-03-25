@@ -9,10 +9,10 @@ from bson.objectid import ObjectId
 
 from .db_connector import DBConnector
 from .error import Error, ErrorType
-from .log import log_system, Log_level
+from .log import log_system, LogLevel
 
 log = log_system.get_or_create_logger("mongo")
-log.setLevel(Log_level.INFO)
+log.setLevel(LogLevel.INFO)
 
 
 class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attributes

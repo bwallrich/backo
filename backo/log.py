@@ -6,7 +6,6 @@ import logging
 import logging.handlers
 import sys
 import types
-from enum import Enum
 
 
 def get_last_message_for_a_logger(self):
@@ -55,7 +54,7 @@ FORMATS_COLOR = {
 }
 
 
-class Log_level():
+class LogLevel:  # pylint: disable=too-few-public-methods
     """
     wrapper to logging.<level>
 
@@ -69,7 +68,6 @@ class Log_level():
     INFO = logging.INFO
     DEBUG = logging.DEBUG
     NOTSET = logging.NOTSET
-
 
 
 class MyFormatter(logging.Formatter):
@@ -102,7 +100,7 @@ class Logger:
         self.loggers = {}
         self.handlers_for_all = []
 
-    def get_or_create_logger(self, name, level=Log_level.ERROR):
+    def get_or_create_logger(self, name, level=LogLevel.ERROR):
         """
         Create a logger
         """
@@ -152,7 +150,7 @@ class Logger:
         """
         f = MyFormatter(True)
         streamhandler = logging.StreamHandler(kwargs.pop("stream", sys.stderr))
-        streamhandler.setLevel(kwargs.pop("loglevel", Log_level.DEBUG))
+        streamhandler.setLevel(kwargs.pop("loglevel", LogLevel.DEBUG))
         streamhandler.setFormatter(f)
         return streamhandler
 
@@ -162,7 +160,7 @@ class Logger:
         """
         f = MyFormatter()
         filehandler = logging.FileHandler(filename)
-        filehandler.setLevel(kwargs.pop("loglevel", Log_level.DEBUG))
+        filehandler.setLevel(kwargs.pop("loglevel", LogLevel.DEBUG))
         filehandler.setFormatter(f)
         return filehandler
 

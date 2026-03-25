@@ -11,10 +11,10 @@ from .item import Item
 from .request_decorators import error_to_http_handler
 from .transaction import Transaction, OperatorType
 from .collection import Collection
-from .log import log_system, Log_level
+from .log import log_system, LogLevel
 
 
-log = log_system.get_or_create_logger("backoffice", Log_level.INFO)
+log = log_system.get_or_create_logger("backoffice", LogLevel.INFO)
 
 
 class Backoffice:  # pylint: disable=too-many-instance-attributes

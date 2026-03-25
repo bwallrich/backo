@@ -22,9 +22,9 @@ from stricto import (
     SRightError,
 )
 from .error import Error as BackError, ErrorType as BackoErrorType
-from .log import log_system, Log_level
+from .log import log_system, LogLevel
 
-log = log_system.get_or_create_logger("http", Log_level.ERROR)
+log = log_system.get_or_create_logger("http", LogLevel.ERROR)
 
 
 def return_http_error(code, message):

@@ -14,13 +14,13 @@ from backo import (
     current_user,
     DBMongoConnector,
     log_system,
-    Log_level,
+    LogLevel,
     Ref,
     Action,
     Selection,
 )
 
-log = log_system.get_or_create_logger("books", Log_level.INFO)
+log = log_system.get_or_create_logger("books", LogLevel.INFO)
 
 
 # ------------------------------------------------

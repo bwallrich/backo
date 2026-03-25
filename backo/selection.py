@@ -14,11 +14,11 @@ from stricto import Permissions
 # from .item import Item
 # from .action import Action
 from .collection_addon import CollectionAddon
-from .log import log_system, Log_level
+from .log import log_system, LogLevel
 from .error import Error, ErrorType
 
 
-log = log_system.get_or_create_logger("select", Log_level.INFO)
+log = log_system.get_or_create_logger("select", LogLevel.INFO)
 
 
 class Selection(CollectionAddon):

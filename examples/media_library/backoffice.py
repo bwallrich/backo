@@ -13,10 +13,10 @@ sys.path.insert(1, "../../../backo")
 
 
 from collections_set import books, users
-from backo import Backoffice, current_user, log_system, Log_level
+from backo import Backoffice, current_user, log_system, LogLevel
 
 log_system.add_handler(log_system.set_streamhandler())
-log_system.setLevel(Log_level.ERROR)
+log_system.setLevel(LogLevel.ERROR)
 
 
 # set the flask application route

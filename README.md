@@ -916,7 +916,7 @@ You must first design your logging system with handlers. Then you can write the 
 ### Example
 
 ```python
-from backo import log_system, Log_level
+from backo import log_system, LogLevel
 
 # To write all file to stderr
 log_system.add_handler( log_system.set_streamhandler() )
@@ -925,11 +925,11 @@ log_system.add_handler( log_system.set_streamhandler() )
 log_system.add_handler( log_system.set_filehandler("/var/log/mylog.log") )
 
 # Set the level 
-log_system.setLevel( Log_level.INFO )
+log_system.setLevel( LogLevel.INFO )
 
 # create your own sub logger with its specific logging level
 log = log_system.get_or_create_logger("custom")
-log.setLevel(Log_level.DEBUG)
+log.setLevel(LogLevel.DEBUG)
 
 log.debug("hey this is my first debug message")
 

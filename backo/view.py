@@ -13,9 +13,9 @@ The Collection module
 # from .item import Item
 # from .action import Action
 from .error import Error, ErrorType
-from .log import log_system, Log_level
+from .log import log_system, LogLevel
 
-log = log_system.get_or_create_logger("collection", Log_level.INFO)
+log = log_system.get_or_create_logger("collection", LogLevel.INFO)
 
 
 class View:

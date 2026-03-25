@@ -6,9 +6,9 @@ from .error import Error, ErrorType
 
 DEFAULT_MAX_LOOP = 40
 
-from .log import log_system, Log_level
+from .log import log_system, LogLevel
 
-log = log_system.get_or_create_logger("loop", Log_level.INFO)
+log = log_system.get_or_create_logger("loop", LogLevel.INFO)
 
 
 class LoopPath:
