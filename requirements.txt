@@ -2,4 +2,4 @@ pyyaml
 mongo
 flask
 pyjwt
-stricto>=0.0.8
+stricto>=0.0.9

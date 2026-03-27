@@ -6,8 +6,20 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 
+## [0.0.4] 2026-03-17
 
-## [0.0.3]
+    * Example : wget connector to DB example
+    * Fix: avoid current_user in some debug message (if not set)
+    * Fix: RefsList bug fix for external DB.
+    * Feature: Log_level wrapper to avoid importing logging
+    * Feature : rexport from stricto to avoid stricto import
+    * Fix : fix os.mkdir() -> os.makedirs() in Yml BD connector
+    * Internal : adding loop_path.py
+    * Feature : FillStrategy.NO_FILL
+    * Feature : selection with POST route
+
+
+## [0.0.3] 2026-03-20
 
  * selections feature
   
