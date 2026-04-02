@@ -13,6 +13,12 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+  "pyjwt",
+  "flask",
+  "pyyaml",
+  "stricto>=0.0.9"
+]
 
 [project.urls]
 GitHub = "https://github.com/bwallrich/backo"
