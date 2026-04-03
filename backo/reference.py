@@ -12,10 +12,10 @@ from typing import Self
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
-from stricto import String, List, Selector, Dict
+from stricto import String, List, Selector, Dict, SSyntaxError, STypeError
 
 from .loop_path import LoopPath
-from .error import Error, ErrorType
+from .error import Error, PathNotFoundError, BackoError
 from .log import log_system, LogLevel
 from .api_toolbox import append_path_to_filter
 
@@ -147,10 +147,8 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         root1 = self.get_root()._collection
         self._coll_ref = root1.get_other_collection(self._collection)
         if not self._coll_ref:
-            raise Error(
-                ErrorType.COLLECTION_NOT_FOUND,
-                f'Collection "{self._collection}" not found',
-            )
+            raise SSyntaxError('Ref "{0}" to unnknown collection "{1}"', self.path_name(), self._collection)
+
         return
 
     def on_before_save(
@@ -249,10 +247,7 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         reverse_field = other.select(me._reverse)
 
         if reverse_field is None:
-            raise Error(
-                ErrorType.FIELD_NOT_FOUND,
-                f'Collection "{self._collection}"."{me._reverse}" not found',
-            )
+            raise PathNotFoundError('Path "{0}" not found in collection "{1}"', me._reverse, self._collection)
 
         looper.append(root._collection.name, root._id.get_value(), me.path_name())
 
@@ -273,11 +268,7 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
             return
 
         # WTF
-        raise Error(
-            ErrorType.NOT_A_REF,
-            # pylint: disable=line-too-long
-            f'Collection "{self._collection}"."{me._reverse}" "{type(reverse_field)}" is not a Ref or a RefsList',
-        )
+        raise STypeError('{0}.{1} is not a Ref or a RefsList', self._collection, me._reverse)
 
     def on_delete(
         self, event_name, root, me, **kwargs
@@ -322,10 +313,7 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         # fill the field
         reverse_field = other.select(me._reverse)
         if reverse_field is None:
-            raise Error(
-                ErrorType.FIELD_NOT_FOUND,
-                f'Collection "{self._collection}"."{me._reverse}" not found',
-            )
+            raise PathNotFoundError('Path "{0}" not found in collection "{1}"', me._reverse, self._collection)
 
         looper.append(root._collection.name, root._id.get_value(), me.path_name())
 
@@ -351,10 +339,7 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
                     other.save(**kwargs)
             return
 
-        raise Error(
-            ErrorType.NOT_A_REF,
-            f'Collection "{self._collection}"."{me._reverse}" is not a Ref or a RefsList',
-        )
+        raise STypeError('{0}.{1} is not a Ref or a RefsList', self._collection, me._reverse)
 
     def get_selectors(self, index_or_slice, sel: Selector):
         """
@@ -497,10 +482,7 @@ class RefsList(List):
         root1 = self.get_root()._collection
         self._coll_ref = root1.get_other_collection(self._collection)
         if not self._coll_ref:
-            raise Error(
-                ErrorType.COLLECTION_NOT_FOUND,
-                f'Collection "{self._collection}" not found',
-            )
+            raise SSyntaxError('RefsList "{0}" to unnknown collection "{1}"', self.path_name(), self._collection)
         return
 
     def get_other_with_a_select(self, root_id: str) -> list:
@@ -518,10 +500,7 @@ class RefsList(List):
         reverse_field = self._coll_ref.model.select(self._reverse)
         reverse_field = self._coll_ref.model.select(self._reverse)
         if not isinstance(reverse_field, (Ref, RefsList)):
-            raise Error(
-                ErrorType.NOT_A_REF,
-                f'Collection "{self._collection}"."{self._reverse}" is not a Ref or a RefsList',
-            )
+            raise STypeError('{0}.{1} is not a Ref or a RefsList', self._collection, self._reverse)
 
         match_filter = {}
         if isinstance(reverse_field, Ref):
@@ -562,20 +541,14 @@ class RefsList(List):
         # With FillStrategy.FILL, just chek if the list is empty
         if self._fill_strategy == FillStrategy.FILL:
             if len(me) != 0:
-                raise Error(
-                    ErrorType.REFSLIST_NOT_EMPTY,
-                    f'Collection "{self._collection}" not empty',
-                )
+                raise BackoError('Collection "{0}" not empty', self._collection)
         else:
             # FillStrategy.NOT_FILL, mus do a select to find
             # if ther is some ref to me.
             # set the _coll_ref (in case of)
             other_list = me.get_other_with_a_select(root._id.get_value())
             if len(other_list) != 0:
-                raise Error(
-                    ErrorType.REFSLIST_NOT_EMPTY,
-                    f'Collection (not filled) "{self._collection}" not empty',
-                )
+                raise BackoError('Collection (not filled) "{0}" not empty', self._collection)
 
     def on_delete_with_reverse(
         self, event_name, root, me, **kwargs
@@ -683,12 +656,6 @@ class RefsList(List):
             return
         looper.append(root._collection.name, root._id.get_value(), me.path_name())
 
-        # if len(kwargs.get("m_path", [])) > 4:
-        #     raise Error(
-        #         ErrorType.FIELD_NOT_FOUND,
-        #         f"on_change + LOOP {path_to_find} in {kwargs.get('m_path', [])}",
-        #     )
-
         # Change the correspondant field to the new one
         for reference in list_of_refs:
             other = me._coll_ref.new()
@@ -696,16 +663,10 @@ class RefsList(List):
 
             reverse_field = other.select(me._reverse)
             if reverse_field is None:
-                raise Error(
-                    ErrorType.FIELD_NOT_FOUND,
-                    f'Collection "{self._collection}"."{me._reverse}" not found',
-                )
+                raise PathNotFoundError('Path "{0}" not found in collection "{1}"', me._reverse, self._collection)
 
             if not isinstance(reverse_field, (Ref, RefsList)):
-                raise Error(
-                    ErrorType.NOT_A_REF,
-                    f'Collection "{self._collection}"."{me._reverse}" is not a Ref or a RefsList',
-                )
+                raise STypeError('{0}.{1} is not a Ref or a RefsList', self._collection, me._reverse)
 
             if looper.is_loop(
                 other._collection.name, reference.get_value(), reverse_field.path_name()

@@ -45,7 +45,7 @@ class TestRoutes(unittest.TestCase):
             "users",
             Item(
                 {
-                    "name": String(),
+                    "name": String( ),
                     "surname": String(),
                     "male": Bool(
                         default=True,
@@ -55,6 +55,7 @@ class TestRoutes(unittest.TestCase):
             self.yml_users,
         )
         self.users_coll.define_view("!surname_only", ["$.name"])
+
 
         # SELECTION
         sel = Selection(["$.surname"], filter={"name": ("$reg", r"bert")})
@@ -371,7 +372,7 @@ class TestRoutes(unittest.TestCase):
             "/myApp/coll/users/_actions/false_action_name/123",
             json={"new_surname": "bert_new"},
         )
-        self.assertEqual(response.status_code, 424)
+        self.assertEqual(response.status_code, 400)
 
     def test_error_action_route_false_id(self):
         """

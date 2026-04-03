@@ -199,6 +199,7 @@ class TestCurrentUser(unittest.TestCase):
                 return "yeah"
 
         current_user.reset(Current1())
+        current_user.standalone = True
 
         response = self.client.post(
             "/login",

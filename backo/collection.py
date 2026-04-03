@@ -31,7 +31,7 @@ from stricto import (
 from .item import Item
 from .action import Action
 from .selection import Selection
-from .error import Error, ErrorType
+from .error import PathNotFoundError
 from .log import log_system, LogLevel
 from .request_decorators import error_to_http_handler
 from .api_toolbox import multidict_to_filter, append_path_to_filter
@@ -161,7 +161,7 @@ class Collection:
                 l.append(self.set(d))
         return l
 
-    def define_view(self, name: str, list_of_selector: list) -> None:
+    def define_view(self, name: str, list_of_selector: list [str] ) -> None:
         """
         add element into views
 
@@ -231,10 +231,8 @@ class Collection:
         :rtype: Self
         """
         if self.backoffice is None:
-            raise Error(
-                ErrorType.COLLECTION_NOT_REGISTERED,
-                f"collection {self.name} not registered into an backoffice",
-            )
+            raise SSyntaxError('Collection {0} not registered into an backoffice', self.name)
+
         return self.backoffice.collections.get(name)
 
     def register_action(self, name: str, action: Action):
@@ -291,10 +289,7 @@ class Collection:
         """
 
         if self._permissions.is_allowed_to("read", None) is not True:
-            raise Error(
-                ErrorType.UNAUTHORIZED,
-                f"No permission to create in collection {self.name}.",
-            )
+            raise SRightError('No permission to create in collection {0}', self.name)
 
         obj = self.new_item()
         obj.load(_id)
@@ -462,10 +457,7 @@ class Collection:
         """
 
         if _action_name not in self._actions:
-            raise Error(
-                ErrorType.ACTION_NOT_AVAILABLE,
-                f"collection {self.name} has no action {_action_name}",
-            )
+            raise SSyntaxError('collection "{0}" has no action "{1}"', self.name, _action_name)
 
         # Set the action
         action = self._actions.get(_action_name)
@@ -494,6 +486,7 @@ class Collection:
         query = request.args
         _view = query.get("_view", "client")
 
+
         obj = self.new_item()
         obj.load(_id)
 
@@ -517,6 +510,7 @@ class Collection:
 
         log.debug(f"filtering {self.name}/_all with filter={match_filter}")
 
+
         result = self._selections["_all"].select(match_filter, _page, _skip)
 
         log.debug(
@@ -537,10 +531,7 @@ class Collection:
         """
 
         if _selection_name not in self._selections:
-            raise Error(
-                ErrorType.SELECTION_NOT_AVAILABLE,
-                f"collection {self.name} has no selection {_selection_name}",
-            )
+            raise SSyntaxError('Collection {0} has no selection {0}', self.name, _selection_name)
 
         query = request.args
         _page = int(query.get("_page", 10))
@@ -567,10 +558,7 @@ class Collection:
         """
 
         if _selection_name not in self._selections:
-            raise Error(
-                ErrorType.SELECTION_NOT_AVAILABLE,
-                f"collection {self.name} has no selection {_selection_name}",
-            )
+            raise SSyntaxError('Collection {0} has no selection {0}', self.name, _selection_name)
 
         query = request.args
         _page = int(query.get("_page", 10))
@@ -664,7 +652,7 @@ class Collection:
         obj.enable_permissions()
         sub_object = obj.select(c.path)
         if sub_object is None:
-            raise Error(ErrorType.FIELD_NOT_FOUND, "path not found")
+            raise PathNotFoundError('Path "{0}" not found in collection "{1}"', c.path, self.name)
 
         try:
             sub_object.check(sub_object.get_value())

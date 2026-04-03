@@ -3,7 +3,7 @@ Module providing the Generic() Class for connection on DB
 """
 
 import uuid
-from .error import Error, ErrorType
+from .error import DBError
 
 
 class DBConnector:  # pylint: disable=too-many-instance-attributes
@@ -29,12 +29,9 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
         Mainly used in test
 
 
-        :raise Error: Raise an error ErrorType.NOT_IMPLEMENTED or any db error
+        :raise Error: Raise an error DBError or any db error
         """
-        raise Error(
-            ErrorType.NOT_IMPLEMENTED,
-            f"drop is not implemented for {type(self)}",
-        )
+        raise DBError('drop() is not implemented for {0}', type(self))
 
     def generate_id(self, o: dict) -> str:  # pylint: disable=unused-argument
         """
@@ -56,13 +53,10 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
 
         :param o: The object given (json format)
         :type o: dict
-        :raise Error: Raise an error ErrorType.NOT_IMPLEMENTED or any db error
+        :raise Error: Raise an error DBError or any db error
 
         """
-        raise Error(
-            ErrorType.NOT_IMPLEMENTED,
-            f"create is not implemented for {type(self)}",
-        )
+        raise DBError('create() is not implemented for {0}', type(self))
 
     def save(self, _id: str, o: dict):  # pylint: disable=unused-argument
         """Save the objet
@@ -71,13 +65,10 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
         :type _id: str
         :param o: The object given (json format)
         :type o: dict
-        :raise Error: Raise an error ErrorType.NOT_IMPLEMENTED or any db error
+        :raise Error: Raise an error DBError or any db error
 
         """
-        raise Error(
-            ErrorType.NOT_IMPLEMENTED,
-            f"save is not implemented for {type(self)}",
-        )
+        raise DBError('save() is not implemented for {0}', type(self))
 
     def get_by_id(self, _id: str) -> dict:  # pylint: disable=unused-argument
         """
@@ -87,26 +78,20 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
         :type _id: str
         :return: The object (json format)
         :rtype: dict
-        :raise Error: Raise an error ErrorType.NOT_IMPLEMENTED or any db error
+        :raise Error: Raise an error DBError or any db error
 
         """
+        raise DBError('get_by_id() is not implemented for {0}', type(self))
 
-        raise Error(
-            ErrorType.NOT_IMPLEMENTED,
-            f"get_by_id is not implemented for {type(self)}",
-        )
 
     def delete_by_id(self, _id: str):  # pylint: disable=unused-argument
         """The _id to delete on the db
 
         :param _id: the _id
         :type _id: str
-        :raise Error: Raise an error ErrorType.NOT_IMPLEMENTED or any db error
+        :raise Error: Raise an error DBError or any db error
         """
-        raise Error(
-            ErrorType.NOT_IMPLEMENTED,
-            f"delete_by_id is not implemented for {type(self)}",
-        )
+        raise DBError('delete_by_id() is not implemented for {0}', type(self))
 
     def select(
         self,
@@ -128,10 +113,7 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
         :type num_of_element_to_skip: int
         :param sort_object: Soon
         :type sort_object: dict
-        :raise Error: Raise an error ErrorType.NOT_IMPLEMENTED or any db error
+        :raise Error: Raise an error DBError or any db error
 
         """
-        raise Error(
-            ErrorType.NOT_IMPLEMENTED,
-            f"select is not implemented for {type(self)}",
-        )
+        raise DBError('select() is not implemented for {0}', type(self))

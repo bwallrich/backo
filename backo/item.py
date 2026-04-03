@@ -7,7 +7,7 @@ Module providing the Item() Class
 import sys
 import copy
 
-from .error import Error, ErrorType
+from .error import BackoError
 from .db_connector import DBConnector
 from .transaction import OperatorType
 from .log import log_system
@@ -20,7 +20,7 @@ log = log_system.get_or_create_logger("Item")
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
-from stricto import Dict, String
+from stricto import Dict, String, SRightError
 
 
 class Item(Dict):  # pylint: disable=too-many-instance-attributes
@@ -154,12 +154,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
         """
         if self._status != StatusType.UNSET:
-            log.error("Cannot load an non-unset object in %r", self._collection.name)
-
-            raise Error(
-                ErrorType.UNSET_SAVE,
-                f"Cannot load an non-unset object in {self._collection.name}",
-            )
+            raise BackoError('Cannot load an non-unset object in {0}', self._collection.name)
 
         _id_to_load = _id.get_value() if isinstance(_id, String) else str(_id)
 
@@ -186,11 +181,8 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
         """
         if self._status != StatusType.SAVED:
-            log.error("Cannot reload an unset object in %r", self._collection.name)
-            raise Error(
-                ErrorType.RELOAD_UNSED,
-                f"Cannot reload an unset object in {self._collection.name}",
-            )
+            raise BackoError('Cannot reload an unset object in {0}', self._collection.name)
+        
         obj = self.db_handler.get_by_id(self._id.get_value())
         # set as UNSET to be able to modify meta datas.
         self.set_status_unset()
@@ -218,10 +210,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
         """
         if self._status == StatusType.UNSET:
-            raise Error(
-                ErrorType.UNSET_SAVE,
-                f"Cannot save an unset object in {self._collection.name}",
-            )
+            raise BackoError('Cannot save an unset object in {0}', self._collection.name)
 
         if kwargs.get("m_path") is None:
             kwargs["m_path"] = []
@@ -235,10 +224,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
         # Check if right to create
         if self._collection.is_allowed_to("modify", self) is not True:
-            raise Error(
-                ErrorType.UNAUTHORIZED,
-                f"No permission to modify element in collection {self.self._collection}.",
-            )
+            raise SRightError("No permission to modify element in collection {0}", self._collection.name)
 
         if self.meta_data_handler:
             self.meta_data_handler.update(self)
@@ -283,11 +269,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
         """
         if self._status == StatusType.UNSET:
-            log.error("Cannot delete an unset object in %r", self._collection.name)
-            raise Error(
-                ErrorType.UNSET_SAVE,
-                f"Cannot delete an unset object in {self._collection.name}",
-            )
+            raise BackoError('Cannot delete an unset object in {0}', self._collection.name)
 
         if kwargs.get("m_path") is None:
             kwargs["m_path"] = []
@@ -301,10 +283,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
         # Check if right to create
         if self._collection.is_allowed_to("delete", self) is not True:
-            raise Error(
-                ErrorType.UNAUTHORIZED,
-                f"No permission to delete in collection {self._collection.name}.",
-            )
+            raise SRightError("No permission to delete in collection {0}", self._collection.name)
 
         # Send delete event before deletion to do  some stufs
         self.trigg("before_delete", id(self), **kwargs)
@@ -365,11 +344,8 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
         # Check if right to create
         if self._collection.is_allowed_to("create") is not True:
-            raise Error(
-                ErrorType.UNAUTHORIZED,
-                f"No permission to create in collection {self._collection.name}",
-            )
-
+            raise SRightError("No permission to create in collection {0}", self._collection.name)
+        
         self.set(obj)
 
         # Lock permissions

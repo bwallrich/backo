@@ -11,13 +11,18 @@ from typing import Callable
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
-from stricto import Dict
+from stricto import Dict, Kparse, SRightError
 
 from .log import log_system
-from .error import Error, ErrorType
 from .item import Item
 
 log = log_system.get_or_create_logger("action")
+
+
+KPARSE_MODEL = {
+    "can_see": {"type": bool | Callable, "default": True},
+    "can_execute": {"type": bool | Callable, "default": True},
+}
 
 
 class Action(Dict):  # pylint: disable=too-many-instance-attributes
@@ -91,7 +96,15 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
         if "exists" not in kwargs:
             kwargs["exists"] = True
 
+        options = Kparse(kwargs, KPARSE_MODEL)
+                
         Dict.__init__(self, schema, **kwargs)
+
+        if options.get("can_see") is not None:
+            self._permissions.add_or_modify_permission("see", options.get("can_see"))
+        if options.get("can_execute") is not None:
+            self._permissions.add_or_modify_permission("execute", options.get("can_execute"))
+     
 
     def check_params(self, param_name, o: Item) -> bool:
         """
@@ -150,17 +163,11 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
 
         if not self.can_see(o):
             log.error("Try to launch non available action %r", self.name)
-            raise Error(
-                ErrorType.ACTION_NOT_AVAILABLE,
-                f"action {self.name} not available",
-            )
+            raise SRightError('Action "{0}" not available', self.name)
 
         if not self.can_execute(o):
             log.error("Try to execute forbidden action %r", self.name)
-            raise Error(
-                ErrorType.ACTION_FORBIDDEN,
-                f"action {self.name} forbidden",
-            )
+            raise SRightError('Action "{0}" forbidden', self.name)
 
         log.debug("Execute action %r", self.name)
         return self.on_trig(self, o)

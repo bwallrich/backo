@@ -2,7 +2,7 @@
 Loop path manipulation
 """
 
-from .error import Error, ErrorType
+from .error import BackoError
 
 DEFAULT_MAX_LOOP = 40
 
@@ -50,9 +50,6 @@ class LoopPath:
         """
 
         if len(self._path) > self.max_loop:
-            raise Error(
-                ErrorType.MAX_LOOP,
-                f"Loop max detected for ( {collection_name}, {_id}, {path})",
-            )
+            raise BackoError('Loop max detected for ( {0}, {1}, {2})', collection_name, _id, path)
 
         self._path.append((collection_name, _id, path))

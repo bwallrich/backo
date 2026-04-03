@@ -15,7 +15,7 @@ from .db_yml_connector import DBYmlConnector
 from .db_mongo_connector import DBMongoConnector
 from .db_connector import DBConnector
 from .current_user import current_user, CurrentUser, CurrentUserWrapper
-from .error import Error, ErrorType
+from .error import DBError, NotFoundError, PathNotFoundError, BackoError, SessionError
 from .backoffice import Backoffice
 from .collection import Collection
 from .selection import Selection

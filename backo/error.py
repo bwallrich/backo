@@ -1,44 +1,11 @@
 """Module providing Error management"""
-
+import sys
 from enum import Enum, auto
 
-PREFIX = "MODEL_"
+# used for developpement
+sys.path.insert(1, "../../stricto")
 
-
-class ErrorType(Enum):
-    """
-    Specifics Errors for backo.
-    Use a ErrorType value (for future internationalisation)
-    """
-
-    ALREADYEXIST = auto()
-    READONLY = auto()
-    NOTFOUND = auto()
-    NOAPP = auto()
-    COLLECTION_NOT_FOUND = auto()
-    COLLECTION_NOT_REGISTERED = auto()
-    FIELD_NOT_FOUND = auto()
-    NOT_A_REF = auto()
-    UNSET_SAVE = auto()
-    RELOAD_UNSED = auto()
-    REFSLIST_NOT_EMPTY = auto()
-    NOT_IMPLEMENTED = auto()
-    MONGO_CONNECT_ERROR = auto()
-    SELECT_ERROR = auto()
-    ACTION_NOT_AVAILABLE = auto()
-    SELECTION_NOT_AVAILABLE = auto()
-    ACTION_FORBIDDEN = auto()
-    UNAUTHORIZED = auto()
-    NOT_DIR = auto()
-    SELECTOR_NOT_FOUND = auto()
-    DEVELOPPER = auto()
-    NO_SESSION_ID = auto()
-    SESSION_NOT_AUTHENTICATED = auto()
-    LOOP = auto()
-    MAX_LOOP = auto()
-
-    def __repr__(self):
-        return PREFIX + self.name
+from stricto import StrictoError
 
 
 class Error(TypeError):
@@ -60,3 +27,100 @@ class Error(TypeError):
         if self.variable_name:
             return f"{self.variable_name}: {self.message} ({self.error_code})"
         return f"{self.message} ({self.error_code})"
+
+
+class DBError(Error, StrictoError):
+    """
+    Extented :py:class:`StrictoError` with ``Error``
+    Used by connectors for all errors related to DB and Storage
+    """
+
+    def __init__(self, message: str, *args: object, **kwargs: object):
+        """
+        init with all params
+        """
+        StrictoError.__init__(self, message, *args, **kwargs)
+        super().__init__(message, *args)
+
+    def __repr__(self):
+        return f'{self.__class__.__bases__[0].__name__}("{self.to_string()}")'
+
+    def __str__(self):
+        return repr(self)
+    
+class NotFoundError(Error, StrictoError):
+    """
+    Extented :py:class:`StrictoError` with ``Error``
+    Used to say "not found"
+    """
+
+    def __init__(self, message: str, *args: object, **kwargs: object):
+        """
+        init with all params
+        """
+        StrictoError.__init__(self, message, *args, **kwargs)
+        super().__init__(message, *args)
+
+    def __repr__(self):
+        return f'{self.__class__.__bases__[0].__name__}("{self.to_string()}")'
+
+    def __str__(self):
+        return repr(self)
+    
+
+class PathNotFoundError(Error, StrictoError):
+    """
+    Extented :py:class:`StrictoError` with ``Error``
+    Used to say "the path/field is not found"
+    """
+
+    def __init__(self, message: str, *args: object, **kwargs: object):
+        """
+        init with all params
+        """
+        StrictoError.__init__(self, message, *args, **kwargs)
+        super().__init__(message, *args)
+
+    def __repr__(self):
+        return f'{self.__class__.__bases__[0].__name__}("{self.to_string()}")'
+
+    def __str__(self):
+        return repr(self)
+    
+class BackoError(Error, StrictoError):
+    """
+    Extented :py:class:`StrictoError` with ``Error``
+    Used to any ORM Errors
+    """
+
+    def __init__(self, message: str, *args: object, **kwargs: object):
+        """
+        init with all params
+        """
+        StrictoError.__init__(self, message, *args, **kwargs)
+        super().__init__(message, *args)
+
+    def __repr__(self):
+        return f'{self.__class__.__bases__[0].__name__}("{self.to_string()}")'
+
+    def __str__(self):
+        return repr(self)
+    
+class SessionError(Error, StrictoError):
+    """
+    Extented :py:class:`StrictoError` with ``Error``
+    Used to any Session / request Errors
+    """
+
+    def __init__(self, message: str, *args: object, **kwargs: object):
+        """
+        init with all params
+        """
+        StrictoError.__init__(self, message, *args, **kwargs)
+        super().__init__(message, *args)
+
+    def __repr__(self):
+        return f'{self.__class__.__bases__[0].__name__}("{self.to_string()}")'
+
+    def __str__(self):
+        return repr(self)

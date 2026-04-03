@@ -11,7 +11,7 @@ from flask import session
 sys.path.insert(1, "../../stricto/stricto")
 
 from stricto import Dict, String, List
-from .error import Error, ErrorType
+from .error import SessionError
 
 ANONYMOUS_DATA = {"_id": "000", "login": "ANONYMOUS", "roles": []}
 
@@ -111,12 +111,11 @@ class CurrentUserWrapper:
 
         session_user_id = session.get("current_user_id", None)
         if session_user_id is None:
-            raise Error(ErrorType.NO_SESSION_ID, "No session id for authentication")
+            raise SessionError('No session id for authentication')
+
         u = self.users.get(session_user_id, None)
         if u is None:
-            raise Error(
-                ErrorType.SESSION_NOT_AUTHENTICATED, "Session not authenticated"
-            )
+            raise SessionError('Session not authenticated (no user found)')
 
         return u
 

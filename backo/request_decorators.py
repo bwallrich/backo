@@ -21,7 +21,7 @@ from stricto import (
     SKeyError,
     SRightError,
 )
-from .error import Error as BackError, ErrorType as BackoErrorType
+from .error import NotFoundError, PathNotFoundError
 from .log import log_system, LogLevel
 
 log = log_system.get_or_create_logger("http", LogLevel.ERROR)
@@ -57,21 +57,10 @@ def error_to_http_handler(f):
     def wrapper(*args, **kwargs):  # pylint: disable=too-many-return-statements
         try:
             return f(*args, **kwargs)
-        except BackError as e:
-            log.error(f"{e.error_code}: {e.message}")
-            log.error(traceback.print_exc())
-            if e.error_code == BackoErrorType.UNAUTHORIZED:
-                return return_http_error(403, e.message)
-            if e.error_code == BackoErrorType.NOTFOUND:
-                return return_http_error(404, e.message)
-            if e.error_code == BackoErrorType.ACTION_NOT_AVAILABLE:
-                return return_http_error(424, e.message)
-            if e.error_code == BackoErrorType.ACTION_FORBIDDEN:
-                return return_http_error(403, e.message)
-            if e.error_code == BackoErrorType.FIELD_NOT_FOUND:
-                return return_http_error(400, e.message)
-            # default error
-            return return_http_error(500, e.message)
+        except NotFoundError as e:
+            return return_http_error(404, repr(e))
+        except PathNotFoundError as e:
+            return return_http_error(400, repr(e))        
         except SRightError as e:
             log.error(repr(e))
             return return_http_error(403, repr(e))
@@ -100,42 +89,3 @@ def error_to_http_handler(f):
             return return_http_error(500, str(e))
 
     return wrapper
-
-
-# def check_method(methods: list):
-#     """
-#     check if the method is in a list of methods [ 'GET', 'POST' ]
-#     """
-#
-#     def inner(f):
-#         @wraps(f)
-#         def wrapper(*args, **kwargs):
-#             if request.method not in methods:
-#                 return return_http_error(405, "Method not Allowed")
-#             return f(*args, **kwargs)
-#
-#         return wrapper
-#
-#     return inner
-
-
-# def check_query_parameters(available_params: list):
-#     """
-#     check if the method is in a list of methods [ 'GET', 'POST' ]
-#     """
-#
-#     def inner(f):
-#         @wraps(f)
-#         def wrapper(*args, **kwargs):
-#             query = request.args
-#             for param_name in query.keys():
-#                 if param_name not in available_params:
-#                     return return_http_error(
-#                         406,
-#                         f'Not acceptable : query  parameter "{param_name}" not allowed.',
-#                     )
-#             return f(*args, **kwargs)
-#
-#         return wrapper
-#
-#     return inner

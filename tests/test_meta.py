@@ -12,7 +12,7 @@ pp = pprint.PrettyPrinter(indent=2)
 
 from backo import Item, Collection
 from backo import DBYmlConnector
-from backo import Backoffice
+from backo import Backoffice, current_user
 from backo import Ref, RefsList, DeleteStrategy
 from backo import String, Bool
 
@@ -79,6 +79,8 @@ class TestMeta(unittest.TestCase):
         self.yml_users.drop()
         self.yml_sites.drop()
 
+        current_user.standalone = True
+
         s = self.backoffice.sites.create({"name": "earth", "address": "here"})
 
         self.backoffice.users.create(
@@ -99,6 +101,7 @@ class TestMeta(unittest.TestCase):
 
         s = self.backoffice.sites.create({"name": "mars", "address": "far"})
         s = self.backoffice.sites.create({"name": "jupiter", "address": "bad idea"})
+        current_user.standalone = False
 
     def test_get_meta(self):
         """
@@ -116,10 +119,12 @@ class TestMeta(unittest.TestCase):
         get meta informations
         """
 
+        current_user.standalone = True
         s = self.backoffice.sites.create({"name": "saturn", "address": "farfar"})
         u = self.backoffice.users.create(
             {"name": "vador", "surname": "dark", "site": s._id}
         )
+        current_user.standalone = False
 
         meta = u.get_current_meta()
         self.assertEqual(meta["exists"], True)

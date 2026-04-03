@@ -9,13 +9,13 @@ import sys
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
-from stricto import Permissions
+from stricto import Permissions, SRightError, SSyntaxError
 
 # from .item import Item
 # from .action import Action
 from .collection_addon import CollectionAddon
 from .log import log_system, LogLevel
-from .error import Error, ErrorType
+from .error import DBError
 
 
 log = log_system.get_or_create_logger("select", LogLevel.INFO)
@@ -131,26 +131,17 @@ class Selection(CollectionAddon):
         Do the selection
         """
         if self.collection is None:
-            raise Error(
-                ErrorType.DEVELOPPER,
-                "This selection is not registered.",
-            )
+            raise SSyntaxError('The selection "{0} is not registered into a collection. (miss register_selection ?)', self.name)
 
         if self.can_read() is False:
-            raise Error(
-                ErrorType.UNAUTHORIZED,
-                f"Execute {self.name} selection is forbidden.",
-            )
+            raise SRightError('Execute {0} selection is forbidden', self.name)
 
         # Do the DB selection without pagination
         db_list = self.collection.db_handler.select(
             self._db_filter, {}, 0, 0, db_sort_object
         )
         if not isinstance(db_list, list):
-            raise Error(
-                ErrorType.SELECT_ERROR,
-                f"select {self.name} database error",
-            )
+            raise DBError('select "{0}" return a database error (not a list)', self.name)
 
         output = {
             "result": [],

@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 
 from backo import Item, Collection
 from backo import DBYmlConnector
-from backo import Backoffice, Error, current_user
+from backo import Backoffice, NotFoundError, BackoError, current_user
 from backo import String, Bool, SRightError
 
 YML_DIR = "/tmp/backo_tests_crud"
@@ -59,19 +59,21 @@ class TestCRUD(unittest.TestCase):
 
         self.yml_users.drop()
 
+        current_user.standalone = True
         v = backoffice.users.new()
-        with self.assertRaises(Error) as e:
+        with self.assertRaises(BackoError) as e:
             v.delete()
-        self.assertEqual(e.exception.message, "Cannot delete an unset object in users")
-        with self.assertRaises(Error) as e:
+        self.assertEqual(e.exception.to_string(), "Cannot delete an unset object in users")
+        with self.assertRaises(BackoError) as e:
             v.save()
-        self.assertEqual(e.exception.message, "Cannot save an unset object in users")
+        self.assertEqual(e.exception.to_string(), "Cannot save an unset object in users")
         v.create({"name": "bebert", "surname": "bebert"})
-        with self.assertRaises(Error) as e:
+        with self.assertRaises(BackoError) as e:
             v.load("test")
         self.assertEqual(
-            e.exception.message, "Cannot load an non-unset object in users"
+            e.exception.to_string(), "Cannot load an non-unset object in users"
         )
+        current_user.standalone = False
 
     def test_create_delete(self):
         """
@@ -93,6 +95,7 @@ class TestCRUD(unittest.TestCase):
 
         self.yml_users.drop()
 
+        current_user.standalone = True
         current_user.set({"login": "Roger", "_id": "1234"})
 
         # -- creation
@@ -128,9 +131,10 @@ class TestCRUD(unittest.TestCase):
         # -- delete
         u.delete()
         v = backoffice.users.new()
-        with self.assertRaises(Error) as e:
+        with self.assertRaises(NotFoundError) as e:
             v.load("User_bebert_bebert")
-        self.assertEqual(e.exception.message, '_id "User_bebert_bebert" not found')
+        self.assertEqual(e.exception.to_string(), '_id "User_bebert_bebert" not found in path "/tmp/backo_tests_crud"')
+        current_user.standalone = False
 
     def test_create_ids(self):
         """
@@ -152,6 +156,7 @@ class TestCRUD(unittest.TestCase):
 
         self.yml_users.drop()
 
+        current_user.standalone = True
         # -- creation
         u = backoffice.users.new()
         u.create({"name": "bebert", "surname": "bebert"})
@@ -169,6 +174,7 @@ class TestCRUD(unittest.TestCase):
         self.assertEqual(
             repr(e.exception), 'RightsError("$._meta.ctime: cannot modify value")'
         )
+        current_user.standalone = False
 
     def test_crud_no_meta(self):
         """

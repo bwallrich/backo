@@ -7,7 +7,7 @@ import os
 import re
 import yaml
 from .db_connector import DBConnector
-from .error import Error, ErrorType
+from .error import NotFoundError, DBError
 from .log import log_system
 
 log = log_system.get_or_create_logger("yml")
@@ -34,14 +34,10 @@ class DBYmlConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             os.makedirs(self._path)
 
         if not os.path.isdir(self._path):
-            raise Error(
-                ErrorType.NOT_DIR, f'Yaml path "{self._path}" is not a directory.'
-            )
+            raise DBError('Yaml path "{0}" is not a directory', self._path)
 
         if self.restriction_filter is not None:
-            raise Error(
-                ErrorType.DEVELOPPER, "Restriction filter not implemented for yml."
-            )
+            raise DBError('Restriction filter not implemented for yml')
 
     def drop(self) -> None:
         """See :func:`DBConnector.drop`"""
@@ -67,7 +63,7 @@ class DBYmlConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         filename = os.path.join(self._path, _id + ".yml")
 
         if os.path.exists(filename):
-            raise Error(ErrorType.ALREADYEXIST, f'_id "{_id}" already exists')
+            raise DBError('_id "{0}" already exist in path "{1}"', _id, self._path)
 
         log.debug(f"try to create {filename}")
         with open(filename, mode="w", encoding="utf8") as outfile:
@@ -80,7 +76,7 @@ class DBYmlConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
         filename = os.path.join(self._path, _id + ".yml")
         if not os.path.isfile(filename):
-            raise Error(ErrorType.NOTFOUND, f'_id "{_id}" not found')
+            raise NotFoundError('_id "{0}" not found in path "{1}"', _id, self._path)
 
         log.debug(f"try to read {filename}")
         with open(filename, mode="r", encoding="utf-8") as stream:
@@ -131,9 +127,6 @@ class DBYmlConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
                     data_loaded = yaml.safe_load(stream)
                 result_list.append(data_loaded)
         except Exception as e:
-            raise Error(
-                ErrorType.MONGO_CONNECT_ERROR,
-                "Error while select in Path",
-            ) from e
+            raise DBError('Error while select in path "{0}"', self._path) from e
 
         return result_list

@@ -8,8 +8,8 @@ import unittest
 
 
 from backo import Item, Collection, Action
-from backo import DBYmlConnector
-from backo import Backoffice, Error
+from backo import DBYmlConnector, current_user
+from backo import Backoffice, SRightError
 from backo import String, Int, List
 
 YML_DIR = "/tmp/backo_tests_actions"
@@ -106,8 +106,11 @@ class TestAction(unittest.TestCase):
 
         self.yml_users.delete_by_id("User_bebert_bebert")
 
+        current_user.standalone = True
+
         v = backoffice.users.create({"name": "bebert", "surname": "bebert"})
         self.assertEqual(v.stars, 0)
+        current_user.standalone = False
 
         incr.set({"comment": "good boy", "num": 2})
         incr.enable_permissions()
@@ -126,11 +129,11 @@ class TestAction(unittest.TestCase):
         # check rights on actions
         self.available = False
         self.can_execute = True
-        with self.assertRaises(Error) as e:
+        with self.assertRaises(SRightError) as e:
             incr.go(v)
-        self.assertEqual(e.exception.message, "action increase not available")
+        self.assertEqual(e.exception.to_string(), 'Action "increase" not available')
         self.available = True
         self.can_execute = False
-        with self.assertRaises(Error) as e:
+        with self.assertRaises(SRightError) as e:
             incr.go(v)
-        self.assertEqual(e.exception.message, "action increase forbidden")
+        self.assertEqual(e.exception.to_string(), 'Action "increase" forbidden')

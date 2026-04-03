@@ -10,7 +10,7 @@ import time
 
 from backo import Item, Collection
 from backo import DBMongoConnector
-from backo import Backoffice, Error, current_user
+from backo import Backoffice, NotFoundError, DBError, current_user
 
 from backo import String, Bool  # , Error as StrictoError
 
@@ -50,12 +50,13 @@ class TestMongo(unittest.TestCase):
             collection="test",
             serverSelectionTimeoutMS=1,
         )
-        with self.assertRaises(Error) as e:
+        with self.assertRaises(DBError) as e:
             a.connect()
         self.assertEqual(
-            e.exception.message,
-            "Mongo connection error at mongodb://localhost:666/testMongo",
+            e.exception.to_string(),
+            'Mongo connection error at "mongodb://localhost:666/testMongo"',
         )
+        a.close()
         b = self.db_users.connect()
         self.assertNotEqual(b["version"], None)
 
@@ -77,26 +78,26 @@ class TestMongo(unittest.TestCase):
         # ignore sessions for this campaign of tests.
         current_user.standalone = True
 
-        with self.assertRaises(Error) as e:
+        with self.assertRaises(DBError) as e:
             self.db_users.delete_by_id("42")
         self.assertEqual(
-            e.exception.message,
-            "Mongo connection error while Users.delete_one() mongodb://localhost:27017/testMongo",
+            e.exception.to_string(),
+            'Mongo connection error while "Users.delete_one()"',
         )
         # delete a non exinsting user
         self.assertEqual(self.db_users.delete_by_id("66a8ee2614c85110d75b9cf8"), False)
 
         # Load a non existing user
-        with self.assertRaises(Error) as e:
+        with self.assertRaises(DBError) as e:
             self.db_users.get_by_id("42")
         self.assertEqual(
-            e.exception.message,
-            "Mongo connection error while Users.find_one() mongodb://localhost:27017/testMongo",
+            e.exception.to_string(),
+            'Mongo connection error while "Users.find_one()"',
         )
-        with self.assertRaises(Error) as e:
+        with self.assertRaises(NotFoundError) as e:
             self.db_users.get_by_id("66a8ee2614c85110d75b9cf8")
         self.assertEqual(
-            e.exception.message, '_id "66a8ee2614c85110d75b9cf8" not found'
+            e.exception.to_string(), '_id "66a8ee2614c85110d75b9cf8" not found in collection "Users"'
         )
 
         v = backoffice.users.create({"name": "bebert", "surname": "bebert"})

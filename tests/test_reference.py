@@ -14,7 +14,10 @@ from backo import (
     RefsList,
     DeleteStrategy,
     FillStrategy,
-    Error,
+    SSyntaxError,
+    NotFoundError,
+    PathNotFoundError,
+    BackoError,
     log_system,
     current_user,
 )
@@ -177,10 +180,10 @@ class TestReferences(unittest.TestCase):
         self.assertEqual(len(si.users), 0)
 
         # -- check error delete
-        with self.assertRaises(Error) as e:
+        with self.assertRaises(BackoError) as e:
             si.delete()
         self.assertEqual(
-            e.exception.message, 'Collection (not filled) "users" not empty'
+            e.exception.to_string(), 'Collection (not filled) "users" not empty'
         )
 
         # -- check if deletion reverse is OK
@@ -317,9 +320,9 @@ class TestReferences(unittest.TestCase):
         # -- delete site
         si.delete()
 
-        with self.assertRaises(Error) as e:
+        with self.assertRaises(NotFoundError) as e:
             u.reload()
-        self.assertEqual(e.exception.message, '_id "User_bebert_bebert" not found')
+        self.assertEqual(e.exception.to_string(), '_id "User_bebert_bebert" not found in path "/tmp/backo_tests_references/Users"')
 
     def test_references_one_to_many_strategy_delete_nofill(self):
         """
@@ -384,9 +387,9 @@ class TestReferences(unittest.TestCase):
         # -- delete site
         si.delete()
 
-        with self.assertRaises(Error) as e:
+        with self.assertRaises(NotFoundError) as e:
             u.reload()
-        self.assertEqual(e.exception.message, '_id "User_bebert_bebert" not found')
+        self.assertEqual(e.exception.to_string(), '_id "User_bebert_bebert" not found in path "/tmp/backo_tests_references/Users"')
 
     def test_references_errors(self):
         """
@@ -442,12 +445,12 @@ class TestReferences(unittest.TestCase):
 
         t_id = backoffice.start_transaction()
         u.site._collection = "unknown_coll"
-        with self.assertRaises(Error) as e:
+        with self.assertRaises(SSyntaxError) as e:
             u.create(
                 {"name": "bebert", "surname": "bebert", "site": "1234"},
                 transaction_id=t_id,
             )
-        self.assertEqual(e.exception.message, 'Collection "unknown_coll" not found')
+        self.assertEqual(e.exception.to_string(), 'Ref "$.site" to unnknown collection "unknown_coll"')
         backoffice.rollback_transaction(t_id)
 
         t_id = backoffice.start_transaction()
@@ -455,13 +458,13 @@ class TestReferences(unittest.TestCase):
         u = backoffice.users.new()
         u.site._collection = "sites"
         u.site._reverse = "unknown_reverse"
-        with self.assertRaises(Error) as e:
+        with self.assertRaises(PathNotFoundError) as e:
             u.create(
                 {"name": "bebert", "surname": "bebert", "site": si._id},
                 transaction_id=t_id,
             )
         self.assertEqual(
-            e.exception.message, 'Collection "sites"."unknown_reverse" not found'
+            e.exception.to_string(), 'Path "unknown_reverse" not found in collection "sites"'
         )
         backoffice.rollback_transaction(t_id)
 
@@ -469,12 +472,12 @@ class TestReferences(unittest.TestCase):
         # self.yml_users.delete_by_id("User_bebert_bebert")
         u = backoffice.users.new()
         u.site._reverse = "users"
-        with self.assertRaises(Error) as e:
+        with self.assertRaises(NotFoundError) as e:
             backoffice.users.create(
                 {"name": "bebert", "surname": "bebert", "site": "no_ref"},
                 transaction_id=t_id,
             )
-        self.assertEqual(e.exception.message, '_id "no_ref" not found')
+        self.assertEqual(e.exception.to_string(), '_id "no_ref" not found in path "/tmp/backo_tests_references/Sites"')
         backoffice.rollback_transaction(t_id)
 
     def test_references_one_to_many_modification(self):
@@ -859,9 +862,9 @@ class TestReferences(unittest.TestCase):
         self.assertEqual(len(asp.humans), 1)
 
         # check if must be embty error
-        with self.assertRaises(Error) as e:
+        with self.assertRaises(BackoError) as e:
             asp.delete()
-        self.assertEqual(e.exception.message, 'Collection "humans" not empty')
+        self.assertEqual(e.exception.to_string(), 'Collection "humans" not empty')
 
     def test_references_many_to_many_no_fill(self):
         """
@@ -950,10 +953,10 @@ class TestReferences(unittest.TestCase):
         self.assertEqual(len(asp.humans), 1)
 
         # check if must be embty error
-        with self.assertRaises(Error) as e:
+        with self.assertRaises(BackoError) as e:
             asp.delete()
         self.assertEqual(
-            e.exception.message, 'Collection (not filled) "humans" not empty'
+            e.exception.to_string(), 'Collection (not filled) "humans" not empty'
         )
 
     def test_references_selector(self):
