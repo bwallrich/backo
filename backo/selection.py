@@ -131,17 +131,22 @@ class Selection(CollectionAddon):
         Do the selection
         """
         if self.collection is None:
-            raise SSyntaxError('The selection "{0} is not registered into a collection. (miss register_selection ?)', self.name)
+            raise SSyntaxError(
+                'The selection "{0}" is not registered into a collection. (miss register_selection ?)',
+                self.name,
+            )
 
         if self.can_read() is False:
-            raise SRightError('Execute {0} selection is forbidden', self.name)
+            raise SRightError("Execute {0} selection is forbidden", self.name)
 
         # Do the DB selection without pagination
         db_list = self.collection.db_handler.select(
             self._db_filter, {}, 0, 0, db_sort_object
         )
         if not isinstance(db_list, list):
-            raise DBError('select "{0}" return a database error (not a list)', self.name)
+            raise DBError(
+                'select "{0}" return a database error (not a list)', self.name
+            )
 
         output = {
             "result": [],

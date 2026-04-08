@@ -117,7 +117,7 @@ def logout():
 myapp = Backoffice("media_library")
 myapp.add_collection(books)
 myapp.add_collection(users)
-myapp.add_routes(flask, "", check_user_token)
+myapp.build_routes(flask, "", check_user_token)
 
 
 # ------------------------------------

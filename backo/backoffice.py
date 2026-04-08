@@ -5,7 +5,14 @@ The Backoffice module
 # pylint: disable=logging-fstring-interpolation
 
 import json
+import sys
+from typing import Callable
 from flask import Flask
+
+# used for developpement
+sys.path.insert(1, "../../stricto")
+
+from stricto import validation_parameters
 
 from .item import Item
 from .request_decorators import error_to_http_handler
@@ -34,6 +41,7 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
 
     """
 
+    @validation_parameters
     def __init__(self, name: str):
         """Constructor for backoffice"""
         self.name = name
@@ -41,6 +49,7 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
         self.transaction_id_reference = 1
         self.transactions = {}
 
+    @validation_parameters
     def register_collection(self, coll: Collection) -> None:
         """Register a collection into this backoffice
 
@@ -122,7 +131,10 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
 
         del self.transactions[transaction_id]
 
-    def add_routes(self, flask_app: Flask, prefix: str = "", jwt_auth=None) -> None:
+    @validation_parameters
+    def build_routes(
+        self, flask_app: Flask, prefix: str = "", jwt_auth: Callable | None = None
+    ) -> None:
         """Add all routes to flask application
 
         :param flask_app: The Flask object
@@ -144,7 +156,7 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
                 blue_print.before_request(jwt_auth)
 
             flask_app.register_blueprint(
-                blue_print, url_prefix=f"{my_path}/coll/{collection.name}"
+                blue_print, url_prefix=f"{my_path}/{collection.name}"
             )
 
         flask_app.add_url_rule(

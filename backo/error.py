@@ -1,6 +1,6 @@
 """Module providing Error management"""
+
 import sys
-from enum import Enum, auto
 
 # used for developpement
 sys.path.insert(1, "../../stricto")
@@ -47,7 +47,8 @@ class DBError(Error, StrictoError):
 
     def __str__(self):
         return repr(self)
-    
+
+
 class NotFoundError(Error, StrictoError):
     """
     Extented :py:class:`StrictoError` with ``Error``
@@ -66,7 +67,7 @@ class NotFoundError(Error, StrictoError):
 
     def __str__(self):
         return repr(self)
-    
+
 
 class PathNotFoundError(Error, StrictoError):
     """
@@ -86,7 +87,8 @@ class PathNotFoundError(Error, StrictoError):
 
     def __str__(self):
         return repr(self)
-    
+
+
 class BackoError(Error, StrictoError):
     """
     Extented :py:class:`StrictoError` with ``Error``
@@ -105,7 +107,8 @@ class BackoError(Error, StrictoError):
 
     def __str__(self):
         return repr(self)
-    
+
+
 class SessionError(Error, StrictoError):
     """
     Extented :py:class:`StrictoError` with ``Error``

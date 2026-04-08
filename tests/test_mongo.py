@@ -97,7 +97,8 @@ class TestMongo(unittest.TestCase):
         with self.assertRaises(NotFoundError) as e:
             self.db_users.get_by_id("66a8ee2614c85110d75b9cf8")
         self.assertEqual(
-            e.exception.to_string(), '_id "66a8ee2614c85110d75b9cf8" not found in collection "Users"'
+            e.exception.to_string(),
+            '_id "66a8ee2614c85110d75b9cf8" not found in collection "Users"',
         )
 
         v = backoffice.users.create({"name": "bebert", "surname": "bebert"})

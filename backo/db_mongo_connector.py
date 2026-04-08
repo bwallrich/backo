@@ -51,7 +51,9 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
         try:
             return self._db.server_info()
         except Exception as e:
-            raise DBError('Mongo connection error at "{0}"', self._connection_string) from e
+            raise DBError(
+                'Mongo connection error at "{0}"', self._connection_string
+            ) from e
 
     def close(self):
         """Close the mongodb connection
@@ -74,7 +76,9 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
         try:
             self._collection.drop()
         except Exception as e:
-            raise DBError('Mongo connection error while "{0}.drop()"', self._collection_name) from e
+            raise DBError(
+                'Mongo connection error while "{0}.drop()"', self._collection_name
+            ) from e
 
     def _combine_with_restriction_filter(self, select):
         """
@@ -102,7 +106,10 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
                 {"_id": ObjectId(_id)}, o, {"upsert": True}
             )
         except Exception as e:
-            raise DBError('Mongo connection error while "{0}.find_one_and_replace()"', self._collection_name) from e
+            raise DBError(
+                'Mongo connection error while "{0}.find_one_and_replace()"',
+                self._collection_name,
+            ) from e
 
         log.debug("save %r", result)
         return True
@@ -113,7 +120,9 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
         try:
             result = self._collection.insert_one(o)
         except Exception as e:
-            raise DBError('Mongo connection error while "{0}.insert_one()"', self._collection_name) from e
+            raise DBError(
+                'Mongo connection error while "{0}.insert_one()"', self._collection_name
+            ) from e
 
         log.debug("create %r", result.inserted_id)
         return str(result.inserted_id)
@@ -125,10 +134,14 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
             db_filter = self._combine_with_restriction_filter({"_id": ObjectId(_id)})
             o = self._collection.find_one(db_filter)
         except Exception as e:
-            raise DBError('Mongo connection error while "{0}.find_one()"', self._collection_name) from e
+            raise DBError(
+                'Mongo connection error while "{0}.find_one()"', self._collection_name
+            ) from e
 
         if o is None:
-            raise NotFoundError('_id "{0}" not found in collection "{1}"', _id, self._collection_name)
+            raise NotFoundError(
+                '_id "{0}" not found in collection "{1}"', _id, self._collection_name
+            )
         o["_id"] = _id
         return o
 
@@ -139,7 +152,9 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
             db_filter = self._combine_with_restriction_filter({"_id": ObjectId(_id)})
             result = self._collection.delete_one(db_filter)
         except Exception as e:
-            raise DBError('Mongo connection error while "{0}.delete_one()"', self._collection_name) from e
+            raise DBError(
+                'Mongo connection error while "{0}.delete_one()"', self._collection_name
+            ) from e
 
         if result.deleted_count == 1:
             return True
@@ -178,5 +193,7 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
                 .limit(page_size)
             )
         except Exception as e:
-            raise DBError('Mongo connection error while "{0}.find()"', self._collection_name) from e
+            raise DBError(
+                'Mongo connection error while "{0}.find()"', self._collection_name
+            ) from e
         return result_list

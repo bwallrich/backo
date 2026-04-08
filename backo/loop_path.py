@@ -50,6 +50,8 @@ class LoopPath:
         """
 
         if len(self._path) > self.max_loop:
-            raise BackoError('Loop max detected for ( {0}, {1}, {2})', collection_name, _id, path)
+            raise BackoError(
+                "Loop max detected for ( {0}, {1}, {2})", collection_name, _id, path
+            )
 
         self._path.append((collection_name, _id, path))

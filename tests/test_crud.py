@@ -63,10 +63,14 @@ class TestCRUD(unittest.TestCase):
         v = backoffice.users.new()
         with self.assertRaises(BackoError) as e:
             v.delete()
-        self.assertEqual(e.exception.to_string(), "Cannot delete an unset object in users")
+        self.assertEqual(
+            e.exception.to_string(), "Cannot delete an unset object in users"
+        )
         with self.assertRaises(BackoError) as e:
             v.save()
-        self.assertEqual(e.exception.to_string(), "Cannot save an unset object in users")
+        self.assertEqual(
+            e.exception.to_string(), "Cannot save an unset object in users"
+        )
         v.create({"name": "bebert", "surname": "bebert"})
         with self.assertRaises(BackoError) as e:
             v.load("test")
@@ -133,7 +137,10 @@ class TestCRUD(unittest.TestCase):
         v = backoffice.users.new()
         with self.assertRaises(NotFoundError) as e:
             v.load("User_bebert_bebert")
-        self.assertEqual(e.exception.to_string(), '_id "User_bebert_bebert" not found in path "/tmp/backo_tests_crud"')
+        self.assertEqual(
+            e.exception.to_string(),
+            '_id "User_bebert_bebert" not found in path "/tmp/backo_tests_crud"',
+        )
         current_user.standalone = False
 
     def test_create_ids(self):

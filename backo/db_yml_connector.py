@@ -37,7 +37,7 @@ class DBYmlConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             raise DBError('Yaml path "{0}" is not a directory', self._path)
 
         if self.restriction_filter is not None:
-            raise DBError('Restriction filter not implemented for yml')
+            raise DBError("Restriction filter not implemented for yml")
 
     def drop(self) -> None:
         """See :func:`DBConnector.drop`"""

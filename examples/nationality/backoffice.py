@@ -20,7 +20,7 @@ flask = Flask("nationality")
 myapp = Backoffice("nationality")
 myapp.add_collection(countries)
 myapp.add_collection(people)
-myapp.add_routes(flask, "")
+myapp.build_routes(flask, "")
 
 
 # ------------------------------------

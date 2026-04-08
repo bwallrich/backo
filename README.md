@@ -1,3 +1,4 @@
+
 # Back Office Low Code (backo)
 
 
@@ -72,32 +73,32 @@ It translates into Python code using Backo like following:
 
 ```python
 from flask import Flask
-from backo import Item, DBYmlConnector, Backoffice
+from backo import Item, DBYmlConnector, Backoffice, Collection, Item
 from backo import Ref, RefsList, DeleteStrategy
 
 # --- Storage for user
-yml_users = DBYmlConnector(path="/tmp")
+yml_users = DBYmlConnector(path="/path_to_users")
 # --- Storage for addresses
-yml_addr = DBYmlConnector(path="/tmp")
+yml_addr = DBYmlConnector(path="/path_to_addresses")
 
 # -- Description of the backoffice
 my_backoffice = Backoffice("myApp")
 
 # -- Add the collection "users" into this backoffice (with a reference to the futur "addrs" collection)
-my_backoffice.add_collection(
+coll_users = Collection( 
     "users",
-    Item(
-        {
-            "name": String(),
-            "surname": String(),
-            "addr": Ref(coll="addrs", field="$.users", required=True),
-            "male": Bool(default=True),
-        },
-        yml_users,
-    ),
+    Item({
+        "name": String(),
+        "surname": String(),
+        "addr": Ref(coll="addrs", field="$.users", required=True),
+        "male": Bool(default=True),
+    }),
+    yml_users,
 )
+my_backoffice.add_collection(coll_users)
+
 # -- Add the collection "addrs" into this backoffice (with reference to the "usres" collection)
-my_backoffice.add_collection(
+coll_addrs = Collection(
     "addrs",
     Item(
         {
@@ -107,25 +108,21 @@ my_backoffice.add_collection(
                 coll="users", field="$.addr", ods=DeleteStrategy.MUST_BE_EMPTY
             ),
         },
-        yml_addr,
     ),
+    yml_addr,
 )
-
+my_backoffice.register_collection(coll_addrs)
 
 # Your flask application
 flask = Flask(__name__)
 
 # -- Add CRUD routes for this application
-my_backoffice.add_routes(flask)
+my_backoffice.build_routes(flask)
 
 ```
 
-## Syntax
 
-
-[backo](https://github.com/bwallrich/backo) use [stricto](https://github.com/bwallrich/stricto) for structured description language.
-
-### Item
+## Item
 
 `Item` is the central class in Backo. 
 
@@ -133,26 +130,39 @@ It represents a database entity and includes all the methods required for CRUD o
 
 A generic object is a [stricto](https://github.com/bwallrich/stricto) `Dict()` object.
 
-`Item( description object , db connector )`
 
-#### example
+
+`Item( description object )`
+
+### example
 
 ```python
 # Describe what a 'cat' is
-cat = Item(
+cat_item = Item(
         {
             "name": String( required=True, default='Felix'),
             "address": String(),
             "age" : Int()
-        },
-        db_connector_for_cat)
+            # And so on...
+        })
 
-# Add the cat object into the backoffice object
-backoffice.add_collection( "cats", cat )
+# --- Storage for cats
+db_for_cats = DBMongoConnector(
+    connection_string="mongodb://localhost:27017/my_database", collection="Cate"
+)
+
+
+# Add the cat object into the Collection object by adding a name and a db connector
+cats = Collection("cats", cat_item, db_for_cats)
+
+# Then add collection to the backoffice
+backoffice.register_collection( "cats", cats )
 ```
 
 > [!IMPORTANT]  
-> Up to now no need to care about [_id](#_id).
+> no need to care about [_id](#_id).
+
+### Methods
 
 | Method | Description |
 | - | - |
@@ -166,26 +176,48 @@ backoffice.add_collection( "cats", cat )
 
 For each function above, an error is triggered in case of something went wrong.
 
-### Cardinalities
+## Cardinalities
 Relations cardinalities are expressed by the mean of `Ref()` and `RefsList()`:
 * `Ref()`: for `0 or 1` or `exactly 1` relations.
 * `RefsList()`: for `0 or more` or `1 or more` relations.
 
+
+
+| Item A | Item B | description |
+| -- | -- | -- |
+| <kbd>Ref</kbd> | <kbd>Ref</kbd> | 0 or One to one |
+| <kbd>Ref</kbd> | <kbd>RefsList</kbd> | 0 or One to many |
+| <kbd>Ref(require=True)</kbd> | <kbd>RefsList</kbd> | One to many |
+| <kbd>RefsList</kbd> | <kbd>RefsList</kbd> | Many to many |
+
+
+### RefsList
+
+* <kbd>ofs=</kbd> On Fill Strategy : fill the value ?
+  * ```FillStrategy.FILL``` (by default) fill it
+  * ```FillStrategy.NOT_FILL``` just keep ref
+
+* <kbd>ods=</kbd> On Delete Strategy : what append when delete this item ?
+  * ```DeleteStrategy.MUST_BE_EMPTY``` (by default) drop only if empty
+  * ```DeleteStrategy.DELETE_REFERENCED_ITEMS``` drop all 
+  * ```DeleteStrategy.UNLINK_REFERENCED_ITEMS``` references are lost
+
+
 #### Options
+
 | Option for Ref | Default | Description |
 | - | - | - |
-| ```coll=``` | None | the collection to make the ref |
-| ```table=``` | None | similar to ```coll``` |
-| ```field=``` | None | The reverse field in the targeted collection (use [selector](https://github.com/bwallrich/stricto?tab=readme-ov-file#selectors) to target it) |
-| ```rev=``` | None | similar to ```field``` |
-| ```ods=``` | None | *On Delete Strategy* see [ods](#deletion-strategies-ods)|
+| <kbd>coll=</kbd> | None | the collection to make the ref |
+| <kbd>field=</kbd> | None | The reverse field in the targeted collection (use [selector](https://github.com/bwallrich/stricto?tab=readme-ov-file#selectors) to target it) |
+| <kbd>ods=</kbd> | ```DeleteStrategy.MUST_BE_EMPTY``` | *On Delete Strategy* see [ods](#deletion-strategies-ods)|
+| <kbd>ofs=</kbd> | ```FillStrategy.FILL``` | *On Fill Strategy* |
 
 And all options availables in [stricto String()](https://github.com/bwallrich/stricto?tab=readme-ov-file#string) fields.
 
 
 #### Deletion strategies (`ods`)
 
-ods define the behaviour of the database when a delete occure and the object contain some ```RefList```. For each  ```RefList```, you can define the strategy :
+ods define the behaviour of the database when a delete occure and the object contain some <kbd>RefList</kbd>. For each  <kbd>RefList</kbd>, you can define the strategy :
 
 * ```DeleteStrategy.MUST_BE_EMPTY``` (by default)
 Requires the RefList to be empty before allowing the object to be deleted.
@@ -200,102 +232,269 @@ Instead of deleting the referenced objects, this strategy removes the reference 
 This is commonly used for many-to-many relationships where you want to delete the parent object but keep the referenced objects intact, but simply cleaning up their links.
 
 
-#### Relationship example: Books and Authors
-An author can write 0 or many books.
+### Example
 
-A book can be written only by 1 author.
+Relationship example: Books and Authors
+
+* An author can write 0 or many books.
+* A book can be written only by 1 author.
 
 ```python
 # Authors write books
-author = Item({
+an_author = Item({
     'name' : String(),
     # An author may have written 0 or many books
-    'books' : RefsList( coll='book', field="$.autor" )
-}, db_connector)
+    'books' : RefsList( coll='books', field="$.autor" )
+})
 
-# A book is written by on author
-book = Item({
+# A book is written by an author
+a_book = Item({
     ... # Some attibutes
     # A book may have 1 or more authors
-    authors = RefsList( coll='author', field="$.books", required=True )
-}, db_connector )
+    author = RefsList( coll='authors', field="$.books", required=True )
+})
 ```
+## Collection
 
-### current_user
+A collection is composed by :
+1. an [Item](#item)
+2. a connector to a DB (DBConnector)
+3. Some rights
 
-`current_user`is a object containing information of the authenticated user currently connected.
+> [!IMPORTANT]  
+> A collection must be registered to a backoffice (with .register_collection() call)
 
-#### usage
+A collection can have :
+1. Some [Actions](#action)
+2. Some [Selections](#selection)
+
+
+See [routes](#routes) for resulting RESTFull api routes
+
+
+### example
 
 ```python
-# anywhere in your code
-from backo import current_user
+from backo import Collection, DBMongoConnector, current
 
-print(current_user._id) # The id of the current connected user
-print(current_user.login) # A login name or whatever you store as "login"
+connector = DBMongoConnector(
+    connection_string="mongodb://localhost:27017/media_library", collection="Books"
+)
+def can_delete(right_name: str, book: Item) -> bool:
+    """Check if can delete a book"""
+    if current_user.has_role(["ADMIN", "EMPLOYEE"]):
+        return True
+    return False
 
-# check if the user has the given role
-if current_user.has_role('teamManager'):
-  return True
+books = Collection(
+    "books",
+    books_item,
+    connector,
+    can_create=True,
+    can_modify=True,
+    can_delete=can_delete,
+)
 ```
 
-#### How to set values to the current_user ?
+### rights
 
-`backo` doesnt manage authentication, because there is so much way to authenticate a user (or an app). So you have to do the auth by yourself.
-
-However, using jwt is a goot solution. See [Authentication](#authentication) for that.
-
-
-#### current_user api
-
-`current_user` is a very simple [Stricto Dict](https://github.com/bwallrich/stricto?tab=readme-ov-file#dict) (but can be [extended](#extend-current_user)). It contains :
-
-| key | type | usage |
-| - | - | - |
-| _id | [Stricto String()](https://github.com/bwallrich/stricto?tab=readme-ov-file#string) | the _id of the user. 
-| login | [Stricto String()](https://github.com/bwallrich/stricto?tab=readme-ov-file#string) | the login or whatever you store . 
-| roles | [Stricto List( String() )](https://github.com/bwallrich/stricto?tab=readme-ov-file#list) | the list of roles for this users. A *role* is a kid of group the user belongs to | 
-| has_role() | function | return True or false to the role givent in param | 
-| reset() | function | change the current_user object type. See [extend current_user](#extend-current_user) for that| 
-
-
-#### extend current_user
-
-You can extend `current_user`, adding stuff in its schema, functions... etc.
-
+a right is a function (or a lambda) with thoses parameters, and must return a bool.
 
 ```python
-from backo import current_user, CurrentUser, CurrentUserWrapper
+def your_function_name(right_name: str, o: Item) -> bool:
 
-class MyCurrentUser(CurrentUser):
-
-
-      def __init__(self, obj: CurrentUser):
-
-        CurrentUser.__init__(self, obj)
-        self.add_to_model( 'email' , String() )
-
-
-    """
-    a new class child of CuurrentUser
-    """
-    def my_function(self):
-        """
-        a Dummy function
-        """
-        return(f"user {self.login} ({self._id})")
-
-current_user.reset(MyCurrentUser())
-
-# Later in the code
-current_user.email = "toto@titi.com"
-current_user.my_function() # return the string "user ..."
 ```
+
+| right | description |
+| -- | -- |
+| can_read | Check if the collection can be read |
+| can_modify | Check if some elements in the collection can be modified |
+| can_delete | Check if some elements in the collection can be deleted |
+
+
+
+
+## Action
+
+
+An action represent some modifications to an Item witch is more complex than just a PATCH/PUT (modification).
+
+An action is compose by :
+1. an [Stricto Dict](https://github.com/bwallrich/stricto?tab=readme-ov-file#dict)
+2. a function
+3. Some rights
+
+> [!IMPORTANT]  
+> An action must be registered to a collection (with .register_action() call)
+
+
+### example
+
+This is an action to *borrow a book*, with a start time at daytime.
+(all collections ar not described)
+
+```python
+
+def borrow(action: Action, book: Item) -> None:
+    """borrow the book"""
+    book.borrow.user = action.user_id
+    book.borrow.date = datetime.now().replace(microsecond=0)
+    book.borrow.return_date = action.return_date
+    book.save()
+
+
+def can_borrow(right_name: str, book: Item) -> bool:
+    """Tel if current_user can execute the borrow action
+    """
+    if current_user.has_role("EMPLOYEE"):
+        return True
+    return False
+
+
+def can_see_borrow_action(right_name: str, book: Item) -> bool:
+    """Tel the borrow action is a nonsense ?
+    """
+    return not book.borrowed
+#
+# Definition of the action
+borrow_action = Action(
+    {
+        "user_id": String(require=True), 
+        "return_date": Datetime(require=True)
+    },
+    borrow,
+    can_execute=can_borrow,
+    exists=can_see_borrow_action,
+)
+
+# Add the action to the book collection
+books.register_action("borrow", borrow_action)
+
+```
+
+### rights for actions
+
+a right is a function (or a lambda) with thoses parameters, and must return a bool.
+
+```python
+def your_function_name(right_name: str, o: Item) -> bool:
+
+```
+
+| right | description |
+| -- | -- |
+| can_execute | Check if [current_user](#current_user) can execute the action |
+| can_see|exists | Check if this action is a available for this item |
+
+
+### routes
+
+
+See [actions routes](#actions-routes) for resulting RESTFull api routes
+
+
+
+
+## Selection
+
+
+A selection is a *named* list of Items with sub elements provided by a [path](https://github.com/bwallrich/stricto#selectors).
+
+An selection is compose by :
+1. a list of [selectors](https://github.com/bwallrich/stricto#selectors)
+2. a [filter](https://github.com/bwallrich/stricto#matching)
+3. Some rights
+
+> [!IMPORTANT]  
+> A selection must be registered to a collection (with .register_selection() call)
+
+
+### example
+
+This is a selection of borrowed books
+(all collections ar not described)
+
+```python
+# Les livres empruntés
+borrowed_book_select = Selection(
+     [ "$.title", "$.borrow.user.login" ], 
+     filter={ 'borrowed' : True }
+     can_read=...
+     )
+books.register_selection("borrowed", borrowed_book_select)
+```
+
+And to call the selection...
+
+```bash
+curl -X GET 'http://localhost/media_library/coll/books/_selections/borrowed' 
+  '{"result": [
+     ["666", "Docker et plaisir", "Wallrich"], 
+     ["1234", "Martine chez Epstein", "Lang"]
+    ],
+    "total": 2, "_skip": 0, "_page": 10}'
+curl -X GET 'http://localhost/media_library/coll/books/_selections/borrowed?title.$reg=Martine'
+```
+
+
+
+### rights for selections
+
+a right is a function (or a lambda) with thoses parameters, and must return a bool.
+
+```python
+def your_function_name(right_name: str, o: Item) -> bool:
+
+```
+
+| right | description |
+| -- | -- |
+| can_read | Check if [current_user](#current_user) can do the selection |
+
+
+### routes
+
+
+See [actions routes](#actions-routes) for resulting RESTFull api routes
+
+
+## Ref and RefsList
+
+See [Cardinalities](#cardinalities)
 
 ## Authentication
 
-This is an short and uncompleted example to authenticate and fill [current_user](#current_user).
+### General
 
+Authentication is not managed by backo. You have to do the auth by yourself. and provide two things :
+
+1. One or more authentication methode which set a ```jwt token```
+2. A *verify function* wich read the ```jwt token``` and populate the [current_user](#current_user).
+
+> [!IMPORTANT]  
+> The *verify function* must be passed as args to .build_routes() call
+
+
+```mermaid
+flowchart LR
+    login[ /login ]
+    route[At each route]
+    setjwt[ set jwt ]
+    decjwt[ decode jwt ]
+    set[ current_user.set ]
+    logout[ /logout ]
+    dropjwt[drop jwt]
+
+    login --> setjwt
+    route --> decjwt
+    decjwt --> set
+    logout --> dropjwt
+
+```
+
+### Example
+
+This is an short and uncompleted example to authenticate and fill [current_user](#current_user).
 
 first, the login part. a `/login` route in flas to make the login, and return a jwt
 
@@ -355,26 +554,109 @@ def token_required(f):
     return decorated
 ```
 
+Then pass the function as args when you build routes.
+
+```python
+myapp.build_routes(flask, "", check_user_token)
+```
+
+## current_user
+
+`current_user`is a object containing information of the authenticated user currently connected.
+
+### usage
+
+```python
+# anywhere in your code
+from backo import current_user
+
+print(current_user._id) # The id of the current connected user
+print(current_user.login) # A login name or whatever you store as "login"
+
+# check if the user has the given role
+if current_user.has_role('teamManager'):
+  return True
+```
+
+### How to set values to the current_user ?
+
+`backo` doesnt manage authentication, because there is so much way to authenticate a user (or an app). So you have to do the auth by yourself.
+
+However, using jwt is a goot solution. See [Authentication](#authentication) for that.
+
+
+### current_user api
+
+`current_user` is a very simple [Stricto Dict](https://github.com/bwallrich/stricto?tab=readme-ov-file#dict) (but can be [extended](#extend-current_user)). It contains :
+
+| key | type | usage |
+| - | - | - |
+| _id | [Stricto String()](https://github.com/bwallrich/stricto?tab=readme-ov-file#string) | the _id of the user. 
+| login | [Stricto String()](https://github.com/bwallrich/stricto?tab=readme-ov-file#string) | the login or whatever you store . 
+| roles | [Stricto List( String() )](https://github.com/bwallrich/stricto?tab=readme-ov-file#list) | the list of roles for this users. A *role* is a kid of group the user belongs to | 
+| has_role() | function | return True or false to the role givent in param | 
+| reset() | function | change the current_user object type. See [extend current_user](#extend-current_user) for that| 
+
+
+### extend current_user
+
+You can extend `current_user`, adding stuff in its schema, functions... etc.
+
+
+```python
+from backo import current_user, CurrentUser, CurrentUserWrapper
+
+class MyCurrentUser(CurrentUser):
+
+
+      def __init__(self, obj: CurrentUser):
+
+        CurrentUser.__init__(self, obj)
+        self.add_to_model( 'email' , String() )
+
+
+    """
+    a new class child of CuurrentUser
+    """
+    def my_function(self):
+        """
+        a Dummy function
+        """
+        return(f"user {self.login} ({self._id})")
+
+current_user.reset(MyCurrentUser())
+
+# Later in the code
+current_user.email = "toto@titi.com"
+current_user.my_function() # return the string "user ..."
+```
+
 
 
 ## Routes
 
-Automatic routes creation provide the following resources
+When you call
 
-### GET \<my-app-name\>/coll/\<collection name\>/\<_id\> \?_view=\<view name\>
+```python
+mybackoffice.build_routes(flask)
+```
+Api routes are generated
+
+### CRUD Routes
+#### GET \<my-app-name\>/\<collection name\>/\<_id\> \?_view=\<view name\>
 
 ```_view``` are defined in [stricto views](https://github.com/bwallrich/stricto?tab=readme-ov-file#views)
 
 Return the object of this collection *by _id*.
 
 ```bash
-curl -X GET 'http://localhost/myApp/coll/users/123'
+curl -X GET 'http://localhost/myApp/users/123'
 
 # Equivalent (by default _view=client)
-curl -X GET 'http://localhost/myApp/coll/users/123?_view=client'
+curl -X GET 'http://localhost/myApp/users/123?_view=client'
 
 # Another view
-curl -X GET 'http://localhost/myApp/coll/users/123?_view=otherviewname'
+curl -X GET 'http://localhost/myApp/users/123?_view=otherviewname'
 
 ```
 Answers can be :
@@ -386,7 +668,7 @@ Answers can be :
 | 404 | None | item not found |
 | 500 | None | server-side error |
 
-### GET \<my-app-name\>/coll/\<collection name\>?\<query_string\>
+#### GET \<my-app-name\>/\<collection name\>?\<query_string\>
 
 Get a list of objects matching the query string. The query string can be with this format
 
@@ -419,63 +701,62 @@ The request returns a HTTP status `200` with that JSON object:
 }
 ```
 
-#### Example
+##### Example
 Select all users whose name includes 'do' and present the result list with 10 items per page.
 ```bash
-curl -X GET 'http://localhost/myApp/coll/users/?name.$re=do&_page=10'  
+curl -X GET 'http://localhost/myApp/users/?name.$re=do&_page=10'  
 ```
 
-### POST \<my-app-name\>/coll/\<collection name\>
+#### POST \<my-app-name\>/\<collection name\>
 Create a new item for the collection `collection name`.
 
-#### Example
+##### Example
 ```bash
-curl -X POST 'http://localhost/myApp/coll/users/' -d '{"name":"John","surname":"Rambo"}'
+curl -X POST 'http://localhost/myApp/users/' -d '{"name":"John","surname":"Rambo"}'
 ```
 
 It returns the created *user* JSON object with a generated unique identifier `_id` and some _metadatas or an error otherwise.
 
 
-### PUT /\<my-app-name\>/coll/\<collection name\>/\<_id\>
+#### PUT /\<my-app-name\>/\<collection name\>/\<_id\>
 Modify an existing object whose id is `_id`.
 
-#### Example
+##### Example
 ```bash
-curl -X PUT 'http://localhost/myApp/coll/users/1234' -d '{"name":"Johnny"}'
+curl -X PUT 'http://localhost/myApp/users/1234' -d '{"name":"Johnny"}'
 
 ```
 Modify the users with _id *1234* and return the modified object.
 
 
 
-### DELETE /\<my-app-name\>/coll/\<collection name\>/\<_id\>
+#### DELETE /\<my-app-name\>/\<collection name\>/\<_id\>
 Delete an existing object whose id is `_id`.
 
-#### Example
+##### Example
 ```bash
-curl -X DELETE 'http://localhost/myApp/coll/users/1234'
+curl -X DELETE 'http://localhost/myApp/users/1234'
 
 ```
 Delete the user that has _id = *1234*.
 
 
-### PATCH /\<my-app-name\>/coll/\<collection name\>/\<_id\>
+#### PATCH /\<my-app-name\>/\<collection name\>/\<_id\>
 Partial change of an existing object whose id is `_id`.
 Please refer to the [Stricto patch method](https://github.com/bwallrich/stricto?tab=readme-ov-file#patch).
 
-#### Example
+##### Example
 ```bash
-curl -X PATCH  'http://localhost/myApp/coll/users/1234' -d '{"op": "replace", "path" : "$.name", "value": "Gilda"}'
+curl -X PATCH  'http://localhost/myApp/users/1234' -d '{"op": "replace", "path" : "$.name", "value": "Gilda"}'
 ```
 
 Partial modification of the user with _id *1234* with the patch.
 
 Patch content can be a *list of patch operations*.
 
+### Validation routes
 
-
-### POST /\<my-app-name\>/coll/\<collection name\>/_check
-
+#### POST /\<my-app-name\>/\<collection name\>/_check
 
 Check the validity a field of the item
 
@@ -499,7 +780,7 @@ Examples :
 
 
 ```bash
-curl -X POST 'http://localhost/myApp/coll/users/_check' -d '{ "item" : { "name" : "John", "surname" : 32 }, "path" : "$.surname" }'
+curl -X POST 'http://localhost/myApp/users/_check' -d '{ "item" : { "name" : "John", "surname" : 32 }, "path" : "$.surname" }'
 # will check surname an return a response.data like 
 {
     'error' : "Must be a string"
@@ -509,35 +790,56 @@ curl -X POST 'http://localhost/myApp/coll/users/_check' -d '{ "item" : { "name
 The response is a *status 200* even if the check return an error. The request is correct.
 
 ```bash
-curl -X POST 'http://localhost/myApp/coll/users/_check' -d '{ "item" : { "surname" : "Johnny" }, "path" : "$.surname" }' 
+curl -X POST 'http://localhost/myApp/users/_check' -d '{ "item" : { "surname" : "Johnny" }, "path" : "$.surname" }' 
 # will check surname an return a response.data like 
 {
     'error' : null
 }
 
 
-curl -X GET 'http://localhost/myApp/coll/users/_check' -d '{ "item" : { "name" : 23, "surname" : "Johnny" }, "path" : "$.surname" }'
+curl -X GET 'http://localhost/myApp/users/_check' -d '{ "item" : { "name" : 23, "surname" : "Johnny" }, "path" : "$.surname" }'
 # (only the surname is tested. don't car if name is correct or not)
 {
     'error' : null
 }
 ```
 
-## Actions routes
+### Actions routes
 
 Each collection has routes for its actions.
 
-### POST /\<my-app-name\>/coll/\<collection name\>/_actions/<action_name>/<_id>
+#### POST /\<my-app-name\>/\<collection name\>/_actions/<action_name>/<_id>
 
 
 is used to call an action.
 
 
-## Meta routes
+### Selections routes
+
+
+| Method | Route | Description |
+| -- | -- | -- |
+| <kbd>GET</kbd> | \<my-app-name\>/\<collection name\>/_selections/\<selection_name\> | do the selection  |
+| <kbd>POST</kbd> | \<my-app-name\>/\<collection name\>/_selections/\<selection_name\> | do the selection with complex filter  |
+
+#### example
+
+```bash
+curl -X GET 'http://localhost/media_library/coll/books/_selections/borrowed' 
+  '{"result": [
+     ["666", "Docker as BDSM toy", "Wallrich"], 
+     ["1234", "Milf forever", "Epstein"]
+    ],
+    "total": 2, "_skip": 0, "_page": 10}'
+curl -X GET 'http://localhost/media_library/coll/books/_selections/borrowed?title.$reg=Dock'
+```
+
+
+### Meta routes
 
 there is some route availables to get informations on the applications (its structure, rights, etc)
 
-### GET /\<my-app-name\>/_meta
+#### GET /\<my-app-name\>/_meta
 
 Return the structure of the application as a json with thoses keys :
 
@@ -546,7 +848,7 @@ Return the structure of the application as a json with thoses keys :
 | name | string | The name of the application |
 | collections | array of *collection description* | list of all collections description |
 
-#### collection description
+##### collection description
 
 Describe a collection
 
@@ -555,7 +857,7 @@ Describe a collection
 | name | string | The name ov the collection |
 | item | [meta element description](#meta-element-description) | description of an item |
 
-#### meta element description
+##### meta element description
 
 Describe an element (an item, a key in an item)
 
@@ -575,11 +877,11 @@ Describe an element (an item, a key in an item)
 | sub_type | [meta element description](#meta-element-description) | description of the content if this object is a [List](https://github.com/bwallrich/stricto?tab=readme-ov-file#list) |
 | sub_types | array of [meta element description](#meta-element-description) | description of the tuple content if this object is a [Tuple](https://github.com/bwallrich/stricto?tab=readme-ov-file#tuple) |
 
-#### meta rights description
+##### meta rights description
 
 
 
-#### Example
+##### Example
 ```bash
 curl -X GET  'http://localhost/myApp/_meta'
 # Will return for example
@@ -695,7 +997,7 @@ curl -X GET  'http://localhost/myApp/_meta'
 
 ```
 
-### POST /\<my-app-name\>/coll/\<collection name\>/_meta
+#### POST /\<my-app-name\>/\<collection name\>/_meta
 
 Ask the backoffice the currents meta information for this collection object.
 
@@ -711,7 +1013,7 @@ Ask the backoffice the currents meta information for this collection object.
             "rights": rights,
 
 
-#### Example
+##### Example
 
 For this structure :
 
@@ -741,7 +1043,7 @@ my_backoffice.add_collection(
 
 ```bash
 # Logged as "Hector"
-curl -X POST 'http://localhost/myApp/coll/users/_meta' -d { 'name' : "John" }
+curl -X POST 'http://localhost/myApp/users/_meta' -d { 'name' : "John" }
 # Will return this structure.
 # rights "read" and "modify" are set to false for the salary
 {

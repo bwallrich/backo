@@ -20,7 +20,7 @@ log = log_system.get_or_create_logger("Item")
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
-from stricto import Dict, String, SRightError
+from stricto import Dict, String, SRightError, validation_parameters
 
 
 class Item(Dict):  # pylint: disable=too-many-instance-attributes
@@ -51,6 +51,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
     """
 
+    @validation_parameters
     def __init__(self, schema: dict, **kwargs):
         """
         Constructor
@@ -77,6 +78,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         if self.meta_data_handler:
             self.meta_data_handler.append_schema(self)
 
+    @validation_parameters
     def set_db_handler(self, db_connector: DBConnector) -> None:
         """
         Set or modify the Database Handler
@@ -154,7 +156,9 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
         """
         if self._status != StatusType.UNSET:
-            raise BackoError('Cannot load an non-unset object in {0}', self._collection.name)
+            raise BackoError(
+                "Cannot load an non-unset object in {0}", self._collection.name
+            )
 
         _id_to_load = _id.get_value() if isinstance(_id, String) else str(_id)
 
@@ -181,8 +185,10 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
         """
         if self._status != StatusType.SAVED:
-            raise BackoError('Cannot reload an unset object in {0}', self._collection.name)
-        
+            raise BackoError(
+                "Cannot reload an unset object in {0}", self._collection.name
+            )
+
         obj = self.db_handler.get_by_id(self._id.get_value())
         # set as UNSET to be able to modify meta datas.
         self.set_status_unset()
@@ -210,7 +216,9 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
         """
         if self._status == StatusType.UNSET:
-            raise BackoError('Cannot save an unset object in {0}', self._collection.name)
+            raise BackoError(
+                "Cannot save an unset object in {0}", self._collection.name
+            )
 
         if kwargs.get("m_path") is None:
             kwargs["m_path"] = []
@@ -224,7 +232,10 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
         # Check if right to create
         if self._collection.is_allowed_to("modify", self) is not True:
-            raise SRightError("No permission to modify element in collection {0}", self._collection.name)
+            raise SRightError(
+                "No permission to modify element in collection {0}",
+                self._collection.name,
+            )
 
         if self.meta_data_handler:
             self.meta_data_handler.update(self)
@@ -269,7 +280,9 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
         """
         if self._status == StatusType.UNSET:
-            raise BackoError('Cannot delete an unset object in {0}', self._collection.name)
+            raise BackoError(
+                "Cannot delete an unset object in {0}", self._collection.name
+            )
 
         if kwargs.get("m_path") is None:
             kwargs["m_path"] = []
@@ -283,7 +296,9 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
         # Check if right to create
         if self._collection.is_allowed_to("delete", self) is not True:
-            raise SRightError("No permission to delete in collection {0}", self._collection.name)
+            raise SRightError(
+                "No permission to delete in collection {0}", self._collection.name
+            )
 
         # Send delete event before deletion to do  some stufs
         self.trigg("before_delete", id(self), **kwargs)
@@ -344,8 +359,10 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
         # Check if right to create
         if self._collection.is_allowed_to("create") is not True:
-            raise SRightError("No permission to create in collection {0}", self._collection.name)
-        
+            raise SRightError(
+                "No permission to create in collection {0}", self._collection.name
+            )
+
         self.set(obj)
 
         # Lock permissions

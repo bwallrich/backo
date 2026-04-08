@@ -322,7 +322,10 @@ class TestReferences(unittest.TestCase):
 
         with self.assertRaises(NotFoundError) as e:
             u.reload()
-        self.assertEqual(e.exception.to_string(), '_id "User_bebert_bebert" not found in path "/tmp/backo_tests_references/Users"')
+        self.assertEqual(
+            e.exception.to_string(),
+            '_id "User_bebert_bebert" not found in path "/tmp/backo_tests_references/Users"',
+        )
 
     def test_references_one_to_many_strategy_delete_nofill(self):
         """
@@ -389,7 +392,10 @@ class TestReferences(unittest.TestCase):
 
         with self.assertRaises(NotFoundError) as e:
             u.reload()
-        self.assertEqual(e.exception.to_string(), '_id "User_bebert_bebert" not found in path "/tmp/backo_tests_references/Users"')
+        self.assertEqual(
+            e.exception.to_string(),
+            '_id "User_bebert_bebert" not found in path "/tmp/backo_tests_references/Users"',
+        )
 
     def test_references_errors(self):
         """
@@ -450,7 +456,10 @@ class TestReferences(unittest.TestCase):
                 {"name": "bebert", "surname": "bebert", "site": "1234"},
                 transaction_id=t_id,
             )
-        self.assertEqual(e.exception.to_string(), 'Ref "$.site" to unnknown collection "unknown_coll"')
+        self.assertEqual(
+            e.exception.to_string(),
+            'Ref "$.site" to unnknown collection "unknown_coll"',
+        )
         backoffice.rollback_transaction(t_id)
 
         t_id = backoffice.start_transaction()
@@ -464,7 +473,8 @@ class TestReferences(unittest.TestCase):
                 transaction_id=t_id,
             )
         self.assertEqual(
-            e.exception.to_string(), 'Path "unknown_reverse" not found in collection "sites"'
+            e.exception.to_string(),
+            'Path "unknown_reverse" not found in collection "sites"',
         )
         backoffice.rollback_transaction(t_id)
 
@@ -477,7 +487,10 @@ class TestReferences(unittest.TestCase):
                 {"name": "bebert", "surname": "bebert", "site": "no_ref"},
                 transaction_id=t_id,
             )
-        self.assertEqual(e.exception.to_string(), '_id "no_ref" not found in path "/tmp/backo_tests_references/Sites"')
+        self.assertEqual(
+            e.exception.to_string(),
+            '_id "no_ref" not found in path "/tmp/backo_tests_references/Sites"',
+        )
         backoffice.rollback_transaction(t_id)
 
     def test_references_one_to_many_modification(self):

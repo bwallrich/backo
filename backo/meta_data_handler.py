@@ -14,7 +14,7 @@ from .current_user import current_user
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
-from stricto import Dict, String, Datetime
+from stricto import Dict, String, Datetime, validation_parameters
 
 
 class GenericMetaDataHandler:  # pylint: disable=too-many-instance-attributes
@@ -77,6 +77,7 @@ class StandardMetaDataHandler(
         if permission_enabled is True:
             o.enable_permissions()
 
+    @validation_parameters
     def append_schema(self, o: Dict) -> None:
         """
         Add to the schema

@@ -39,8 +39,10 @@ class View:
         for sel in selectors:
             obj = collection.model.select(sel)
             if obj is None:
-                raise PathNotFoundError('Path "{0}" not found in collection "{1}"', sel, collection.name)
-            
+                raise PathNotFoundError(
+                    'Path "{0}" not found in collection "{1}"', sel, collection.name
+                )
+
             if self.name not in obj._views:
                 obj._views.append(self.name)
 

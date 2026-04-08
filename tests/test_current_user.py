@@ -131,7 +131,7 @@ class TestCurrentUser(unittest.TestCase):
             return response
 
         # set the flask application route
-        self.backo.add_routes(self.flask, "auth")
+        self.backo.build_routes(self.flask, "auth")
 
         # Set client for testing
         self.ctx = self.flask.app_context()

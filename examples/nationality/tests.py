@@ -32,7 +32,7 @@ class TestBackoffice(unittest.TestCase):
         """
         try to get a country
         """
-        response = self.client.get("/nationality/coll/countries/can")
+        response = self.client.get("/nationality//countries/can")
         self.assertEqual(response.status_code, 200)
         results = json.loads(response.data)
         self.assertEqual(results["name"]["common"], "Canada")
@@ -42,14 +42,14 @@ class TestBackoffice(unittest.TestCase):
         """
         try to get a wrong country
         """
-        response = self.client.get("/nationality/coll/countries/trumpland")
+        response = self.client.get("/nationality//countries/trumpland")
         self.assertEqual(response.status_code, 404)
 
     def test_select_country(self):
         """
         try to select country
         """
-        response = self.client.get("/nationality/coll/countries?name.common=France")
+        response = self.client.get("/nationality//countries?name.common=France")
         self.assertEqual(response.status_code, 200)
         results = json.loads(response.data)
         self.assertEqual(results["total"], 1)
@@ -59,7 +59,7 @@ class TestBackoffice(unittest.TestCase):
         try to create
         """
         response = self.client.post(
-            "/nationality/coll/people",
+            "/nationality//people",
             json={
                 "name": "bourne",
                 "surname": "jason",
@@ -73,5 +73,5 @@ class TestBackoffice(unittest.TestCase):
 
         # delete the user
 
-        response = self.client.delete(f"/nationality/coll/people/{jason_id}")
+        response = self.client.delete(f"/nationality//people/{jason_id}")
         self.assertEqual(response.status_code, 200)

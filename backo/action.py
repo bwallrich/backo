@@ -11,7 +11,7 @@ from typing import Callable
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
-from stricto import Dict, Kparse, SRightError
+from stricto import Dict, Kparse, SRightError, validation_parameters
 
 from .log import log_system
 from .item import Item
@@ -20,7 +20,7 @@ log = log_system.get_or_create_logger("action")
 
 
 KPARSE_MODEL = {
-    "can_see": {"type": bool | Callable, "default": True},
+    "can_see|exists": {"type": bool | Callable, "default": True},
     "can_execute": {"type": bool | Callable, "default": True},
 }
 
@@ -69,6 +69,7 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
 
     """
 
+    @validation_parameters
     def __init__(self, schema: dict, on_trig: Callable, **kwargs):
         """
                 :param schema: The data schema needed for this action (see `Dict <https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict>`)
@@ -86,25 +87,16 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
         self.collection = None
         self.on_trig = on_trig
 
-        # Add default right
-        if "can_execute" not in kwargs:
-            kwargs["can_execute"] = True
-        if "can_see" not in kwargs:
-            kwargs["can_see"] = True
-        kwargs["can_read"] = True
-        kwargs["can_modify"] = True
-        if "exists" not in kwargs:
-            kwargs["exists"] = True
-
         options = Kparse(kwargs, KPARSE_MODEL)
-                
+
         Dict.__init__(self, schema, **kwargs)
 
         if options.get("can_see") is not None:
             self._permissions.add_or_modify_permission("see", options.get("can_see"))
         if options.get("can_execute") is not None:
-            self._permissions.add_or_modify_permission("execute", options.get("can_execute"))
-     
+            self._permissions.add_or_modify_permission(
+                "execute", options.get("can_execute")
+            )
 
     def check_params(self, param_name, o: Item) -> bool:
         """

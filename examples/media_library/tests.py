@@ -62,9 +62,7 @@ class TestBackoffice(unittest.TestCase):
         """
         self.logout()
         response = self.login("emp1")
-        response = self.client.post(
-            "/media_library/coll/users", json={"login": "toto1"}
-        )
+        response = self.client.post("/media_library//users", json={"login": "toto1"})
         self.assertEqual(response.status_code, 403)
         self.logout()
 
@@ -74,21 +72,13 @@ class TestBackoffice(unittest.TestCase):
         """
         self.logout()
         response = self.login("admin")
-        response = self.client.post(
-            "/media_library/coll/users", json={"login": "toto1"}
-        )
+        response = self.client.post("/media_library//users", json={"login": "toto1"})
         self.assertEqual(response.status_code, 200)
-        response = self.client.post(
-            "/media_library/coll/users", json={"login": "toto2"}
-        )
+        response = self.client.post("/media_library//users", json={"login": "toto2"})
         self.assertEqual(response.status_code, 200)
-        response = self.client.post(
-            "/media_library/coll/users", json={"login": "toto3"}
-        )
+        response = self.client.post("/media_library//users", json={"login": "toto3"})
         self.assertEqual(response.status_code, 200)
-        response = self.client.post(
-            "/media_library/coll/users", json={"login": "toto4"}
-        )
+        response = self.client.post("/media_library//users", json={"login": "toto4"})
         self.assertEqual(response.status_code, 200)
         self.logout()
 
@@ -99,7 +89,7 @@ class TestBackoffice(unittest.TestCase):
         self.logout()
         response = self.login("emp1")
         response = self.client.post(
-            "/media_library/coll/books",
+            "/media_library//books",
             json={"title": "martine a la plage 1", "pages": 21},
         )
         self.assertEqual(response.status_code, 200)
@@ -107,19 +97,19 @@ class TestBackoffice(unittest.TestCase):
         book_id = d["_id"]
         # self.logout()
         # self.login('test')
-        # response=self.client.delete(f"/media_library/coll/books/{book_id}")
+        # response=self.client.delete(f"/media_library//books/{book_id}")
         # self.assertEqual(response.status_code, 403)
         # self.logout()
         # self.login('emp1')
-        response = self.client.delete(f"/media_library/coll/books/{book_id}")
+        response = self.client.delete(f"/media_library//books/{book_id}")
         self.assertEqual(response.status_code, 200)
         response = self.client.post(
-            "/media_library/coll/books",
+            "/media_library//books",
             json={"title": "martine a la plage 2", "pages": 22},
         )
         self.assertEqual(response.status_code, 200)
         response = self.client.post(
-            "/media_library/coll/books",
+            "/media_library//books",
             json={"title": "martine a la plage 3", "pages": 23},
         )
         self.assertEqual(response.status_code, 200)
@@ -131,36 +121,36 @@ class TestBackoffice(unittest.TestCase):
         """
         self.logout()
         response = self.login("emp1")
-        response = self.client.get("/media_library/coll/users?login=toto1")
+        response = self.client.get("/media_library//users?login=toto1")
         results = json.loads(response.data)
         self.assertEqual(results["total"], 1)
         user = results["result"][0]
-        response = self.client.get("/media_library/coll/books?title.$reg=martine.*3")
+        response = self.client.get("/media_library//books?title.$reg=martine.*3")
         results = json.loads(response.data)
         self.assertEqual(results["total"], 1)
         book = results["result"][0]
         # response = self.client.post(
-        #     f"/media_library/coll/books/_actions/borrow/{book['_id']}",
+        #     f"/media_library//books/_actions/borrow/{book['_id']}",
         #     json={"user_id": user['_id'], "return_date": "test"},
         # )
         # self.assertEqual(response.status_code, 400)
         return_date = datetime.now() + timedelta(days=3)
         response = self.client.post(
-            f"/media_library/coll/books/_actions/borrow/{book['_id']}",
+            f"/media_library//books/_actions/borrow/{book['_id']}",
             json={"user_id": user["_id"], "return_date": return_date.isoformat()},
         )
         self.assertEqual(response.status_code, 200)
-        response = self.client.get(f"/media_library/coll/users/{user['_id']}")
+        response = self.client.get(f"/media_library//users/{user['_id']}")
         u = json.loads(response.data)
         self.assertEqual(u["rent"]["books"][0], book["_id"])
 
         # verify book has borrowed = True
-        response = self.client.get(f"/media_library/coll/books/{book['_id']}")
+        response = self.client.get(f"/media_library//books/{book['_id']}")
         b = json.loads(response.data)
         self.assertEqual(b["borrowed"], True)
 
         # Do the selection on borrowed books
-        response = self.client.get("/media_library/coll/books/_selections/borrowed")
+        response = self.client.get("/media_library//books/_selections/borrowed")
         self.assertEqual(response.status_code, 200)
         results = json.loads(response.data)
         self.assertEqual(results["total"], 1)

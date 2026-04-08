@@ -60,7 +60,7 @@ def error_to_http_handler(f):
         except NotFoundError as e:
             return return_http_error(404, repr(e))
         except PathNotFoundError as e:
-            return return_http_error(400, repr(e))        
+            return return_http_error(400, repr(e))
         except SRightError as e:
             log.error(repr(e))
             return return_http_error(403, repr(e))

@@ -31,7 +31,7 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
 
         :raise Error: Raise an error DBError or any db error
         """
-        raise DBError('drop() is not implemented for {0}', type(self))
+        raise DBError("drop() is not implemented for {0}", type(self))
 
     def generate_id(self, o: dict) -> str:  # pylint: disable=unused-argument
         """
@@ -56,7 +56,7 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
         :raise Error: Raise an error DBError or any db error
 
         """
-        raise DBError('create() is not implemented for {0}', type(self))
+        raise DBError("create() is not implemented for {0}", type(self))
 
     def save(self, _id: str, o: dict):  # pylint: disable=unused-argument
         """Save the objet
@@ -68,7 +68,7 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
         :raise Error: Raise an error DBError or any db error
 
         """
-        raise DBError('save() is not implemented for {0}', type(self))
+        raise DBError("save() is not implemented for {0}", type(self))
 
     def get_by_id(self, _id: str) -> dict:  # pylint: disable=unused-argument
         """
@@ -81,8 +81,7 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
         :raise Error: Raise an error DBError or any db error
 
         """
-        raise DBError('get_by_id() is not implemented for {0}', type(self))
-
+        raise DBError("get_by_id() is not implemented for {0}", type(self))
 
     def delete_by_id(self, _id: str):  # pylint: disable=unused-argument
         """The _id to delete on the db
@@ -91,7 +90,7 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
         :type _id: str
         :raise Error: Raise an error DBError or any db error
         """
-        raise DBError('delete_by_id() is not implemented for {0}', type(self))
+        raise DBError("delete_by_id() is not implemented for {0}", type(self))
 
     def select(
         self,
@@ -116,4 +115,4 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
         :raise Error: Raise an error DBError or any db error
 
         """
-        raise DBError('select() is not implemented for {0}', type(self))
+        raise DBError("select() is not implemented for {0}", type(self))

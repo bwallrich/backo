@@ -61,8 +61,12 @@ class MyDBRestfullConnector(
             return data
 
         connection.close()
-        raise NotFoundError('_id "{0}" not found country "{1}/{2}"', _id, response.status, response.reason)
-
+        raise NotFoundError(
+            '_id "{0}" not found country "{1}/{2}"',
+            _id,
+            response.status,
+            response.reason,
+        )
 
     def select(
         self,
@@ -100,4 +104,6 @@ class MyDBRestfullConnector(
             return list_of_countries
 
         connection.close()
-        raise NotFoundError('selection error country "{0}/{1}"', response.status, response.reason)
+        raise NotFoundError(
+            'selection error country "{0}/{1}"', response.status, response.reason
+        )

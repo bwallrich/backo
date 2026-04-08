@@ -10,7 +10,7 @@ from flask import session
 # used for developpement
 sys.path.insert(1, "../../stricto/stricto")
 
-from stricto import Dict, String, List
+from stricto import Dict, String, List, validation_parameters
 from .error import SessionError
 
 ANONYMOUS_DATA = {"_id": "000", "login": "ANONYMOUS", "roles": []}
@@ -111,11 +111,11 @@ class CurrentUserWrapper:
 
         session_user_id = session.get("current_user_id", None)
         if session_user_id is None:
-            raise SessionError('No session id for authentication')
+            raise SessionError("No session id for authentication")
 
         u = self.users.get(session_user_id, None)
         if u is None:
-            raise SessionError('Session not authenticated (no user found)')
+            raise SessionError("Session not authenticated (no user found)")
 
         return u
 
@@ -130,7 +130,8 @@ class CurrentUserWrapper:
         if session_user_id is not None:
             del self.users[session_user_id]
 
-    def set(self, data) -> None:
+    @validation_parameters
+    def set(self, data: dict) -> None:
         """
         Set the user and save it into the database
         """

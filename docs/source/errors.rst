@@ -10,6 +10,28 @@ Errors
    :show-inheritance:
    :no-index:
    
-.. autoclass:: Error
+.. autoclass:: DBError
    :members:
    :show-inheritance: 
+
+.. autoclass:: NotFoundError
+   :members:
+   :show-inheritance: 
+
+.. autoclass:: PathNotFoundError
+   :members:
+   :show-inheritance: 
+
+.. autoclass:: BackoError
+   :members:
+   :show-inheritance: 
+
+.. autoclass:: SessionError
+   :members:
+   :show-inheritance: 
+
+
+
+
+
+
