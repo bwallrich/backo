@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.1.0] 2026-04-08
+    * Fix
+      * fix issue #3
+    * Feature
+      * Changing Error management
+      * minimize Human errors
+        * Moving to Kparse for **kwargs
+        * add check_json to requests
+        * Adding validation parameters
+    * Doc
+      * Documentation refactoring
+
 
 ## [0.0.4] 2026-03-17
 
