@@ -4,11 +4,21 @@ Module providing the Yml DB like
 
 # pylint: disable=logging-fstring-interpolation
 import os
+import sys
 import re
 import yaml
+
+# used for developpement
+sys.path.insert(1, "../../stricto")
+
+from stricto import Kparse
+
 from .db_connector import DBConnector
 from .error import NotFoundError, DBError
 from .log import log_system
+
+
+KPARSE_MODEL = {"path": {"type": str, "default": "/tmp"}}
 
 log = log_system.get_or_create_logger("yml")
 
@@ -26,7 +36,10 @@ class DBYmlConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
     def __init__(self, **kwargs):
         """constructor"""
-        self._path = kwargs.pop("path", "/tmp")
+
+        options = Kparse(kwargs, KPARSE_MODEL)
+
+        self._path = options.get("path")
 
         DBConnector.__init__(self, **kwargs)
 

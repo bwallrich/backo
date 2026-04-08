@@ -5,6 +5,7 @@ Ref and RefsLink class definition
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code, logging-fstring-interpolation
 
 import sys
+import copy
 import re
 from enum import Enum, auto
 from typing import Self
@@ -12,7 +13,7 @@ from typing import Self
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
-from stricto import String, List, Selector, Dict, SSyntaxError, STypeError
+from stricto import String, List, Selector, Dict, SSyntaxError, STypeError, Kparse
 
 from .loop_path import LoopPath
 from .error import Error, PathNotFoundError, BackoError
@@ -72,6 +73,13 @@ class FillStrategy(Enum):
 A reference to another table
 """
 
+REF_KPARSE_MODEL = {
+    "collection|coll*": str,
+    "reverse|rev|field": str,
+    "require|required": {"type": bool, "default": False},
+    "on": {"type": list[tuple], "default": []},
+}
+
 
 class Ref(String):  # pylint: disable=too-many-instance-attributes
     """Ref 0 or 1 to many to another :py:class:`Collection`
@@ -108,20 +116,19 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
 
     def __init__(self, **kwargs):
         """Constructor"""
-        self._collection = kwargs.pop(
-            "collection", kwargs.pop("coll", kwargs.pop("table", None))
-        )
-        self._reverse = kwargs.pop(
-            "reverse", kwargs.pop("rev", kwargs.pop("field", None))
-        )
+
+        options = Kparse(kwargs, REF_KPARSE_MODEL)
+
+        self._collection = options.get("collection")
+        self._reverse = options.get("reverse")
         self._coll_ref = None
 
         # For required
-        not_none = kwargs.pop("notNone", kwargs.pop("required", False))
-        default = DEFAULT_ID if not_none is True else None
+        require = options.get("require")
+        default = DEFAULT_ID if require is True else None
 
         # for events
-        on = kwargs.pop("on", [])
+        on = copy.copy(options.get("on"))
         on.append(("created", self.on_created))
         on.append(("before_delete", self.on_delete))
         on.append(("before_save", self.on_before_save))
@@ -129,7 +136,7 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         String.__init__(
             self,
             default=default,
-            required=not_none,
+            required=require,
             on=on,
             **kwargs,
         )
@@ -410,6 +417,16 @@ A list of reference to another table
 """
 
 
+REFSLIST_KPARSE_MODEL = {
+    "collection|coll*": str,
+    "reverse|rev|field": str,
+    "require|required": {"type": bool, "default": False},
+    "on_delete|ods": {"type": DeleteStrategy, "default": DeleteStrategy.MUST_BE_EMPTY},
+    "on_fill|ofs": {"type": FillStrategy, "default": FillStrategy.FILL},
+    "on": {"type": list[tuple], "default": []},
+}
+
+
 class RefsList(List):
     """Ref 0 or 1 to many to another :py:class:`Collection`
 
@@ -445,27 +462,21 @@ class RefsList(List):
 
     def __init__(self, **kwargs):
         """Constructor"""
-        self._collection = kwargs.pop(
-            "collection", kwargs.pop("coll", kwargs.pop("table", None))
-        )
-        self._reverse = kwargs.pop(
-            "reverse", kwargs.pop("rev", kwargs.pop("field", None))
-        )
-        self._require = kwargs.pop("require", True)
+
+        options = Kparse(kwargs, REFSLIST_KPARSE_MODEL)
+        self._collection = options.get("collection")
+        self._reverse = options.get("reverse")
+
+        self._require = options.get("require")
+
         self._coll_ref = None
 
         # Strategy for fill
-        self._fill_strategy = kwargs.pop(
-            "ofs", kwargs.pop("on_fill", FillStrategy.FILL)
-        )
-        if self._fill_strategy != FillStrategy.FILL:
-            self._fill_strategy = FillStrategy.NOT_FILL
+        self._fill_strategy = options.get("on_fill")
 
         # Strategy for deletion and modification
         on_modify_strategy = None
-        on_delete_strategy = kwargs.pop(
-            "ods", kwargs.pop("on_delete", DeleteStrategy.MUST_BE_EMPTY)
-        )
+        on_delete_strategy = options.get("on_delete")
         if on_delete_strategy == DeleteStrategy.MUST_BE_EMPTY:
             on_delete_strategy = self.on_delete_must_by_empty
         if on_delete_strategy == DeleteStrategy.DELETE_REFERENCED_ITEMS:
@@ -476,7 +487,7 @@ class RefsList(List):
         on_modify_strategy = self.on_modify_clean_reverse
 
         # for events
-        on = kwargs.pop("on", [])
+        on = copy.copy(options.get("on"))
         on.append(("created", self.on_created))
         on.append(("before_delete", on_delete_strategy))
         on.append(("before_save", on_modify_strategy))

@@ -1,6 +1,6 @@
 [project]
 name = "backo"
-version = "0.0.4"
+version = "0.1.0"
 authors = [
   { name="Bertrand Wallrich", email="Bertrand.Wallrich@inria.fr" },
 ]
@@ -17,7 +17,7 @@ dependencies = [
   "pyjwt",
   "flask",
   "pyyaml",
-  "stricto>=0.0.9"
+  "stricto>=0.1.0"
 ]
 
 [project.urls]

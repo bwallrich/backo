@@ -4,9 +4,8 @@ The Collection module
 
 # pylint: disable=logging-fstring-interpolation, too-many-public-methods
 import json
-import re
 import sys
-from typing import Self
+from typing import Self, Callable
 
 from flask import request, Blueprint
 
@@ -25,6 +24,7 @@ from stricto import (
     SConstraintError,
     SError,
     SRightError,
+    Kparse,
     validation_parameters,
 )
 
@@ -34,7 +34,7 @@ from .action import Action
 from .selection import Selection
 from .error import PathNotFoundError
 from .log import log_system, LogLevel
-from .request_decorators import error_to_http_handler
+from .request_decorators import error_to_http_handler, check_json
 from .api_toolbox import multidict_to_filter, append_path_to_filter
 from .patch import Patch
 
@@ -44,6 +44,17 @@ check_model_request = Dict(
     {"path": String(required=True, default="$"), "item": FreeDict(default={})}
 )
 meta_model_request = FreeDict(default={})
+
+KPARSE_MODEL = {
+    "can_read|read": {"type": bool | Callable, "default": True},
+    "can_modify|modify|write|can_write|can_update|update": {
+        "type": bool | Callable,
+        "default": True,
+    },
+    "can_delete|delete": {"type": bool | Callable, "default": True},
+    "can_create|create": {"type": bool | Callable, "default": True},
+    "refuse_filter": Callable,
+}
 
 
 class Collection:
@@ -109,19 +120,21 @@ class Collection:
         self.model.__dict__["_collection"] = self
         self.model.set_db_handler(db_handler)
 
+        options = Kparse(kwargs, KPARSE_MODEL, strict=True)
+
         # Set permissions
         self._permissions = Permissions(
             read=True, create=True, delete=True, modify=True
         )
-        for key, right in kwargs.items():
-            a = re.findall(r"^can_(.*)$", key)
-            if a:
-                self._permissions.add_or_modify_permission(a[0], right)
+        self._permissions.add_or_modify_permission("read", options.get("can_read"))
+        self._permissions.add_or_modify_permission("create", options.get("can_create"))
+        self._permissions.add_or_modify_permission("modify", options.get("can_modify"))
+        self._permissions.add_or_modify_permission("delete", options.get("can_delete"))
 
         self._permissions.enable()
 
         # For filtering
-        self.refuse_filter = kwargs.pop("refuse_filter", None)
+        self.refuse_filter = options.get("refuse_filter")
 
         # For actions (aka some element work with datas)
         self._actions = {}
@@ -450,6 +463,7 @@ class Collection:
 
         return collection_blueprint
 
+    @check_json
     @error_to_http_handler
     def action_go(self, _action_name: str, _id: str):
         """_summary_
@@ -553,6 +567,7 @@ class Collection:
 
         return (json.dumps(result, cls=StrictoEncoder), 200)
 
+    @check_json
     @error_to_http_handler
     def do_post_selection(self, _selection_name: str):
         """Do a selection with filter given in post
@@ -584,6 +599,7 @@ class Collection:
 
         return (json.dumps(result, cls=StrictoEncoder), 200)
 
+    @check_json
     @error_to_http_handler
     def http_create(self):
         """
@@ -604,6 +620,7 @@ class Collection:
         log.debug(f"create {obj._id} in {self.name} in view {_view}")
         return (json.dumps(obj.get_view(_view), cls=StrictoEncoder), 200)
 
+    @check_json
     @error_to_http_handler
     def http_modify(self, _id: str):
         """
@@ -641,6 +658,7 @@ class Collection:
 
         return ("deleted", 200)
 
+    @check_json
     @error_to_http_handler
     def http_check(self):
         """
@@ -678,6 +696,7 @@ class Collection:
         ) as e:
             return (json.dumps({"error": e.to_string()}), 200)
 
+    @check_json
     @error_to_http_handler
     def http_meta(self):
         """
@@ -699,6 +718,7 @@ class Collection:
 
         return (json.dumps(obj.get_current_meta()), 200)
 
+    @check_json
     @error_to_http_handler
     def http_patch_one(self, _id: str):
         """

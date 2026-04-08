@@ -72,7 +72,7 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
     @validation_parameters
     def __init__(self, schema: dict, on_trig: Callable, **kwargs):
         """
-                :param schema: The data schema needed for this action (see `Dict <https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict>`)
+        :param schema: The data schema needed for this action (see `Dict <https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict>`)
         :type schema: dict
         :param on_trig: the function to trig on the action
         :type on_trig: Callable
@@ -91,25 +91,10 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
 
         Dict.__init__(self, schema, **kwargs)
 
-        if options.get("can_see") is not None:
-            self._permissions.add_or_modify_permission("see", options.get("can_see"))
-        if options.get("can_execute") is not None:
-            self._permissions.add_or_modify_permission(
-                "execute", options.get("can_execute")
-            )
-
-    def check_params(self, param_name, o: Item) -> bool:
-        """
-        Check if can execute the action
-
-        :meta private:
-
-
-        """
-        p = self._params.get(param_name, False)
-        if not callable(p):
-            return bool(p)
-        return bool(p(self.backoffice, self.collection, self, o))
+        self._permissions.add_or_modify_permission("see", options.get("can_see"))
+        self._permissions.add_or_modify_permission(
+            "execute", options.get("can_execute")
+        )
 
     def can_see(self, o: Item) -> bool:
         """Check if this action exists for running

@@ -2,10 +2,17 @@
 Module providing the mongo DB like
 """
 
+import sys
+
 # pylint: disable=logging-fstring-interpolation
 from pymongo import MongoClient
 from pymongo.uri_parser import parse_uri
 from bson.objectid import ObjectId
+
+# used for developpement
+sys.path.insert(1, "../../stricto")
+
+from stricto import Kparse
 
 from .db_connector import DBConnector
 from .error import DBError, NotFoundError
@@ -13,6 +20,9 @@ from .log import log_system, LogLevel
 
 log = log_system.get_or_create_logger("mongo")
 log.setLevel(LogLevel.INFO)
+
+
+KPARSE_MODEL = {"connection_string*": str, "collection": {"type": str, "default": ""}}
 
 
 class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attributes
@@ -29,10 +39,11 @@ class DBMongoConnector(DBConnector):  # pylint: disable=too-many-instance-attrib
 
     def __init__(self, **kwargs):
         """constructor"""
-        self._connection_string = kwargs.pop(
-            "connection_string", "mongodb://localhost:27017/backo"
-        )
-        self._collection_name = kwargs.pop("collection", "")
+
+        options = Kparse(kwargs, KPARSE_MODEL)
+
+        self._connection_string = options.get("connection_string")
+        self._collection_name = options.get("collection")
 
         log.debug("Mongo client to %r", parse_uri(self._connection_string))
 

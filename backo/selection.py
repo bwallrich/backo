@@ -5,11 +5,18 @@ The Collection module
 # pylint: disable=logging-fstring-interpolation
 import copy
 import sys
+from typing import Callable
 
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
-from stricto import Permissions, SRightError, SSyntaxError
+from stricto import (
+    Permissions,
+    SRightError,
+    SSyntaxError,
+    Kparse,
+    validation_parameters,
+)
 
 # from .item import Item
 # from .action import Action
@@ -19,6 +26,12 @@ from .error import DBError
 
 
 log = log_system.get_or_create_logger("select", LogLevel.INFO)
+
+KPARSE_MODEL = {
+    "can_read|read": {"type": bool | Callable, "default": True},
+    "filter": Callable | dict | tuple,
+    "db_filter": Callable,
+}
 
 
 class Selection(CollectionAddon):
@@ -61,7 +74,8 @@ class Selection(CollectionAddon):
         # ...
     """
 
-    def __init__(self, selectors: list[str] = None, **kwargs):
+    @validation_parameters
+    def __init__(self, selectors: list[str] | None = None, **kwargs):
         """
         Selection constructor
 
@@ -72,19 +86,18 @@ class Selection(CollectionAddon):
           The filter to pass to the :py:class:`DBConnector`
 
         """
+        options = Kparse(kwargs, KPARSE_MODEL)
 
         self._selectors = selectors
         if self._selectors is not None and "$._id" not in self._selectors:
             self._selectors.insert(0, "$._id")
 
-        self._filter = kwargs.pop("filter", None)
-        self._db_filter = kwargs.pop("db_filter", None)
-
-        if "can_read" not in kwargs:
-            kwargs["can_read"] = True
+        self._filter = options.get("filter")
+        self._db_filter = options.get("db_filter")
 
         CollectionAddon.__init__(self)
         self._permissions = Permissions(**kwargs)
+        self._permissions.add_or_modify_permission("read", options.get("can_read"))
 
     def can_read(self) -> bool:
         """

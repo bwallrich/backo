@@ -3,7 +3,17 @@ Module providing the Generic() Class for connection on DB
 """
 
 import uuid
+import sys
+from typing import Callable
+
+# used for developpement
+sys.path.insert(1, "../../stricto")
+
+from stricto import Kparse
+
 from .error import DBError
+
+KPARSE_MODEL = {"restriction": Callable}
 
 
 class DBConnector:  # pylint: disable=too-many-instance-attributes
@@ -21,7 +31,9 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
     def __init__(self, **kwargs):
         """Constructor"""
 
-        self.restriction_filter = kwargs.pop("restriction", None)
+        options = Kparse(kwargs, KPARSE_MODEL)
+
+        self.restriction_filter = options.get("restriction")
 
     def drop(self):  # pylint: disable=unused-argument
         """Drop the collection

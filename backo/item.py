@@ -11,7 +11,7 @@ from .error import BackoError
 from .db_connector import DBConnector
 from .transaction import OperatorType
 from .log import log_system
-from .meta_data_handler import StandardMetaDataHandler
+from .meta_data_handler import StandardMetaDataHandler, GenericMetaDataHandler
 from .status import StatusType
 
 
@@ -20,7 +20,14 @@ log = log_system.get_or_create_logger("Item")
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
-from stricto import Dict, String, SRightError, validation_parameters
+from stricto import Dict, String, SRightError, Kparse, validation_parameters
+
+KPARSE_MODEL = {
+    "meta_data_handler": {
+        "type": GenericMetaDataHandler | None,
+        "default": StandardMetaDataHandler(),
+    }
+}
 
 
 class Item(Dict):  # pylint: disable=too-many-instance-attributes
@@ -56,10 +63,12 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         """
         Constructor
         """
+
+        options = Kparse(kwargs, KPARSE_MODEL)
+
         self.db_handler = None
-        self.meta_data_handler = kwargs.pop(
-            "meta_data_handler", StandardMetaDataHandler()
-        )
+        self.meta_data_handler = options.get("meta_data_handler")
+
         self._loaded_object = None
         self._status = StatusType.UNSET
         self._collection = None
