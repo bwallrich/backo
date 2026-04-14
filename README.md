@@ -1290,7 +1290,7 @@ def transform_function( o: dict) -> dict:
 ```
 
 
-By default, the flag ```dry_run``` is ```True```. so you will broke nothing. ``dry_run``` will do all work except saving the object in the DB.
+By default, the flag ```dry_run``` is ```True```. so you will broke nothing. ```dry_run``` will do all work except saving the object in the DB.
 
 > [!IMPORTANT]  
 > there is no check of *rights* and *current_user* during migration. metadatas (see [_meta](#_meta)) are not updated.
@@ -1314,11 +1314,13 @@ log_migration = log_system.get_or_create_logger("migration", LogLevel.DEBUG)
 
 # ---------------------------------------------
 # Check if a data match the model
-# it raise an error if not
+# it raise an error at first _id 
 # ---------------------------------------------
-mybackoffice = myapp.migrate("books", _id="my_book_id") # check a specific _Id
-mybackoffice = myapp.migrate("books", _ids=["my_book_id1", "my_book_id2"]) # check a list of _Id
-mybackoffice = myapp.migrate("books")  # check all ids
+report = myapp.migrate("books", _id="my_book_id") # check a specific _Id
+# or
+report = myapp.migrate("books", _ids=["my_book_id1", "my_book_id2"]) # check a list of _Id
+# or
+report = myapp.migrate("books")  # check all ids
 
 # --------------------------------------------
 # Do a changement
@@ -1365,7 +1367,7 @@ The migration return a report structure :
 * ```report.changes.total```
   the number of changed _ids.
 * ```report.changes.diff```
-  The list (array) of diff for each -id. The format is [DeepDiff](https://pypi.org/project/deepdiff/)
+  The list (array) of diff for each _id. The format is [DeepDiff](https://pypi.org/project/deepdiff/)
 
 
 
