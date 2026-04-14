@@ -17,3 +17,4 @@ from .test_selections import TestSelections
 from .test_api_toolbox import TestApiToolbox
 from .test_meta import TestMeta
 from .test_current_user import TestCurrentUser
+from .test_migrations import TestMigrations

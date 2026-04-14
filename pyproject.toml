@@ -17,6 +17,7 @@ dependencies = [
   "pyjwt",
   "flask",
   "pyyaml",
+  "deepdiff",
   "stricto>=0.1.0"
 ]
 

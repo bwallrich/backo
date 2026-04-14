@@ -16,7 +16,7 @@ sys.path.insert(1, "../../stricto")
 from stricto import String, List, Selector, Dict, SSyntaxError, STypeError, Kparse
 
 from .loop_path import LoopPath
-from .error import Error, PathNotFoundError, BackoError
+from .error import PathNotFoundError, BackoError
 from .log import log_system, LogLevel
 from .api_toolbox import append_path_to_filter
 
@@ -386,7 +386,7 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         other = self._coll_ref.new()
         try:
             other.load(self.get_value())
-        except Error:
+        except Exception:  # pylint: disable=broad-exception-caught
             pass
 
         # The index_or_slice is actually ignored.
@@ -862,7 +862,7 @@ class RefsList(List):
                 other = self._coll_ref.new()
                 try:
                     other.load(other_id)
-                except Error:
+                except Exception:  # pylint: disable=broad-exception-caught
                     continue
                 result = other.get_selectors(None, sel.copy())
                 if result is not None:
@@ -873,6 +873,6 @@ class RefsList(List):
         other = self._coll_ref.new()
         try:
             other.load(list_ids_or_id)
-        except Error:
+        except Exception:  # pylint: disable=broad-exception-caught
             return None
         return other.get_selectors(None, sel)

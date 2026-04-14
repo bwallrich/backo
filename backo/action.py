@@ -1,5 +1,6 @@
 """
 Module providing the action
+
 """
 
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, attribute-defined-outside-init
@@ -79,8 +80,7 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
         :param ``**kwargs``: see https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict
             - *can_see=* ``[func]|bool`` -- a function to say if this action exists
             - *can_execute=* ``[func]|bool`` -- a function to say if the :py:class:`CurrentUser` can execute this action.
-
-
+        
         """
         self.backoffice = None
         self.name = None
@@ -130,11 +130,11 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
 
     def go(self, o: Item) -> None:
         """
-                Launch the action
-        elf,
-                object is the object (if exists)
+        Launch the action
+        :param o: The current item
+        :type o: Item
 
-                :meta private:
+        :meta private:
 
         """
 

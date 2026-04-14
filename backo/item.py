@@ -260,7 +260,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         self.trigg("before_save", id(self), **kwargs)
 
         # print(f"Save {int(datetime.timestamp(datetime.now()))}", self)
-        dict_to_save = self.get_view("save").get_value()
+        dict_to_save = self.get_view("save").get_encoded()
 
         self.db_handler.save(self._id.get_value(), dict_to_save)
 
@@ -385,7 +385,8 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         self._id = self.create_uniq_id()
 
         # create
-        dict_to_save = self.get_value()
+        # dict_to_save = self.get_value()
+        dict_to_save = self.get_view("save").get_encoded()
         self._id = self.db_handler.create(dict_to_save)
 
         self.set_status_saved()

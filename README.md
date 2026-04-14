@@ -1259,6 +1259,114 @@ Currently available loggers are :
 | ref | Ref and RefsList objects |
 | transaction | transactions and roolback |
 | yml | yaml database connector |
+| mongo | mongo database connector |
+| select | selections |
+| migration | see [migration](#migration) |
+
+
+
+## migration
+
+
+If you chance an [Item](#item) of a [Collection](#collection), datas currently in the database can be rejected by the model.
+You need to migrate them and there is a tool for that.
+
+### How it works
+
+You have to write a script importing your backoffice object call the ```.migrate()``` method of the backoffice, and provide a function to make change to the object.
+
+the givent function must be like that :
+
+```python
+def transform_function( o: dict) -> dict:
+    """ Do what you want and return o"""
+    # Adding a new key
+    if 'new_key' not in o:
+        o['new_key'] = ...
+    # removing
+    del o['unwanted_key']
+    # ...
+    return o
+```
+
+
+By default, the flag ```dry_run``` is ```True```. so you will broke nothing. ``dry_run``` will do all work except saving the object in the DB.
+
+> [!IMPORTANT]  
+> there is no check of *rights* and *current_user* during migration. metadatas (see [_meta](#_meta)) are not updated.
+
+
+
+### example
+
+Imagine a *books* collection. 
+You modify the book [Item](#item) to add a *note* field which is a float and is required. 
+If you do nothing, the ```load()``` of a old item in the DB will failed on the new field *note* (required). 
+This is an example for migrate datas
+
+
+```python
+from media_library import mybackoffice
+from backo import log_system, LogLevel
+
+# Set migration level to debug
+log_migration = log_system.get_or_create_logger("migration", LogLevel.DEBUG)
+
+# ---------------------------------------------
+# Check if a data match the model
+# it raise an error if not
+# ---------------------------------------------
+mybackoffice = myapp.migrate("books", _id="my_book_id") # check a specific _Id
+mybackoffice = myapp.migrate("books", _ids=["my_book_id1", "my_book_id2"]) # check a list of _Id
+mybackoffice = myapp.migrate("books")  # check all ids
+
+# --------------------------------------------
+# Do a changement
+# example you must now have a note field with a float value
+# --------------------------------------------
+def update_with_note(o: dict) -> dict:
+    """
+    this the function for doing operation on objects before setting them into the Item
+    You can do what you want.
+    """
+    if "note" not in o:
+        o["note"] = 10.0
+    return o
+
+
+# Check if OK (dry_run is True by default)
+report = mybackoffice.migrate("books", update_with_note, _id="my_book_id")
+# or
+report = mybackoffice.migrate("books", update_with_note, _ids=["my_book_id1", "my_book_id2"])
+# or
+report = mybackoffice.migrate("books", update_with_note)  # All ids
+
+# do it for real
+report = mybackoffice.migrate("books", update_with_note, _id="my_book_id", dry_run=False)
+# or
+report = mybackoffice.migrate(
+    "books", update_with_note, _ids=["my_book_id1", "my_book_id2"], dry_run=False
+)
+# or
+report = mybackoffice.migrate("books", update_with_note, dry_run=False)  # All ids
+
+```
+
+### report
+
+The migration return a report structure :
+
+* ```report.nochanges._ids``` 
+  The list (array) of unchanged _ids
+* ```report.total```
+  The number of unchanged _id durion this migration
+* ```report.changes._ids```
+  The list (array)  of _ids which are changed during this migration
+* ```report.changes.total```
+  the number of changed _ids.
+* ```report.changes.diff```
+  The list (array) of diff for each -id. The format is [DeepDiff](https://pypi.org/project/deepdiff/)
+
 
 
 ## Tests & co

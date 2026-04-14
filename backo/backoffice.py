@@ -12,16 +12,23 @@ from flask import Flask
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
-from stricto import validation_parameters
+from stricto import SSyntaxError, validation_parameters, Kparse
 
 from .item import Item
 from .request_decorators import error_to_http_handler
 from .transaction import Transaction, OperatorType
 from .collection import Collection
+from .migration_report import MigrationReport
 from .log import log_system, LogLevel
 
 
 log = log_system.get_or_create_logger("backoffice", LogLevel.INFO)
+
+KPARSE_MIGRATION_MODEL = {
+    "_id": str,
+    "_ids": list[str],
+    "dry_run": {"type": bool, "default": True},
+}
 
 
 class Backoffice:  # pylint: disable=too-many-instance-attributes
@@ -130,6 +137,34 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
             t.rollback(self)
 
         del self.transactions[transaction_id]
+
+    @validation_parameters
+    def migrate(
+        self, collection_name: str, migration_function: Callable | None = None, **kwargs
+    ) -> MigrationReport:
+        """_summary_
+
+        :param collection_name: _description_
+        :type collection_name: str | list[str] | None
+        :param _id: _description_
+        :type _id: _type_
+        :return: _description_
+        :rtype: _type_
+        """
+        options = Kparse(kwargs, KPARSE_MIGRATION_MODEL)
+
+        if collection_name not in self.collections:
+            raise SSyntaxError(
+                'Backoffice migration : collection "{0}" not registered',
+                collection_name,
+            )
+
+        _ids = options.get("_ids")
+        if _ids is None and options.get("_id") is not None:
+            _ids = [options.get("_id")]
+
+        coll = self.collections.get(collection_name)
+        return coll.migrate(migration_function, _ids, options.get("dry_run"))
 
     @validation_parameters
     def build_routes(

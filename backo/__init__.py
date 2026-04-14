@@ -24,6 +24,7 @@ from .reference import Ref, RefsList, FillStrategy, DeleteStrategy
 from .meta_data_handler import GenericMetaDataHandler, StandardMetaDataHandler
 from .status import StatusType
 from .action import Action
+from .migration_report import MigrationReport
 from .request_decorators import (
     check_json,
     return_http_error,

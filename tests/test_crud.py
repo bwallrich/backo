@@ -8,11 +8,11 @@ import unittest
 import time
 from datetime import datetime, timedelta
 
-
+from ipaddress import IPv4Address
 from backo import Item, Collection
 from backo import DBYmlConnector
 from backo import Backoffice, NotFoundError, BackoError, current_user
-from backo import String, Bool, SRightError
+from backo import String, Bool, SRightError, Ipaddress
 
 YML_DIR = "/tmp/backo_tests_crud"
 
@@ -91,7 +91,12 @@ class TestCRUD(unittest.TestCase):
             Collection(
                 "users",
                 Item(
-                    {"name": String(), "surname": String(), "male": Bool(default=True)}
+                    {
+                        "name": String(),
+                        "surname": String(),
+                        "ip": Ipaddress(),  # just to add an extended type
+                        "male": Bool(default=True),
+                    }
                 ),
                 self.yml_users,
             )
@@ -103,7 +108,9 @@ class TestCRUD(unittest.TestCase):
         current_user.set({"login": "Roger", "_id": "1234"})
 
         # -- creation
-        u = backoffice.users.create({"name": "bebert", "surname": "bebert"})
+        u = backoffice.users.create(
+            {"name": "bebert", "surname": "bebert", "ip": "127.0.0.1"}
+        )
         v = backoffice.users.new()
         v.load(u._id.get_value())
         self.assertEqual(v, u)
@@ -155,7 +162,12 @@ class TestCRUD(unittest.TestCase):
             Collection(
                 "users",
                 Item(
-                    {"name": String(), "surname": String(), "male": Bool(default=True)}
+                    {
+                        "name": String(),
+                        "surname": String(),
+                        "ip": Ipaddress(),  # just to add an extended type
+                        "male": Bool(default=True),
+                    }
                 ),
                 self.yml_users,
             )
@@ -166,7 +178,7 @@ class TestCRUD(unittest.TestCase):
         current_user.standalone = True
         # -- creation
         u = backoffice.users.new()
-        u.create({"name": "bebert", "surname": "bebert"})
+        u.create({"name": "bebert", "surname": "bebert", "ip": "127.0.0.1"})
         self.assertEqual(u._id, "User_bebert_bebert")
         u.surname = "foo"
         u.save()
@@ -175,6 +187,8 @@ class TestCRUD(unittest.TestCase):
         v.load(u._id.get_value())
         v.enable_permissions()
         self.assertEqual(v.surname, "foo")
+        self.assertEqual(v.ip, IPv4Address("127.0.0.1"))
+        self.assertEqual(isinstance(v.ip, Ipaddress), True)
 
         with self.assertRaises(SRightError) as e:
             v._meta.ctime = datetime.now() + timedelta(minutes=1)

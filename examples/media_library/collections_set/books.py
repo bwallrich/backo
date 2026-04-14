@@ -95,11 +95,10 @@ books_item = Item(
                 "user": Ref(
                     coll="users",
                     field="$.rent.books",
-                    require=True,
                     can_read=can_read_borrow_user,
                 ),
-                "return_date": Datetime(require=True),
-                "date": Datetime(require=True),
+                "return_date": Datetime(),
+                "date": Datetime(),
             },
             can_modify=can_modify_borrow,
         ),

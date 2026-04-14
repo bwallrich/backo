@@ -5,7 +5,10 @@ The Collection module
 # pylint: disable=logging-fstring-interpolation, too-many-public-methods
 import json
 import sys
+import copy
+import pprint
 from typing import Self, Callable
+from deepdiff import DeepDiff
 
 from flask import request, Blueprint
 
@@ -37,8 +40,11 @@ from .log import log_system, LogLevel
 from .request_decorators import error_to_http_handler, check_json
 from .api_toolbox import multidict_to_filter, append_path_to_filter
 from .patch import Patch
+from .migration_report import MigrationReport
 
 log = log_system.get_or_create_logger("collection", LogLevel.INFO)
+log_migration = log_system.get_or_create_logger("migration")
+
 
 check_model_request = Dict(
     {"path": String(required=True, default="$"), "item": FreeDict(default={})}
@@ -115,10 +121,11 @@ class Collection:
     def __init__(self, name: str, model: Item, db_handler, **kwargs):
         """Constructor"""
         self.db_handler = db_handler
-        self.name = name
-        self.model = model.copy()
+        self.name: str = name
+        self.model: Item = model.copy()
         self.model.__dict__["_collection"] = self
         self.model.set_db_handler(db_handler)
+        self.migration: Callable | None = None
 
         options = Kparse(kwargs, KPARSE_MODEL, strict=True)
 
@@ -271,8 +278,9 @@ class Collection:
         """See :func:`register_action`"""
         return self.register_action(name, action)
 
+    @validation_parameters
     def register_selection(self, selection_name: str, selection: Selection) -> None:
-        """Register a selction to this collection
+        """Register a selection to this collection
 
         :param name: The name of the selection
         :type name: str
@@ -284,6 +292,80 @@ class Collection:
         selection.backoffice = self.backoffice
         selection.name = selection_name
         selection.collection = self
+
+    @validation_parameters
+    def migrate(
+        self,
+        migration_function: Callable | None,
+        _ids: list[str] | None = None,
+        dry_run: bool = True,
+    ) -> MigrationReport:
+        """start the migration for a collection
+
+        :param _ids: list of ids to migrate
+        :type _ids: list[str] | None
+        :param dry_run: _description_just check
+        :type dry_run: bool
+        """
+        report = MigrationReport()
+        log_migration.info(f"{self.name} start migration (dry_run={dry_run}) ")
+        if _ids is None:
+            # Do the DB selection without pagination
+            db_list = self.db_handler.select(None, {}, 0, 0, {})
+            for obj in db_list:
+                changes = self._migrate_obj(migration_function, obj, dry_run)
+                if changes is None:
+                    report.add_no_change(obj["_id"])
+                else:
+                    report.add_change(obj["_id"], changes)
+
+        else:
+            for _id in _ids:
+                obj = self.db_handler.get_by_id(_id)
+                changes = self._migrate_obj(migration_function, obj, dry_run)
+                if changes is None:
+                    report.add_no_change(obj["_id"])
+                else:
+                    report.add_change(obj["_id"], changes)
+
+        return report
+
+    def _migrate_obj(
+        self, migration_function: Callable | None, obj: dict, dry_run: bool = True
+    ) -> dict | None:
+        log_migration.debug(
+            f'Migrate "{self.name}/{obj["_id"]}" start (dry_run={dry_run})'
+        )
+
+        obj["_id"] = str(obj["_id"])
+        old_obj = copy.copy(obj)
+        new_obj = migration_function(obj) if migration_function is not None else old_obj
+
+        diffs = DeepDiff(old_obj, new_obj)
+        if len(list(diffs.keys())) == 0:
+            log_migration.debug(f'Migrate "{self.name}/{obj["_id"]}" no changes')
+
+            # Check if the object match the model despite the fact there is no change
+            o = self.new_item()
+            print(o)
+            o.set(new_obj)
+
+            return None
+
+        sdiffs = pprint.pformat(diffs, indent=2)
+        log_migration.debug(f'Migrate "{self.name}/{obj["_id"]}" changes = {sdiffs}')
+
+        # Check if the object match the model
+        o = self.new_item()
+        o.set(new_obj)
+
+        dict_to_save = o.get_view("save").get_encoded()
+
+        if dry_run is False:
+            self.db_handler.save(o._id.get_value(), dict_to_save)
+            log_migration.debug(f'Migrate "{self.name}/{obj["_id"]}" saved')
+
+        return diffs
 
     def drop(self):
         """

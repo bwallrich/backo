@@ -2,4 +2,5 @@ pyyaml
 mongo
 flask
 pyjwt
+deepdiff
 stricto>=0.1.0

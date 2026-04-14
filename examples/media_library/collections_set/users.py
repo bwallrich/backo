@@ -222,7 +222,7 @@ add_role_action = Action(
 )
 
 # Add the action to the users collection
-users.register_action("toggle_role", toggle_role)
+users.register_action("toggle_role", add_role_action)
 
 
 # ------------------------------------------------
