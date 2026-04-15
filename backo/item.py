@@ -12,6 +12,7 @@ from .db_connector import DBConnector
 from .transaction import OperatorType
 from .log import log_system
 from .meta_data_handler import StandardMetaDataHandler, GenericMetaDataHandler
+from .loop_path import LoopPath
 from .status import StatusType
 
 
@@ -27,6 +28,12 @@ KPARSE_MODEL = {
         "type": GenericMetaDataHandler | None,
         "default": StandardMetaDataHandler(),
     }
+}
+
+KPARSE_DB_ACCESS = {
+    "transaction_id": int | None,
+    "looper": LoopPath | None,
+    "old_object": Dict | None,
 }
 
 
@@ -81,7 +88,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         self._events["change"].append(self.on_change)
 
         # adding _id to the model
-        self.add_to_model("_id", String())
+        self.add_to_model("_id", String(can_modify=False))
 
         # Setting meta schema
         if self.meta_data_handler:
@@ -164,6 +171,10 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
             - *m_path=* ``[str]`` -- the modification path, to to avoid loop with references
 
         """
+
+        # Check for kwargs availability
+        Kparse(kwargs, KPARSE_DB_ACCESS, pop=False, strict=True)
+
         if self._status != StatusType.UNSET:
             raise BackoError(
                 "Cannot load an non-unset object in {0}", self._collection.name
@@ -178,8 +189,8 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         self.set_status_saved()
         self.__dict__["_loaded_object"] = copy.copy(self)
 
-        if kwargs.get("m_path") is None:
-            kwargs["m_path"] = []
+        # if kwargs.get("m_path") is None:
+        #     kwargs["m_path"] = []
 
         self.trigg("loaded", id(self), **kwargs)
 
@@ -193,6 +204,10 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
             - *m_path=* ``[str]`` -- the modification path, to to avoid loop with references
 
         """
+
+        # Check for kwargs availability
+        Kparse(kwargs, KPARSE_DB_ACCESS, pop=False, strict=True)
+
         if self._status != StatusType.SAVED:
             raise BackoError(
                 "Cannot reload an unset object in {0}", self._collection.name
@@ -209,8 +224,8 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         self.set_status_saved()
         self.__dict__["_loaded_object"] = copy.copy(self)
 
-        if kwargs.get("m_path") is None:
-            kwargs["m_path"] = []
+        # if kwargs.get("m_path") is None:
+        #     kwargs["m_path"] = []
 
         self.trigg("loaded", id(self), **kwargs)
 
@@ -224,13 +239,16 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
 
         """
+        # Check for kwargs availability
+        Kparse(kwargs, KPARSE_DB_ACCESS, pop=False, strict=True)
+
         if self._status == StatusType.UNSET:
             raise BackoError(
                 "Cannot save an unset object in {0}", self._collection.name
             )
 
-        if kwargs.get("m_path") is None:
-            kwargs["m_path"] = []
+        # if kwargs.get("m_path") is None:
+        #     kwargs["m_path"] = []
 
         log.debug(
             "try to save %r/%r with transaction_id=%r",
@@ -288,13 +306,17 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
             - *m_path=* ``[str]`` -- the modification path, to to avoid loop with references
 
         """
+
+        # Check for kwargs availability
+        Kparse(kwargs, KPARSE_DB_ACCESS, pop=False, strict=True)
+
         if self._status == StatusType.UNSET:
             raise BackoError(
                 "Cannot delete an unset object in {0}", self._collection.name
             )
 
-        if kwargs.get("m_path") is None:
-            kwargs["m_path"] = []
+        # if kwargs.get("m_path") is None:
+        #     kwargs["m_path"] = []
 
         log.debug(
             "try to delete %r/%r with transaction_id=%r",
@@ -358,6 +380,10 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
 
         """
+
+        # Check for kwargs availability
+        Kparse(kwargs, KPARSE_DB_ACCESS, pop=False, strict=True)
+
         # Set the object
         log.debug(
             "try to create new object in %r with transaction_id=%r, obj=%r",
@@ -374,20 +400,23 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
         self.set(obj)
 
-        # Lock permissions
-        self.enable_permissions()
+        # Set the _id
+        self._id = self.create_uniq_id()
 
         # Set _meta
         if self.meta_data_handler:
             self.meta_data_handler.update(self)
 
-        # Set the _id
-        self._id = self.create_uniq_id()
+        # Lock permissions
+        self.enable_permissions()
 
         # create
         # dict_to_save = self.get_value()
         dict_to_save = self.get_view("save").get_encoded()
+
+        self.disable_permissions()
         self._id = self.db_handler.create(dict_to_save)
+        self.enable_permissions()
 
         self.set_status_saved()
 
@@ -400,8 +429,8 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
             None,
         )
 
-        if kwargs.get("m_path") is None:
-            kwargs["m_path"] = []
+        # if kwargs.get("m_path") is None:
+        #     kwargs["m_path"] = []
 
         log.info(
             "%r/%r created",

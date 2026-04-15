@@ -123,6 +123,66 @@ class TestReferences(unittest.TestCase):
         # -- delete site
         si.delete()
 
+    def test_check_syntax(self):
+        """
+        creating an backoffice with refs and some error to check syntaxes one to many
+        and delete
+        """
+
+        backoffice = Backoffice("myApp")
+
+        backoffice.register_collection(
+            Collection(
+                "users",
+                Item(
+                    {
+                        "name": String(),
+                        "surname": String(),
+                        "site": Ref(coll="sites", field="$.users", required=True),
+                        "sitenocoll": Ref(
+                            coll="sitesunknown", field="$.users", required=True
+                        ),
+                        "site1": Ref(coll="sites", required=True),
+                        "site2": Ref(
+                            coll="sites", field="$.unknownfield", required=True
+                        ),
+                        "male": Bool(default=True),
+                    }
+                ),
+                self.yml_users,
+            )
+        )
+        backoffice.register_collection(
+            Collection(
+                "sites",
+                Item(
+                    {
+                        "name": String(),
+                        "address": String(),
+                        "users": RefsList(
+                            coll="users",
+                            field="$.site",
+                            ofs=FillStrategy.FILL,
+                            ods=DeleteStrategy.MUST_BE_EMPTY,
+                        ),
+                        "users1": RefsList(
+                            coll="notfound",
+                            field="$.site",
+                        ),
+                        "users2": RefsList(
+                            coll="users",
+                        ),
+                        "users3": RefsList(
+                            coll="users",
+                            field="$.sitenotfound",
+                        ),
+                    }
+                ),
+                self.yml_sites,
+            )
+        )
+        backoffice.check_syntax()
+
     def test_references_one_to_many_nofill(self):
         """
         creating an backoffice with ref one to many

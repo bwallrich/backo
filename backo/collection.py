@@ -269,6 +269,14 @@ class Collection:
         :type action: :py:class:`Action`
 
         """
+
+        if name in self._actions:
+            raise SSyntaxError(
+                'Collection {0} register_action : action "{1}" already registered',
+                self.name,
+                name,
+            )
+
         self._actions[name] = action
         action.__dict__["backoffice"] = self.backoffice
         action.__dict__["name"] = name
@@ -288,6 +296,14 @@ class Collection:
         :type action: :py:class:`Selection`
 
         """
+
+        if selection_name in self._actions:
+            raise SSyntaxError(
+                'Collection {0} register_selection : selection "{1}" already registered',
+                self.name,
+                selection_name,
+            )
+
         self._selections[selection_name] = selection
         selection.backoffice = self.backoffice
         selection.name = selection_name
@@ -568,11 +584,21 @@ class Collection:
 
         # set the object
         obj = self.new_item()
-        obj.load(_id)
 
-        log.debug(f"lauch action {_action_name} for {_id}")
-        action.go(obj)
+        # initialisation of a transaction
+        t_id = self.backoffice.start_transaction()
+        try:
+            obj.load(_id, transaction_id=t_id)
 
+            log.debug(f"lauch action {_action_name} for {_id}")
+            action.go(obj)
+
+        except Exception as e:
+            # Error, rollback the transaction
+            self.backoffice.rollback_transaction(t_id)
+            raise e
+
+        self.backoffice.stop_transaction(t_id)
         return ("action done", 200)
 
     @error_to_http_handler
@@ -697,9 +723,22 @@ class Collection:
         _view = query.get("_view", "client")
 
         log.debug(f"post {type(request.json)} {request.json}")
-        obj = self.create(request.json)
+
+        # initialisation of a transaction
+        t_id = self.backoffice.start_transaction()
+
+        try:
+            obj = self.create(request.json, transaction_id=t_id)
+        except Exception as e:
+            # Error, rollback the transaction
+            self.backoffice.rollback_transaction(t_id)
+            raise e
 
         log.debug(f"create {obj._id} in {self.name} in view {_view}")
+
+        # End the transaction
+        self.backoffice.stop_transaction(t_id)
+
         return (json.dumps(obj.get_view(_view), cls=StrictoEncoder), 200)
 
     @check_json
@@ -718,9 +757,21 @@ class Collection:
         _view = query.get("_view", "client")
 
         obj = self.new_item()
-        obj.load(_id)
-        obj.set(request.json)
-        obj.save()
+
+        # initialisation of a transaction
+        t_id = self.backoffice.start_transaction()
+
+        try:
+            obj.load(_id, transaction_id=t_id)
+            obj.set(request.json)
+            obj.save(transaction_id=t_id)
+        except Exception as e:
+            # Error, rollback the transaction
+            self.backoffice.rollback_transaction(t_id)
+            raise e
+
+        # End the transaction
+        self.backoffice.stop_transaction(t_id)
 
         return (json.dumps(obj.get_view(_view), cls=StrictoEncoder), 200)
 
@@ -735,8 +786,19 @@ class Collection:
         log.debug(f"http_delete _id {_id}")
 
         obj = self.new_item()
-        obj.load(_id)
-        obj.delete()
+
+        # initialisation of a transaction
+        t_id = self.backoffice.start_transaction()
+        try:
+            obj.load(_id, transaction_id=t_id)
+            obj.delete(transaction_id=t_id)
+        except Exception as e:
+            # Error, rollback the transaction
+            self.backoffice.rollback_transaction(t_id)
+            raise e
+
+        # End the transaction
+        self.backoffice.stop_transaction(t_id)
 
         return ("deleted", 200)
 
@@ -815,14 +877,26 @@ class Collection:
         patch_list = request.json if isinstance(request.json, list) else [request.json]
 
         obj = self.new_item()
-        obj.load(_id)
 
-        # apply patches
-        for p in patch_list:
-            patch = Patch()
-            patch.set(p)
-            obj.patch(patch.op, patch.path, patch.value)
+        # initialisation of a transaction
+        t_id = self.backoffice.start_transaction()
 
-        obj.save()
+        try:
+            obj.load(_id, transaction_id=t_id)
+
+            # apply patches
+            for p in patch_list:
+                patch = Patch()
+                patch.set(p)
+                obj.patch(patch.op, patch.path, patch.value)
+
+            obj.save(transaction_id=t_id)
+        except Exception as e:
+            # Error, rollback the transaction
+            self.backoffice.rollback_transaction(t_id)
+            raise e
+
+        # End the transaction
+        self.backoffice.stop_transaction(t_id)
 
         return (json.dumps(obj.get_view(_view), cls=StrictoEncoder), 200)

@@ -80,7 +80,7 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
         :param ``**kwargs``: see https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict
             - *can_see=* ``[func]|bool`` -- a function to say if this action exists
             - *can_execute=* ``[func]|bool`` -- a function to say if the :py:class:`CurrentUser` can execute this action.
-        
+
         """
         self.backoffice = None
         self.name = None
@@ -128,7 +128,7 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
         """
         return self._permissions.is_allowed_to("execute", o)
 
-    def go(self, o: Item) -> None:
+    def go(self, o: Item, **kwargs) -> None:
         """
         Launch the action
         :param o: The current item
@@ -147,4 +147,4 @@ class Action(Dict):  # pylint: disable=too-many-instance-attributes
             raise SRightError('Action "{0}" forbidden', self.name)
 
         log.debug("Execute action %r", self.name)
-        return self.on_trig(self, o)
+        return self.on_trig(self, o, **kwargs)

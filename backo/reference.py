@@ -132,6 +132,7 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         on.append(("created", self.on_created))
         on.append(("before_delete", self.on_delete))
         on.append(("before_save", self.on_before_save))
+        on.append(("check_syntax", self.check_syntax))
 
         String.__init__(
             self,
@@ -161,6 +162,40 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
             )
 
         return
+
+    def check_syntax(
+        self, event_name: str, root, me, **kwargs
+    ):  # pylint: disable=unused-argument
+        """
+        Check if everything is correct log some warnings
+        """
+        log.debug(f"Check the syntax {me.path_name()}")
+
+        try:
+            me.set_collection_reference()
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+
+        if not me._coll_ref:
+            log.error(
+                f'{root._collection.name}/{me.path_name()}: Collection "{me._collection}" not found'
+            )
+            return
+
+        if not me._reverse:
+            log.warning(
+                f'{root._collection.name}/{me.path_name()}: Collection "{me._collection}". No reverse defined. Are you sure ?'
+            )
+        else:
+            # fill the field
+            other = me._coll_ref.new_item()
+            reverse_field = other.select(me._reverse)
+            # Must check == None rather
+            if reverse_field == None:  # pylint: disable=singleton-comparison
+                log.error(
+                    f'{root._collection.name}/{me.path_name()}: Collection "{me._collection}" has no field "{me._reverse}"'
+                )
+                return
 
     def on_before_save(
         self, event_name, root, me, **kwargs
@@ -491,6 +526,7 @@ class RefsList(List):
         on.append(("created", self.on_created))
         on.append(("before_delete", on_delete_strategy))
         on.append(("before_save", on_modify_strategy))
+        on.append(("check_syntax", self.check_syntax))
 
         List.__init__(
             self, String(default=DEFAULT_ID, required=True), on=on, default=[], **kwargs
@@ -515,6 +551,40 @@ class RefsList(List):
                 self._collection,
             )
         return
+
+    def check_syntax(
+        self, event_name: str, root, me, **kwargs
+    ):  # pylint: disable=unused-argument
+        """
+        Check if everything is correct log some warnings
+        """
+        log.debug(f"Check the syntax {root._collection.name}/{me.path_name()}")
+
+        try:
+            me.set_collection_reference()
+        except Exception:  # pylint: disable=broad-exception-caught
+            pass
+
+        if not me._coll_ref:
+            log.error(
+                f'{root._collection.name}/{me.path_name()}: Collection "{me._collection}" not found'
+            )
+            return
+
+        if not me._reverse:
+            log.warning(
+                f'{root._collection.name}/{me.path_name()}: Collection "{me._collection}". No reverse defined. Are you sure ?'
+            )
+        else:
+            # fill the field
+            other = me._coll_ref.new_item()
+            reverse_field = other.select(me._reverse)
+            # Must check == None rather
+            if reverse_field == None:  # pylint: disable=singleton-comparison
+                log.error(
+                    f'{root._collection.name}/{me.path_name()}: Collection "{me._collection}" has no field "{me._reverse}"'
+                )
+                return
 
     def get_other_with_a_select(self, root_id: str) -> list:
         """Get reverse Items with a select

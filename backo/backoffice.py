@@ -66,6 +66,12 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
         See :py:class:`Collection`
 
         """
+        if coll.name in self.collections:
+            raise SSyntaxError(
+                'Backoffice register_collection : collection "{0}" already registered',
+                coll.name,
+            )
+
         self.collections[coll.name] = coll
         coll.backoffice = self
         setattr(self, coll.name, coll)
@@ -219,3 +225,13 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
         """GET meta information :func:`get_meta` via https"""
         log.debug(f"get meta information for {self.name}")
         return (json.dumps(self.get_meta()), 200)
+
+    def check_syntax(self) -> None:
+        """
+        Check the syntax by trigging a "check_syntax" event to all Items
+        this event is catch by Ref and RefsList wich display warning if needed
+        """
+        log.debug("Check syntax start")
+        for collection in self.collections.values():
+            collection.model.trigg("check_syntax")
+        log.debug("Check syntax end")

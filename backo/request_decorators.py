@@ -72,20 +72,20 @@ def error_to_http_handler(f):
             SKeyError,
             SError,
         ) as e:
-            log.error(repr(e))
-            log.error(traceback.print_exc())
-            return return_http_error(400, repr(e))
+            log.error(str(e))
+            log.error(traceback.format_exc())
+            return return_http_error(400, str(e))
         except AttributeError as e:
-            log.error(f" Error AttributeError {str(e)}")
-            log.error(traceback.print_exc())
+            log.error(repr(e))
+            log.error(traceback.format_exc())
             return return_http_error(400, str(e))
         except TypeError as e:
-            log.error(f" Error TypeError {str(e)}")
-            log.error(traceback.print_exc())
+            log.error(str(e))
+            log.error(traceback.format_exc())
             return return_http_error(400, str(e))
         except Exception as e:  # pylint: disable=broad-exception-caught
-            log.error(f" Error Exception {str(e)}")
-            log.error(traceback.print_exc())
+            log.error(str(e))
+            log.error(traceback.format_exc())
             return return_http_error(500, str(e))
 
     return wrapper

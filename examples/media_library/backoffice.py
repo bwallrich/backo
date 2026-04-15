@@ -117,6 +117,9 @@ def logout():
 myapp = Backoffice("media_library")
 myapp.add_collection(books)
 myapp.add_collection(users)
+
+# To check if you have some syntax issue
+myapp.check_syntax()
 myapp.build_routes(flask, "", check_user_token)
 
 

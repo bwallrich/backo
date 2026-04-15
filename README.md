@@ -335,12 +335,12 @@ This is an action to *borrow a book*, with a start time at daytime.
 
 ```python
 
-def borrow(action: Action, book: Item) -> None:
+def borrow(action: Action, book: Item, **kwargs) -> None:
     """borrow the book"""
     book.borrow.user = action.user_id
     book.borrow.date = datetime.now().replace(microsecond=0)
     book.borrow.return_date = action.return_date
-    book.save()
+    book.save(**kwargs)
 
 
 def can_borrow(right_name: str, book: Item) -> bool:
@@ -1268,7 +1268,7 @@ Currently available loggers are :
 ## migration
 
 
-If you chance an [Item](#item) of a [Collection](#collection), datas currently in the database can be rejected by the model.
+If you change an [Item](#item) of a [Collection](#collection), datas currently in the database can be rejected by the model.
 You need to migrate them and there is a tool for that.
 
 ### How it works

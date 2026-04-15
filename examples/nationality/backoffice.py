@@ -20,6 +20,10 @@ flask = Flask("nationality")
 myapp = Backoffice("nationality")
 myapp.add_collection(countries)
 myapp.add_collection(people)
+
+# To check if you have some syntax issue
+myapp.check_syntax()
+
 myapp.build_routes(flask, "")
 
 

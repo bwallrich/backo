@@ -61,12 +61,12 @@ class TestRoutes(unittest.TestCase):
         self.users_coll.register_selection("bert_only", sel)
 
         # ACTION
-        def change_surname(action, o):  # pylint: disable=unused-argument
+        def change_surname(action, o, **kwargs):  # pylint: disable=unused-argument
             """
             Do the increment
             """
             o.surname = action.new_surname
-            o.save()
+            o.save(**kwargs)
 
         change_surname_action = Action(
             {"new_surname": String(required=True)},

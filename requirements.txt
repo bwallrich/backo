@@ -3,4 +3,4 @@ mongo
 flask
 pyjwt
 deepdiff
-stricto>=0.1.0
+stricto>=0.1.1
