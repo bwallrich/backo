@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.1.1] 2026-04-15
+    * Fix
+      * fix some Error in Error management (on traces)
+      * fix bugs get_value() vs get_encoded() for saving.
+    * Internal
+      * Add transaction in all routes with rollback
+      * pushing kwargs to actions (for transactions)
+    * Feature
+      * Add migration method
+      * Add backoffice.check_syntax()
+    * Doc
+      * Documentation for migration
+
 ## [0.1.0] 2026-04-08
     * Fix
       * fix issue #3
