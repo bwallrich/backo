@@ -65,7 +65,7 @@ class DBYmlConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         filename = os.path.join(self._path, _id + ".yml")
 
         log.debug(f"try to save {filename}")
-        with open(filename, mode="w", encoding="utf8") as outfile:
+        with open(filename, mode="w", encoding="utf-8") as outfile:
             yaml.dump(o, outfile, default_flow_style=False)
 
     def create(self, o: dict) -> str:
@@ -79,7 +79,7 @@ class DBYmlConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             raise DBError('_id "{0}" already exist in path "{1}"', _id, self._path)
 
         log.debug(f"try to create {filename}")
-        with open(filename, mode="w", encoding="utf8") as outfile:
+        with open(filename, mode="w", encoding="utf-8") as outfile:
             yaml.dump(o, outfile, default_flow_style=False)
         return _id
 
