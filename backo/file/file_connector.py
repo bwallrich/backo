@@ -1,3 +1,4 @@
+# pylint: disable=unused-argument, relative-beyond-top-level
 """
 Module providing the Generic() Class for file connector
 """
@@ -102,4 +103,9 @@ class FileConnector:  # pylint: disable=too-many-instance-attributes
         return None
 
     def delete(self, filename: str) -> None:
+        """Delete the file
+
+        :param filename: _description_
+        :type filename: str
+        """
         return

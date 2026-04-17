@@ -1,8 +1,9 @@
+# pylint: disable=consider-using-with, relative-beyond-top-level
+
 """
 Module providing class for file in a file system
 """
 
-import uuid
 import sys
 import os
 import tempfile
@@ -53,7 +54,7 @@ class FileSystemConnector(
         """
         return os.path.isfile(os.path.join(self._path, filename))
 
-    def get(self, filename: str, mode: str) -> str | bytes:
+    def get(self, filename: str, mode: str, encoding:str|None = None ) -> str | bytes:
         """Return the content of the file
 
         :return: _description_
@@ -62,7 +63,7 @@ class FileSystemConnector(
         full_filename = os.path.join(self._path, filename)
 
         try:
-            fd = open(full_filename, mode)
+            fd = open(full_filename, mode, encoding=encoding)
             r = fd.read()
             fd.close()
             return r
@@ -114,7 +115,7 @@ class FileSystemConnector(
 
         return fname
 
-    def set(self, filename: str, mode: str, content: str | bytes) -> str:
+    def set(self, filename: str, mode: str, content: str | bytes, encoding:str|None = None) -> str:
         """Set the file content
 
         :param filename: _description_
@@ -129,7 +130,7 @@ class FileSystemConnector(
         full_filename = os.path.join(self._path, fname)
 
         try:
-            fd = open(full_filename, mode)
+            fd = open(full_filename, mode, encoding=encoding)
             fd.write(content)
             fd.close()
         except Exception as e:
@@ -151,5 +152,3 @@ class FileSystemConnector(
                 os.unlink(full_filename)
             except Exception as e:
                 raise FileError("{0} delete ({1})", full_filename, repr(e)) from e
-
-        return

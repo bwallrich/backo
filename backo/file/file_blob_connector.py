@@ -1,20 +1,16 @@
+# pylint: disable=consider-using-with, relative-beyond-top-level
 """
 Module providing the file connector in a Blob
 """
 
-import uuid
 import sys
-import os
-import tempfile
 from typing import Generator
 
 # used for developpement
 sys.path.insert(1, "../../../stricto")
-sys.path.insert(1, "..")
 
-from stricto import Kparse, validation_parameters, SSyntaxError, Bytes
+from stricto import validation_parameters, Bytes
 from .file_connector import FileConnector
-from ..error import DBError
 
 
 class FileBlobConnector(FileConnector):  # pylint: disable=too-many-instance-attributes
@@ -44,14 +40,7 @@ class FileBlobConnector(FileConnector):  # pylint: disable=too-many-instance-att
         """
         return filename in self._blobs
 
-    def raw(self, filename: str) -> Bytes:
-
-        if filename not in self._blobs:
-            self._blobs[filename] = Bytes()
-
-        return self._blobs[filename]
-
-    def get(self, filename: str, mode: str) -> str | bytes:
+    def get(self, filename: str, mode: str) -> str | bytes | None:
         """Return the content of the file
 
         :return: _description_
@@ -65,6 +54,9 @@ class FileBlobConnector(FileConnector):  # pylint: disable=too-many-instance-att
             return b.get_value()
         if mode == "r":
             return b.get_value().decode("utf-8")
+
+        # unknown mode
+        return None
 
     def read_chunk(self, filename: str, buffer_size: int = 2048) -> Generator | None:
         """Set the file content
@@ -127,7 +119,6 @@ class FileBlobConnector(FileConnector):  # pylint: disable=too-many-instance-att
 
         if mode == "wb":
             self._blobs[fname].set(content)
-            return b.get_value()
         if mode == "w":
             b = bytes(content, "utf-8")
             self._blobs[fname].set(b)

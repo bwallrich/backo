@@ -1,30 +1,13 @@
-"""Module providing the File() Class"""
+# pylint: disable=relative-beyond-top-level, attribute-defined-outside-init
+"""Module providing the BlobFile Class"""
 
-import io
-import os
 import sys
-import uuid
-import magic
-import hashlib
-from typing import Any, Self, IO, Union
 
 
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
-from stricto import (
-    Bytes,
-    SSyntaxError,
-    STypeError,
-    SAttributeError,
-    SConstraintError,
-    Kparse,
-    Dict,
-    String,
-    SError,
-    Int,
-    Bool,
-)
+from stricto import Bytes
 from .file_connector import FileConnector
 from .file_blob_connector import FileBlobConnector
 from .file import File, MIME
@@ -54,12 +37,11 @@ class BlobFile(File):
 
         File.__init__(self, **kwargs)
 
+        # add the content to the model to store the file content
         self.add_to_model("content", Bytes())
 
         # Set a fake filename
         self.__dict__["filename"].set("_local")
-        # Set as pointer direct to the Bytes object.
-        self.__dict__["content"] = self._work_connector.raw(self.filename.get_value())
 
     def __copy__(self):
         """remap copy to make a copy of the file too
@@ -73,7 +55,7 @@ class BlobFile(File):
         b.__dict__["content"].set(self.content.get_value())
         return b
 
-    def get_content(self, check_hash: bool = True) -> str | bytes:
+    def get_content(self) -> str | bytes:
         """Get the file content
 
         :return: the content of the file
@@ -88,8 +70,7 @@ class BlobFile(File):
 
         if self.encoding.get_value():
             return v.decode(self.encoding.get_value())
-        else:
-            return v
+        return v
 
     def set_content(self, content: str | bytes) -> None:
         """
@@ -101,15 +82,15 @@ class BlobFile(File):
         log.debug(f"{self.path_name()} blobfile set_content() for {f} {mime_type}")
 
         # Set the mime_type
-        self.mime_type = mime_type
+        self.mime_type.set(mime_type)
         # set as modified
-        self.modified = True
+        self.modified.set(True)
         if self.encoding.get_value():
             self.content.set(content.encode(self.encoding.get_value()))
         else:
             self.content.set(content)
 
-    def copy_file_content(
+    def copy_file_content(  # pylint: disable=unused-argument
         self, fsrc: str, src: FileConnector, fsdt: str, dst: FileConnector
     ) -> str | None:
         """Copy a file from an connector to another
@@ -125,21 +106,15 @@ class BlobFile(File):
         """
         load from the cold storage
         """
-        return
 
     def save(self) -> None:
         """
         Save to the cold storage _storage_connector
         """
 
-        print("save blob")
-
-        return
-
-    def on_before_save(
+    def on_before_save(  # pylint: disable=unused-argument
         self, event_name, root, me, **kwargs
-    ):  # pylint: disable=unused-argument
+    ):
         """
         Try to save the file if possible
         """
-        return

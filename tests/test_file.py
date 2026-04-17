@@ -1,4 +1,5 @@
-# pylint: disable=duplicate-code
+# pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code
+
 """
 test for File()
 """
@@ -40,6 +41,10 @@ class TestFile(unittest.TestCase):
         init this tests
         """
         super().__init__(*args, **kwargs)
+
+        self.clean(TEST_PATH)
+        self.clean(TEST_PATH2)
+
         if not os.path.exists(TEST_PATH):
             os.makedirs(TEST_PATH)
         if not os.path.exists(TEST_PATH2):
@@ -53,13 +58,20 @@ class TestFile(unittest.TestCase):
         self.yml_users = DBYmlConnector(path=YML_DIR)
         self.yml_users.generate_id = lambda o: f"User_{o.name}_{o.surname}"
 
+    def clean(self, path: str):
+        """Erase all"""
+        if not os.path.exists(path):
+            return
+        dirs = os.listdir(path)
+        for file in dirs:
+            os.unlink(os.path.join(path, file))
+        os.rmdir(path)
+
     @classmethod
     def tearDownClass(cls):
         """Erase all"""
-        dirs = os.listdir(TEST_PATH)
-        # for file in dirs:
-        #         os.unlink(os.path.join(TEST_PATH, file))
-        # os.rmdir( TEST_PATH )
+        cls.clean(cls, TEST_PATH)
+        cls.clean(cls, TEST_PATH2)
 
     def test_error_dir_not_exists(self):
         """

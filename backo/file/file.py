@@ -1,3 +1,4 @@
+# pylint: disable=relative-beyond-top-level, attribute-defined-outside-init
 """Module providing the File() Class"""
 
 import copy
@@ -123,12 +124,12 @@ class File(Dict):
         _id = self._work_connector.set(f, self._modes["w"], content)
 
         if f is None:
-            self.filename = _id
+            self.filename.set(_id)
 
         # Set the mime_type
-        self.mime_type = mime_type
+        self.mime_type.set(mime_type)
         # set as modified
-        self.modified = True
+        self.modified.set(True)
 
     def copy_file_content(
         self, fsrc: str, src: FileConnector, fsdt: str, dst: FileConnector
@@ -142,7 +143,7 @@ class File(Dict):
         """
 
         if not src.has_file(fsrc):
-            return
+            return None
 
         chunk_iterator = src.read_chunk(fsrc)
         if chunk_iterator is None:
@@ -168,7 +169,7 @@ class File(Dict):
         self.copy_file_content(f, self._storage_connector, f, self._work_connector)
 
         # set as not modified
-        self.modified = False
+        self.modified.set(False)
 
     def save(self) -> None:
         """
@@ -189,7 +190,7 @@ class File(Dict):
         self.filename.set(_id)
 
         # set as not modified
-        self.modified = False
+        self.modified.set(False)
 
     def on_before_save(
         self, event_name, root, me, **kwargs
