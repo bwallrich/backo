@@ -2,6 +2,7 @@
 """Module providing the BlobFile Class"""
 
 import sys
+from werkzeug.datastructures import FileStorage
 
 
 # used for developpement
@@ -11,10 +12,10 @@ from stricto import Bytes
 from .file_connector import FileConnector
 from .file_blob_connector import FileBlobConnector
 from .file import File, MIME
+from ..error import FileError
 from ..log import log_system, LogLevel
 
-log = log_system.get_or_create_logger("file")
-log.setLevel(LogLevel.INFO)
+log = log_system.get_or_create_logger("file", LogLevel.DEBUG)
 
 
 class BlobFile(File):
@@ -40,55 +41,51 @@ class BlobFile(File):
         # add the content to the model to store the file content
         self.add_to_model("content", Bytes())
 
-        # Set a fake filename
-        self.__dict__["filename"].set("_local")
-
-    def __copy__(self):
-        """remap copy to make a copy of the file too
-
-        :return: _description_
-        :rtype: _type_
-        """
-        b = super().__copy__()
-
-        b.__dict__["filename"].set("_local")
-        b.__dict__["content"].set(self.content.get_value())
-        return b
-
-    def get_content(self) -> str | bytes:
+    def get_content(self) -> bytes | None:
         """Get the file content
 
         :return: the content of the file
         :rtype: str|bytes
         """
-        f = self.filename.get_value()
+        f_id = self.file_id.get_value()
+        if f_id is None:
+            raise FileError("{0} file doesnt exists", self.path_name())
 
-        log.debug(f"{self.path_name()} blobfile get_content() for {f}")
-        v = self.content.get_value()
-        if v is None:
-            return None
+        return self.content.get_value()
 
-        if self.encoding.get_value():
-            return v.decode(self.encoding.get_value())
-        return v
+    def _set_content_from_bytes(self, content: bytes) -> None:
+        self.content.set(content)
+        self.mime_type = MIME.from_buffer(content)
+        self.modified = True
+        self.file_id = "_local"
 
-    def set_content(self, content: str | bytes) -> None:
+    def _set_content_from_str(self, content: str) -> None:
+        return self._set_content_from_bytes(content.encode("utf-8"))
+
+    def _set_content_from_FileStorage(self, content: FileStorage) -> None:
+        """Set the content of the file from a FileStorage
+
+        :param content: the content
+        :type content: FileStorage
+        :return: ( _id, mime_types )
+        :rtype: tuple
         """
-        Set the file content
-        """
-        f = self.filename.get_value()
-        mime_type = MIME.from_buffer(content)
+        log.debug(f"{self.path_name()} file _set_content_from_FileStorage()")
 
-        log.debug(f"{self.path_name()} blobfile set_content() for {f} {mime_type}")
+        barray = bytearray(b"")
+        chunk = content.read(self._buffers_size)
+        log.debug(f"chunk read {chunk}")
 
-        # Set the mime_type
-        self.mime_type.set(mime_type)
-        # set as modified
-        self.modified.set(True)
-        if self.encoding.get_value():
-            self.content.set(content.encode(self.encoding.get_value()))
-        else:
-            self.content.set(content)
+        size_read = 0
+        while chunk != b"":
+            log.debug(f"chunk read {chunk}")
+            size_read += len(chunk)
+            barray += bytearray(chunk)
+            chunk = content.read(self._buffers_size)
+        content.close()
+        log.debug(f"{self.path_name()} file _set_content_from_FileStorage() = {barray}")
+
+        self._set_content_from_bytes(bytes(barray))
 
     def copy_file_content(  # pylint: disable=unused-argument
         self, fsrc: str, src: FileConnector, fsdt: str, dst: FileConnector
@@ -118,3 +115,4 @@ class BlobFile(File):
         """
         Try to save the file if possible
         """
+        me.modified = False

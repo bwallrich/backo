@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
       * Changing Error management
       * minimize Human errors
         * Moving to Kparse for **kwargs
-        * add check_json to requests
+        * add check_content_type to requests
         * Adding validation parameters
     * Doc
       * Documentation refactoring

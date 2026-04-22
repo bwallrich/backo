@@ -16,6 +16,10 @@ sys.path.insert(1, "..")
 from stricto import Kparse, validation_parameters, SSyntaxError
 from .file_connector import FileConnector
 from ..error import FileError
+from ..log import log_system, LogLevel
+
+log = log_system.get_or_create_logger("file", LogLevel.DEBUG)
+
 
 KPARSE_MODEL = {
     "path": {"type": str, "default": tempfile.gettempdir()},
@@ -48,20 +52,24 @@ class FileSystemConnector(
 
         FileConnector.__init__(self, **kwargs)
 
-    def has_file(self, filename: str) -> bool:
+    def has_file(self, file_id: str) -> bool:
         """
         check if the file exists
         """
-        return os.path.isfile(os.path.join(self._path, filename))
+        log.debug(f"check file {os.path.join(self._path, file_id)}")
+        return os.path.isfile(os.path.join(self._path, file_id))
 
-    def get(self, filename: str, mode: str, encoding:str|None = None ) -> str | bytes:
+    def get(
+        self, file_id: str, mode: str = "rb", encoding: str | None = None
+    ) -> bytes | str:
         """Return the content of the file
 
         :return: _description_
         :rtype: str|bytes
         """
-        full_filename = os.path.join(self._path, filename)
+        full_filename = os.path.join(self._path, file_id)
 
+        log.debug(f"Read file {os.path.join(self._path, file_id)}")
         try:
             fd = open(full_filename, mode, encoding=encoding)
             r = fd.read()
@@ -70,39 +78,37 @@ class FileSystemConnector(
         except Exception as e:
             raise FileError("{0} read error ({1})", full_filename, repr(e)) from e
 
-    def read_chunk(self, filename: str, buffer_size: int = 2048) -> Generator:
+    def read_chunk(self, file_id: str) -> Generator:
         """Set the file content
 
-        :param filename: _description_
-        :type filename: str
+        :param file_id: _description_
+        :type file_id: str
         :param mode: _description_
         :type mode: str
         :param content: _description_
         :type content: str | bytes
         """
-        full_filename = os.path.join(self._path, filename)
+        full_filename = os.path.join(self._path, file_id)
         with open(full_filename, "rb") as fd:
-            chunk = fd.read(buffer_size)
+            chunk = fd.read(self._buffer_size)
             while chunk:
                 yield chunk
-                chunk = fd.read(buffer_size)
+                chunk = fd.read(self._buffer_size)
 
         return chunk
 
-    def write_chunk(self, filename: str, chunk: bytes) -> str | None:
+    def write_chunk(self, file_id: str, chunk: bytes) -> None:
         """Set the file content
 
-        :param filename: _description_
-        :type filename: str
+        :param file_id: _description_
+        :type file_id: str
         :param mode: _description_
         :type mode: str
         :param content: _description_
         :type content: str | bytes
         """
 
-        fname = self.generate_id() if filename is None else filename
-
-        full_filename = os.path.join(self._path, fname)
+        full_filename = os.path.join(self._path, file_id)
 
         try:
             fd = open(full_filename, "ab")
@@ -113,21 +119,24 @@ class FileSystemConnector(
                 "{0} write chunk error ({1})", full_filename, repr(e)
             ) from e
 
-        return fname
-
-    def set(self, filename: str, mode: str, content: str | bytes, encoding:str|None = None) -> str:
+    def set(
+        self,
+        file_id: str,
+        content: str | bytes,
+        mode: str = "wb",
+        encoding: str | None = None,
+    ) -> None:
         """Set the file content
 
-        :param filename: _description_
-        :type filename: str
+        :param file_id: _description_
+        :type file_id: str
         :param mode: _description_
         :type mode: str
         :param content: _description_
         :type content: str | bytes
         """
-        fname = self.generate_id() if filename is None else filename
-
-        full_filename = os.path.join(self._path, fname)
+        full_filename = os.path.join(self._path, file_id)
+        log.debug(f"Write file {full_filename}")
 
         try:
             fd = open(full_filename, mode, encoding=encoding)
@@ -138,15 +147,14 @@ class FileSystemConnector(
                 "{0} write chunk error ({1})", full_filename, repr(e)
             ) from e
 
-        return fname
-
-    def delete(self, filename: str) -> None:
+    def delete(self, file_id: str) -> None:
         """Clear
 
-        :param filename: _description_
-        :type filename: str
+        :param file_id: _description_
+        :type file_id: str
         """
-        full_filename = os.path.join(self._path, filename)
+        full_filename = os.path.join(self._path, file_id)
+        log.debug(f"Delete file {full_filename}")
         if os.path.isfile(full_filename):
             try:
                 os.unlink(full_filename)

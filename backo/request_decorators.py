@@ -5,6 +5,7 @@ The decortators used for flask routes
 # pylint: disable=logging-fstring-interpolation
 
 import sys
+import re
 import traceback
 from functools import wraps
 from flask import request
@@ -34,16 +35,18 @@ def return_http_error(code, message):
     return message, code
 
 
-def check_json(f):
+def check_content_type(f):
     """
     Check if the data is json otherwise error
     """
 
     @wraps(f)
     def wrapper(*args, **kwargs):
-        if request.content_type != "application/json":
-            return return_http_error(415, "Unsuported Media Type")
-        return f(*args, **kwargs)
+        if request.content_type == "application/json":
+            return f(*args, **kwargs)
+        if re.match(r"^multipart/form-data;", request.content_type):
+            return f(*args, **kwargs)
+        return return_http_error(415, "Unsuported Media Type")
 
     return wrapper
 

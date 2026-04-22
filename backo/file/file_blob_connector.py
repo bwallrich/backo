@@ -11,6 +11,9 @@ sys.path.insert(1, "../../../stricto")
 
 from stricto import validation_parameters, Bytes
 from .file_connector import FileConnector
+from ..log import log_system, LogLevel
+
+log = log_system.get_or_create_logger("file", LogLevel.DEBUG)
 
 
 class FileBlobConnector(FileConnector):  # pylint: disable=too-many-instance-attributes
@@ -34,22 +37,24 @@ class FileBlobConnector(FileConnector):  # pylint: disable=too-many-instance-att
 
         FileConnector.__init__(self, **kwargs)
 
-    def has_file(self, filename: str) -> bool:
+    def has_file(self, file_id: str) -> bool:
         """
         check if the file exists
         """
-        return filename in self._blobs
+        return file_id in self._blobs
 
-    def get(self, filename: str, mode: str) -> str | bytes | None:
+    def get(
+        self, file_id: str, mode: str = "rb", encoding: str | None = None
+    ) -> bytes | str:
         """Return the content of the file
 
         :return: _description_
         :rtype: str|bytes
         """
-        if filename not in self._blobs:
+        if file_id not in self._blobs:
             return None
 
-        b = self._blobs[filename]
+        b = self._blobs[file_id]
         if mode == "rb":
             return b.get_value()
         if mode == "r":
@@ -58,61 +63,63 @@ class FileBlobConnector(FileConnector):  # pylint: disable=too-many-instance-att
         # unknown mode
         return None
 
-    def read_chunk(self, filename: str, buffer_size: int = 2048) -> Generator | None:
+    def read_chunk(self, file_id: str) -> Generator:
         """Set the file content
 
-        :param filename: _description_
-        :type filename: str
+        :param file_id: _description_
+        :type file_id: str
         :param mode: _description_
         :type mode: str
         :param content: _description_
         :type content: str | bytes
         """
-        bvalue = self._blobs[filename].get_value()
+        bvalue = self._blobs[file_id].get_value()
         if bvalue is None:
             return None
 
-        barray = bytearray(self._blobs[filename].get_value())
+        barray = bytearray(self._blobs[file_id].get_value())
         index = 0
         while index < len(barray):
-            yield barray[index : index + buffer_size]
-            index += buffer_size
-        return barray[index : index + buffer_size]
+            yield barray[index : index + self._buffer_size]
+            index += self._buffer_size
+        return barray[index : index + self._buffer_size]
 
-    def write_chunk(self, filename: str, chunk: bytes) -> str:
+    def write_chunk(self, file_id: str, chunk: bytes) -> None:
         """Set the file content
 
-        :param filename: _description_
-        :type filename: str
+        :param file_id: _description_
+        :type file_id: str
         :param mode: _description_
         :type mode: str
         :param content: _description_
         :type content: str | bytes
         """
 
-        fname = self.generate_id() if filename is None else filename
+        if file_id not in self._blobs:
+            self._blobs[file_id] = Bytes(default=b"")
 
-        if fname not in self._blobs:
-            self._blobs[fname] = Bytes(default=b"")
-
-        barray = bytearray(self._blobs[fname].get_value())
+        barray = bytearray(self._blobs[file_id].get_value())
         barray += bytearray(chunk)
-        self._blobs[fname].set(bytes(barray))
+        self._blobs[file_id].set(bytes(barray))
 
-        return fname
-
-    def set(self, filename: str, mode: str, content: str | bytes) -> None:
+    def set(
+        self,
+        file_id: str,
+        content: str | bytes,
+        mode: str = "wb",
+        encoding: str | None = None,
+    ) -> None:
         """Set the file content
 
-        :param filename: _description_
-        :type filename: str
+        :param file_id: _description_
+        :type file_id: str
         :param mode: _description_
         :type mode: str
         :param content: _description_
         :type content: str | bytes
         """
 
-        fname = self.generate_id() if filename is None else filename
+        fname = self.generate_id() if file_id is None else file_id
 
         if fname not in self._blobs:
             self._blobs[fname] = Bytes()
@@ -120,15 +127,16 @@ class FileBlobConnector(FileConnector):  # pylint: disable=too-many-instance-att
         if mode == "wb":
             self._blobs[fname].set(content)
         if mode == "w":
-            b = bytes(content, "utf-8")
+            b = bytes(content, "utf-8") if isinstance(content, str) else content
             self._blobs[fname].set(b)
 
         return fname
 
-    def delete(self, filename: str) -> None:
+    def delete(self, file_id: str) -> None:
         """Clear
 
-        :param filename: _description_
-        :type filename: str
+        :param file_id: _description_
+        :type file_id: str
         """
-        del self._blobs[filename]
+        if file_id in self._blobs:
+            del self._blobs[file_id]

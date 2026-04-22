@@ -7,6 +7,7 @@ import json
 import sys
 import copy
 import pprint
+import os
 from typing import Self, Callable
 from deepdiff import DeepDiff
 
@@ -37,8 +38,8 @@ from .action import Action
 from .selection import Selection
 from .error import PathNotFoundError
 from .log import log_system, LogLevel
-from .request_decorators import error_to_http_handler, check_json
-from .api_toolbox import multidict_to_filter, append_path_to_filter
+from .request_decorators import error_to_http_handler, check_content_type
+from .api_toolbox import multidict_to_filter, append_path_to_filter, request_to_object
 from .patch import Patch
 from .migration_report import MigrationReport
 
@@ -561,7 +562,7 @@ class Collection:
 
         return collection_blueprint
 
-    @check_json
+    @check_content_type
     @error_to_http_handler
     def action_go(self, _action_name: str, _id: str):
         """_summary_
@@ -578,9 +579,12 @@ class Collection:
                 'collection "{0}" has no action "{1}"', self.name, _action_name
             )
 
+        request_content = request_to_object(request)
+        log.debug(f"http action {_action_name} content {request_content}")
+
         # Set the action
         action = self._actions.get(_action_name)
-        action.set(request.json)
+        action.set(request_content)
 
         # set the object
         obj = self.new_item()
@@ -675,7 +679,7 @@ class Collection:
 
         return (json.dumps(result, cls=StrictoEncoder), 200)
 
-    @check_json
+    @check_content_type
     @error_to_http_handler
     def do_post_selection(self, _selection_name: str):
         """Do a selection with filter given in post
@@ -692,12 +696,15 @@ class Collection:
                 "Collection {0} has no selection {0}", self.name, _selection_name
             )
 
+        request_content = request_to_object(request)
+        log.debug(f"http post selection {_selection_name} content {request_content}")
+
         query = request.args
         _page = int(query.get("_page", 10))
         _skip = int(query.get("_skip", 0))
 
         match_filter = {}
-        for key, v in request.json.items():
+        for key, v in request_content.items():
             append_path_to_filter(match_filter, key, v)
         result = self._selections[_selection_name].select(match_filter, _page, _skip)
 
@@ -707,7 +714,7 @@ class Collection:
 
         return (json.dumps(result, cls=StrictoEncoder), 200)
 
-    @check_json
+    @check_content_type
     @error_to_http_handler
     def http_create(self):
         """
@@ -716,19 +723,18 @@ class Collection:
         :meta private:
 
         """
-
-        log.debug(f"http_create request {request.json}")
+        request_content = request_to_object(request)
 
         query = request.args
         _view = query.get("_view", "client")
 
-        log.debug(f"post {type(request.json)} {request.json}")
+        log.debug(f"http post content {request_content}")
 
         # initialisation of a transaction
         t_id = self.backoffice.start_transaction()
 
         try:
-            obj = self.create(request.json, transaction_id=t_id)
+            obj = self.create(request_content, transaction_id=t_id)
         except Exception as e:
             # Error, rollback the transaction
             self.backoffice.rollback_transaction(t_id)
@@ -741,7 +747,7 @@ class Collection:
 
         return (json.dumps(obj.get_view(_view), cls=StrictoEncoder), 200)
 
-    @check_json
+    @check_content_type
     @error_to_http_handler
     def http_modify(self, _id: str):
         """
@@ -751,7 +757,8 @@ class Collection:
 
         """
 
-        log.debug(f"http_modify request {request.json}")
+        request_content = request_to_object(request)
+        log.debug(f"http_modify request {request_content}")
 
         query = request.args
         _view = query.get("_view", "client")
@@ -763,7 +770,7 @@ class Collection:
 
         try:
             obj.load(_id, transaction_id=t_id)
-            obj.set(request.json)
+            obj.set(request_content)
             obj.save(transaction_id=t_id)
         except Exception as e:
             # Error, rollback the transaction
@@ -802,7 +809,7 @@ class Collection:
 
         return ("deleted", 200)
 
-    @check_json
+    @check_content_type
     @error_to_http_handler
     def http_check(self):
         """
@@ -812,10 +819,11 @@ class Collection:
 
         """
 
-        log.debug(f"http_check request {request.json}")
+        request_content = request_to_object(request)
+        log.debug(f"http_check request {request_content}")
 
         c = check_model_request.copy()
-        c.set(request.json)
+        c.set(request_content)
 
         # Create a partial object with values given in request.item
         obj = self.new_item()
@@ -840,7 +848,7 @@ class Collection:
         ) as e:
             return (json.dumps({"error": e.to_string()}), 200)
 
-    @check_json
+    @check_content_type
     @error_to_http_handler
     def http_meta(self):
         """
@@ -850,10 +858,11 @@ class Collection:
 
         """
 
-        log.debug(f"http_meta request {request.json}")
+        request_content = request_to_object(request)
+        log.debug(f"http_meta request {request_content}")
 
         c = meta_model_request.copy()
-        c.set(request.json)
+        c.set(request_content)
 
         # Create a partial object with values given in request.item
         obj = self.new_item()
@@ -862,7 +871,7 @@ class Collection:
 
         return (json.dumps(obj.get_current_meta()), 200)
 
-    @check_json
+    @check_content_type
     @error_to_http_handler
     def http_patch_one(self, _id: str):
         """
@@ -871,10 +880,16 @@ class Collection:
         :meta private:
 
         """
+
+        request_content = request_to_object(request)
+        log.debug(f"http patch {request_content}")
+
         query = request.args
         _view = query.get("_view", "client")
 
-        patch_list = request.json if isinstance(request.json, list) else [request.json]
+        patch_list = (
+            request_content if isinstance(request_content, list) else [request_content]
+        )
 
         obj = self.new_item()
 

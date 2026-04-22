@@ -2,6 +2,7 @@
 Logging file
 """
 
+import inspect
 import logging
 import logging.handlers
 import sys
@@ -28,9 +29,10 @@ RED = "\033[91m"
 BOLD_RED = "\033[91m\033[1m"
 RESET_COLOR = "\x1b[0m"
 
+
 FORMATS = {
     logging.DEBUG: logging.Formatter(
-        "%(levelname)s-%(name)s-%(pathname)s.%(lineno)d : %(message)s"
+        '%(levelname)s-%(name)s- "%(pathname)s", line %(lineno)d : %(message)s'
     ),
     logging.INFO: logging.Formatter("%(levelname)s :%(message)s"),
     logging.WARNING: logging.Formatter("%(levelname)s : %(message)s"),
@@ -40,7 +42,7 @@ FORMATS = {
 FORMATS_COLOR = {
     logging.DEBUG: logging.Formatter(
         OKGREEN
-        + "%(levelname)s-%(name)s-%(pathname)s.%(lineno)d : %(message)s"
+        + '%(levelname)s-%(name)s- "%(pathname)s", line %(lineno)d : %(message)s'
         + RESET_COLOR
     ),
     logging.INFO: logging.Formatter(GREY + "%(levelname)s : %(message)s" + RESET_COLOR),
@@ -68,6 +70,30 @@ class LogLevel:  # pylint: disable=too-few-public-methods
     INFO = logging.INFO
     DEBUG = logging.DEBUG
     NOTSET = logging.NOTSET
+
+
+def stack(level: int = 10) -> str:
+    """Return the stack of call
+       in a string.
+
+    :param level: number of call, defaults to 10
+    :type level: int, optional
+    :return: the stack trace
+    :rtype: str
+    """
+
+    l = level if level < len(inspect.stack()) else len(inspect.stack())
+    s = "\r\n  / \r\n"
+
+    for i in range(2, l):
+        frame = inspect.stack()[i]
+
+        # arg_names = inspect.getfullargspec(frame).args
+
+        s += f'{" " * i }\\ called by "{frame.filename}", line {frame.lineno}, in {frame.function}\r\n'
+
+    s += f'{" " * i } \\__\r\n'
+    return s
 
 
 class MyFormatter(logging.Formatter):

@@ -14,6 +14,7 @@ from stricto import Kparse, validation_parameters
 
 
 KPARSE_MODEL = {
+    "buffer_size": {"type": int, "default": 3},
     "encoding": {"type": str, "default": "utf-8"},
     "buffering": int,
 }
@@ -36,6 +37,7 @@ class FileConnector:  # pylint: disable=too-many-instance-attributes
         """Constructor"""
 
         options = Kparse(kwargs, KPARSE_MODEL, strict=True)
+        self._buffer_size = options.get("buffer_size")
         self._encoding = options.get("encoding")
         self._buffering = options.get("buffering")
         self._modes = {

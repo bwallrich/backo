@@ -4,6 +4,9 @@ A set of functions
 """
 
 import re
+import json
+from flask import Request
+from typing import Any
 from werkzeug.datastructures import ImmutableMultiDict
 
 
@@ -82,10 +85,45 @@ def multidict_to_filter(md: ImmutableMultiDict):
     for key in md.keys():
 
         # ignoring keys starting with _
-        if re.match(r"^_.*", key):
+        if re.match(r"^_", key):
             continue
 
         value = md.getlist(key)
         append_path_to_filter(filter_as_dict, key, value)
 
     return filter_as_dict
+
+
+def request_to_object(request: Request) -> Any:
+    """Read the request and transform it to a struct
+
+    :param request: The request given
+    :type request: Request
+    """
+
+    # Json, return just the json
+    if request.content_type == "application/json":
+        return request.json
+
+    if re.match(r"^multipart/form-data;", request.content_type):
+        obj = {}
+        if "_json" in request.form:
+            obj = json.loads(request.form.get("_json"))
+
+        # Adding other keys
+        for key in request.form:
+            value = request.form[key]
+            # ignoring keys starting with _
+            if re.match(r"^_", key):
+                continue
+
+            append_path_to_filter(obj, key, value)
+
+        # Append files to the json struct
+        for vpath in request.files:
+            file = request.files[vpath]
+            append_path_to_filter(obj, vpath, file)
+
+        return obj
+
+    return None

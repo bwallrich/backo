@@ -26,7 +26,7 @@ from .error import (
 from .backoffice import Backoffice
 from .collection import Collection
 from .selection import Selection
-from .log import Logger, log_system, LogLevel
+from .log import Logger, log_system, LogLevel, stack
 from .reference import Ref, RefsList, FillStrategy, DeleteStrategy
 from .file.file import File
 from .file.file_connector import FileConnector
@@ -38,7 +38,7 @@ from .status import StatusType
 from .action import Action
 from .migration_report import MigrationReport
 from .request_decorators import (
-    check_json,
+    check_content_type,
     return_http_error,
     error_to_http_handler,
 )
