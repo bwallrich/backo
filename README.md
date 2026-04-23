@@ -332,18 +332,26 @@ an_author = Item({
 In a general context, [routes](#routes-1) are restfull json api calls. But with files, every routes (crud, actions, ... )
 can be called in two ways :
 
-1. With file embedded in json in string format (for text files) or with base64 encoded (for other).
+1. With files embedded in json in string format (for text files) or with base64 encoded (for other).
     
     ```bash
         # creating an author with a pict
-        curl -X POST 'http://localhost/myApp/authors/' -d '{"name":"John","surname":"Rambo", "pict" : "base64:Sm9obiBwaWN0"}'
+        curl -X POST 'http://localhost/myApp/authors/' -d '{"surname":"John","name":"Rambo", "pict" : "base64:Sm9obiBwaWN0"}'
     ```
    
-2. With a multipart route and the json part 
+2. With a multipart route
+    
+    Each file is a part of the html multipart message. The json structure must be encoded in a ```_json``` multipart part.
    
     ```bash
         # creating an author with a pict
-        curl -X POST -F json='{"name":"John","surname":"Rambo"}' -F pict=@rambo.png http://localhost/myApp/authors/
+        curl -X POST -F _json='{"surname":"John","name":"Rambo"}' -F pict=@rambo.png http://localhost/myApp/authors/
+
+        # Modifying the author picture
+        curl -X PUT -F pict=@rambo1.png http://localhost/myApp/authors/id_of_rambo
+
+        # Modifying the author picture and name
+        curl -X PUT  -F _json='{ "name":"Rimbaud" }' -F pict=@rimbaud.png http://localhost/myApp/authors/id_of_rambo
 
     ```
 

@@ -20,7 +20,7 @@ from stricto import Kparse, Dict, String, Int, Bool, STypeError, SConstraintErro
 from .file_connector import FileConnector
 
 from ..error import FileError
-from ..log import log_system, LogLevel, stack
+from ..log import log_system, LogLevel
 
 log = log_system.get_or_create_logger("file", LogLevel.DEBUG)
 
@@ -194,7 +194,7 @@ class File(Dict):
         :rtype: str|bytes
         """
         log.debug(
-            f"{self.path_name()} file get_content() for {self.filename} {self.file_id} {stack()}"
+            f"{self.path_name()} file get_content() for {self.filename} {self.file_id}"
         )
         f_id = self.file_id.get_value()
         if f_id is None:

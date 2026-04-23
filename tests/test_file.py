@@ -393,6 +393,25 @@ class TestFile(unittest.TestCase):
         u = model.copy()
         u.set(json.loads(response.data))
         self.assertEqual(u.f.get_content(), b"yeswecanornot")
+
+        # update the file
+        with open(fname, "a", encoding="utf-8") as f:
+            f.write("modified!")
+
+        response = client.put(
+            f"/myApp/users/{v['_id']}",
+            data={
+                # "_json": json.dumps({"name": "bert3"}),
+                "f": io.FileIO(fname, "rb"),
+            },
+        )
+
+        response = client.get(f"/myApp/users/{v['_id']}")
+        self.assertEqual(response.status_code, 200)
+        u = model.copy()
+        u.set(json.loads(response.data))
+        self.assertEqual(u.f.get_content(), b"Now the file has more content!modified!")
+
         # delete
         response = client.delete(f"/myApp/users/{v['_id']}")
         self.assertEqual(response.status_code, 200)
