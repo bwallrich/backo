@@ -18,6 +18,7 @@ dependencies = [
   "flask",
   "pyyaml",
   "deepdiff",
+  "python-magic",
   "stricto>=0.1.1"
 ]
 
