@@ -1,5 +1,5 @@
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: api reference
 
 
@@ -37,14 +37,6 @@ References
 Ref & RefsList
 --------------
 
-.. autoclass:: DeleteStrategy
-   :members:
-   :show-inheritance: 
-
-.. autoclass:: FillStrategy
-   :members:
-   :show-inheritance: 
-
 .. autoclass:: Ref
    :members:
    :show-inheritance: 
@@ -53,8 +45,43 @@ Ref & RefsList
    :members:
    :show-inheritance: 
 
+.. autoclass:: DeleteStrategy
+   :members:
+   :show-inheritance: 
 
-DBconnector
+.. autoclass:: FillStrategy
+   :members:
+   :show-inheritance: 
+
+Files
+-----
+
+.. autoclass:: File
+   :members:
+   :show-inheritance: 
+
+.. autoclass:: BlobFile
+   :members:
+   :show-inheritance: 
+
+
+Files storage
+^^^^^^^^^^^^^
+
+.. autoclass:: FileConnector
+   :members:
+   :show-inheritance: 
+
+.. autoclass:: FileSystemConnector
+   :members:
+   :show-inheritance: 
+
+.. autoclass:: FileBlobConnector
+   :members:
+   :show-inheritance: 
+
+
+Database
 -----------
 
 .. autoclass:: DBConnector

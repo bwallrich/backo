@@ -5,9 +5,7 @@ test for Flask and routes
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code
 
 import unittest
-import io
 import json
-import os
 from flask import Flask
 
 # get the resources folder in the tests folder

@@ -29,20 +29,19 @@ KPARSE_MODEL = {
 class FileSystemConnector(
     FileConnector
 ):  # pylint: disable=too-many-instance-attributes
-    """File connector Connector
-
-    This is the way to save / store / retrieve objects
-
-    :param ``**kwargs``:
-        - *restriction=* ``func`` --
-          not used yet
-
-
-    """
 
     @validation_parameters
     def __init__(self, **kwargs):
-        """Constructor"""
+        """
+        File connector on a file system
+
+        This is the way to save / store / retrieve objects
+
+
+        :param path=: The directory to store files
+        :type path=: str
+
+        """
 
         options = Kparse(kwargs, KPARSE_MODEL)
         self._path = options.get("path")
@@ -55,6 +54,13 @@ class FileSystemConnector(
     def has_file(self, file_id: str) -> bool:
         """
         check if the file exists
+
+        :param file_id: file id
+        :type file_id: str
+
+        :return: True if the file exists
+        :rtype: bool
+
         """
         log.debug(f"check file {os.path.join(self._path, file_id)}")
         return os.path.isfile(os.path.join(self._path, file_id))
@@ -62,10 +68,14 @@ class FileSystemConnector(
     def get(
         self, file_id: str, mode: str = "rb", encoding: str | None = None
     ) -> bytes | str:
-        """Return the content of the file
+        """
+        Return the content of the file
 
-        :return: _description_
-        :rtype: str|bytes
+        :param file_id: file id
+        :type file_id: str
+
+        :return: the file content
+        :rtype: bytes
         """
         full_filename = os.path.join(self._path, file_id)
 
@@ -78,15 +88,28 @@ class FileSystemConnector(
         except Exception as e:
             raise FileError("{0} read error ({1})", full_filename, repr(e)) from e
 
-    def read_chunk(self, file_id: str) -> Generator:
-        """Set the file content
+    def clear(self, file_id: str) -> None:
+        """
+        Set the file given by its file_id to empty
 
-        :param file_id: _description_
+        :param file_id: file id
         :type file_id: str
-        :param mode: _description_
-        :type mode: str
-        :param content: _description_
-        :type content: str | bytes
+        """
+        full_filename = os.path.join(self._path, file_id)
+        with open(full_filename, "wb"):
+            pass
+
+    def read_chunk(self, file_id: str) -> Generator:
+        """
+        
+        Read a chunk of the file
+
+        :param file_id: file id
+        :type file_id: str
+
+        :return: a generator to get the next chunk
+        :rtype: Generator
+
         """
         full_filename = os.path.join(self._path, file_id)
         with open(full_filename, "rb") as fd:
@@ -98,14 +121,16 @@ class FileSystemConnector(
         return chunk
 
     def write_chunk(self, file_id: str, chunk: bytes) -> None:
-        """Set the file content
+        """        
+        
+        Append a chunk to the file
 
-        :param file_id: _description_
+        :param file_id: file id
         :type file_id: str
-        :param mode: _description_
-        :type mode: str
-        :param content: _description_
-        :type content: str | bytes
+        :param chunk: the chunk content
+        :type chunk: bytes
+
+
         """
 
         full_filename = os.path.join(self._path, file_id)
@@ -119,38 +144,11 @@ class FileSystemConnector(
                 "{0} write chunk error ({1})", full_filename, repr(e)
             ) from e
 
-    def set(
-        self,
-        file_id: str,
-        content: str | bytes,
-        mode: str = "wb",
-        encoding: str | None = None,
-    ) -> None:
-        """Set the file content
-
-        :param file_id: _description_
-        :type file_id: str
-        :param mode: _description_
-        :type mode: str
-        :param content: _description_
-        :type content: str | bytes
-        """
-        full_filename = os.path.join(self._path, file_id)
-        log.debug(f"Write file {full_filename}")
-
-        try:
-            fd = open(full_filename, mode, encoding=encoding)
-            fd.write(content)
-            fd.close()
-        except Exception as e:
-            raise FileError(
-                "{0} write chunk error ({1})", full_filename, repr(e)
-            ) from e
-
     def delete(self, file_id: str) -> None:
-        """Clear
+        """
+        Delete the file on dist
 
-        :param file_id: _description_
+        :param file_id: file id
         :type file_id: str
         """
         full_filename = os.path.join(self._path, file_id)

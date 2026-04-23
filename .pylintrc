@@ -28,6 +28,7 @@ ignore-imports=no
 [MESSAGES CONTROL]
 disable = 
     import-error,
+    missing-class-docstring, # all class docstrin are in __init__ to mix sphinx and vscode
     wrong-import-position,
     dangerous-default-value,
     super-init-not-called, # Bug ?

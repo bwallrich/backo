@@ -254,6 +254,104 @@ a_book = Item({
     author = RefsList( coll='authors', field="$.books", required=True )
 })
 ```
+
+
+## Files objects
+
+backo can manage files in a simple way : Like other [stricto types](https://github.com/bwallrich/stricto?tab=readme-ov-file#basic-types).
+You can use File() or BlobFile().
+
+| object | Description |
+| -- | -- |
+| File() | Generic object to manage a file. You need to define a FileConnector to say to the object File where to store the file |
+| BlobFile() | Store the file directly in the datastructure. You don't need any FileConnector. Reserved for small files. |
+
+You can use all [parameters](https://github.com/bwallrich/stricto?tab=readme-ov-file#types) for Files like other fields. 
+
+
+You have specific parameters :
+
+| Option | Default | Description |
+| - | - | - |
+| ```mime_types=[ str ]``` | None | The list of avaiable content types you want. |
+| ```max_size=8192``` | None | The maximum size of the file |
+| ```work_connector=FileConnector``` | None | The fileConnector to use ( = the place to store the file) |
+| ```storage_connector=FileConnector``` | None | The second fileConnector to use to move the file when the Item is saved. If *None*, files stay il the *work_connector* |
+
+
+A file object as attributes and methods :
+
+```python
+a = BlobFile()
+
+a.set(b'Hello word')
+# or
+a.set_content(b'Hello word')
+
+a.filename = "my_hello.txt"
+a.content_type # -> 'text/plain'
+a.size # -> 9
+a.file_id # -> A random id
+
+# Get the content of the file
+a.get_content() # -> b'Hello word'
+
+```
+
+
+### BlobFile()
+
+
+Add a file with storage into the structure. That's it.
+
+```python
+an_author = Item({
+    'name' : String( require=True ),
+    'surname' : String(),
+    'pict' : BlobFile( require=True , mime_types=[ 'image/jpeg', 'image/png' ])
+    'books' : RefsList( coll='books', field="$.autor" )
+})
+```
+### File()
+
+
+Add a file with storage on a specific place on the file system
+
+```python
+an_author = Item({
+    'name' : String( require=True ),
+    'surname' : String(),
+    'pict' : File( require=True , mime_types=[ 'image/jpeg', 'image/png' ], work=FileSystemConnector( path="/the_place/to/store/files" ) )
+    'books' : RefsList( coll='books', field="$.autor" )
+})
+```
+
+
+### routes
+
+In a general context, [routes](#routes-1) are restfull json api calls. But with files, every routes (crud, actions, ... )
+can be called in two ways :
+
+1. With file embedded in json in string format (for text files) or with base64 encoded (for other).
+    
+    ```bash
+        # creating an author with a pict
+        curl -X POST 'http://localhost/myApp/authors/' -d '{"name":"John","surname":"Rambo", "pict" : "base64:Sm9obiBwaWN0"}'
+    ```
+   
+2. With a multipart route and the json part 
+   
+    ```bash
+        # creating an author with a pict
+        curl -X POST -F json='{"name":"John","surname":"Rambo"}' -F pict=@rambo.png http://localhost/myApp/authors/
+
+    ```
+
+See [routes](#routes-1) for more details 
+
+
+
+
 ## Collection
 
 A collection is composed by :
@@ -1247,6 +1345,37 @@ log.setLevel(loggind.DEBUG)
 log.addHandler ( my_own_handler )
 # ...
 ```
+
+### stack()
+
+If you need, you can had the ```stack()``` into your message, to get a nice stack call:
+
+```python
+log = log_system.get_or_create_logger("custom")
+log.setLevel(loggind.DEBUG)
+
+# somewhere in you code
+log.debug(f'this is a debug message with stack {stack()}')
+# ...
+```
+
+Will output something like :
+
+
+```bash
+DEBUG-custom- "/my_path/myfile.py", line 196 : this is a debug message with stack
+  / 
+  \ called by "/my_path/myfile.py", line 128, in sub_test_set_get_sample
+   \ called by "/my_pathtests/test_file.py", line 140, in test_set_get_sample
+    \ called by "/usr/lib/python3.12/unittest/case.py", line 589, in _callTestMethod
+     \ called by "/usr/lib/python3.12/unittest/case.py", line 634, in run
+      \ called by "/usr/lib/python3.12/unittest/case.py", line 690, in __call__
+       \ called by "/usr/lib/python3.12/unittest/suite.py", line 122, in run
+        \ called by "/usr/lib/python3.12/unittest/suite.py", line 84, in __call__
+         \ called by "/usr/lib/python3.12/unittest/suite.py", line 122, in run
+          \__
+```
+
 
 ### current loggers
 

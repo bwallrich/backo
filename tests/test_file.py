@@ -1,4 +1,4 @@
-# pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code
+# pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code, unused-argument
 
 """
 test for File()
@@ -25,7 +25,7 @@ from backo import (
     FileError,
     StrictoEncoder,
     SSyntaxError,
-    STypeError,
+    SConstraintError,
     FileSystemConnector,
     FileBlobConnector,
     BlobFile,
@@ -102,9 +102,12 @@ class TestFile(unittest.TestCase):
         a.filename = "notexists.txt"
         with self.assertRaises(FileError) as e:
             a.get_content()
-        self.assertEqual(e.exception.to_string(), "$ file doesnt exists")
+        self.assertEqual(e.exception.to_string(), "$ file doesnt exists (no file_id)")
 
     def test_error_read(self):
+        """
+        Test error read
+        """
         for file_connector in [
             BlobFile(),
             File(work=self.work_connector),
@@ -120,11 +123,14 @@ class TestFile(unittest.TestCase):
         a = file_type
         a.filename = "toto.txt"
         a.set_content("coucou")
-        self.assertEqual(a.mime_type.get_value(), "text/plain")
+        self.assertEqual(a.content_type.get_value(), "text/plain")
         self.assertEqual(a.filename.get_value(), "toto.txt")
         self.assertEqual(a.get_content(), b"coucou")
 
     def test_set_get_sample(self):
+        """
+        Test sample get
+        """
         for file_connector in [
             BlobFile(),
             File(work=self.work_connector),
@@ -146,12 +152,14 @@ class TestFile(unittest.TestCase):
         self.assertNotEqual(a.get_content(), b.get_content())
 
     def test_copy(self):
+        """
+        test copy object file into another
+        """
         for file_connector in [
             BlobFile(),
             File(work=self.work_connector),
             File(work=FileBlobConnector()),
         ]:
-            # for file_connector in [ File( work=self.work_connector ) ]:
             with self.subTest(file_connector=file_connector):
                 self.sub_test_copy(file_connector)
 
@@ -177,6 +185,7 @@ class TestFile(unittest.TestCase):
         self.assertEqual(a.f.get_content(), b"Hello Charlie.")
 
     def test_file_in_dict(self):
+        """Test update file in a Dict"""
 
         def update_file(o: Dict):
             o.f.set_content(f"Hello {o.name}.")
@@ -190,7 +199,71 @@ class TestFile(unittest.TestCase):
             with self.subTest(file_connector=file_connector):
                 self.sub_test_file_in_dict(file_connector)
 
-    def test_fileStorage_src_blobfile(self):
+    def sub_test_file_constraints(self, file_type):
+        """Check a file with constraint
+
+        :param file_type: _description_
+        :type file_type: _type_
+        """
+        a = file_type
+        a.check("toto")
+        with self.assertRaises(SConstraintError) as e:
+            a.check(b"\x01\x02\x03\x04\x05\x06")
+        self.assertEqual(
+            e.exception.to_string(),
+            "$: Constraint not validated for value=\"<FileStorage: None ('application/octet-stream')>\"",
+        )
+
+    def test_file_constraints(self):
+        """Test constraints on a file"""
+
+        def only_text(f: FileStorage | None, o) -> bool:
+            """check manualy if the mime type is text/plain"""
+            if f is None:
+                return True
+            if f.content_type == "text/plain":
+                return True
+            return False
+
+        for file_connector in [
+            BlobFile(constraint=only_text),
+            File(work=self.work_connector, constraint=only_text),
+            File(work=FileBlobConnector(), constraint=only_text),
+        ]:
+            with self.subTest(file_connector=file_connector):
+                self.sub_test_file_constraints(file_connector)
+
+        for file_connector in [
+            BlobFile(mime_types=["text/plain"]),
+            File(work=self.work_connector, mime_types=["text/plain"]),
+            File(work=FileBlobConnector(), mime_types=["text/plain"]),
+        ]:
+            with self.subTest(file_connector=file_connector):
+                a = file_connector
+                a.check("toto")
+                with self.assertRaises(SConstraintError) as e:
+                    a.check(b"\x01\x02\x03\x04\x05\x06")
+                self.assertEqual(
+                    e.exception.to_string(),
+                    '$: Unauthorized content_type (value="application/octet-stream")',
+                )
+
+        for file_connector in [
+            BlobFile(max=4),
+            File(work=self.work_connector, max=4),
+            File(work=FileBlobConnector(), max=4),
+        ]:
+            with self.subTest(file_connector=file_connector):
+                a = file_connector
+                a.check("tot")
+                with self.assertRaises(SConstraintError) as e:
+                    a.check(b"\x01\x02\x03\x04\x05\x06")
+                self.assertEqual(
+                    e.exception.to_string(),
+                    "$: File too big (value=\"<FileStorage: None ('application/octet-stream')>\")",
+                )
+
+    def test_filestorage_src_blobfile(self):
         """test fileStorage as source"""
         data = bytes([1, 2, 3, 4, 5, 6])
         file = FileStorage(
@@ -203,7 +276,7 @@ class TestFile(unittest.TestCase):
         a.set_content(file)
         self.assertEqual(a.get_content(), b"\x01\x02\x03\x04\x05\x06")
 
-    def test_fileStorage_src_file(self):
+    def test_filestorage_src_file(self):
         """test fileStorage as source"""
         data = bytes([1, 2, 3, 4, 5, 6])
         file = FileStorage(
@@ -260,13 +333,13 @@ class TestFile(unittest.TestCase):
         self.yml_users.drop()
 
         # set the flask route
-        self.flask = Flask(__name__)
-        backoffice.build_routes(self.flask)
+        flask = Flask(__name__)
+        backoffice.build_routes(flask)
 
         # Set client for testing
-        ctx = self.flask.app_context()
+        ctx = flask.app_context()
         ctx.push()
-        client = self.flask.test_client()
+        client = flask.test_client()
         return client
 
     def sub_test_file_routes(self, file_type):
@@ -286,7 +359,7 @@ class TestFile(unittest.TestCase):
 
         # Creation with a FileStorage
         fname = os.path.join(SRC_DIR, "demofile.txt")
-        with open(fname, "w") as f:
+        with open(fname, "w", encoding="utf-8") as f:
             f.write("Now the file has more content!")
 
         response = client.post(
@@ -331,7 +404,7 @@ class TestFile(unittest.TestCase):
             "/myApp/users",
             json={
                 "name": "bert3",
-                "surname": "hector",
+                "surname": "hector3",
                 "f": f"base64:{base64.b64encode(v).decode('utf-8')}",
             },
         )
@@ -348,11 +421,16 @@ class TestFile(unittest.TestCase):
         self.assertEqual(u.f._work_connector.has_file(u.f.file_id.get_value()), False)
 
     def test_file_routes(self):
+        """Test routes"""
+
+        fname = os.path.join(SRC_DIR, "demofile.txt")
+        with open(fname, "w", encoding="utf-8") as f:
+            f.write("Now the file has more content!")
+
         for file_connector in [
             BlobFile(),
             File(work=self.work_connector),
             File(work=FileBlobConnector()),
         ]:
-            # for file_connector in [ File( work=self.work_connector ) ]:
             with self.subTest(file_connector=file_connector):
                 self.sub_test_file_routes(file_connector)

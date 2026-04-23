@@ -5,8 +5,8 @@ A set of functions
 
 import re
 import json
-from flask import Request
 from typing import Any
+from flask import Request
 from werkzeug.datastructures import ImmutableMultiDict
 
 

@@ -10,11 +10,15 @@ Errors
    :show-inheritance:
    :no-index:
    
+.. autoclass:: BackoError
+   :members:
+   :show-inheritance: 
+
 .. autoclass:: DBError
    :members:
    :show-inheritance: 
 
-.. autoclass:: NotFoundError
+.. autoclass:: FileError
    :members:
    :show-inheritance: 
 
@@ -22,13 +26,14 @@ Errors
    :members:
    :show-inheritance: 
 
-.. autoclass:: BackoError
+.. autoclass:: NotFoundError
    :members:
    :show-inheritance: 
 
 .. autoclass:: SessionError
    :members:
    :show-inheritance: 
+
 
 
 
