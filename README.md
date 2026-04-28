@@ -15,7 +15,7 @@ See [Documentation](https://backo.readthedocs.io/en/latest/) for all details
 
 
 ## What is backo
-It aims at providing a simple and efficient way to create a backend application that exposes a set of REST API routes. 
+It aims at providing a simple and efficient way to create a backend application that exposes a set of RESTful API routes. 
 
 
 ## Installation
@@ -244,7 +244,7 @@ Relationship example: Books and Authors
 an_author = Item({
     'name' : String(),
     # An author may have written 0 or many books
-    'books' : RefsList( coll='books', field="$.autor" )
+    'books' : RefsList( coll='books', field="$.author" )
 })
 
 # A book is written by an author
@@ -263,23 +263,23 @@ You can use File() or BlobFile().
 
 | object | Description |
 | -- | -- |
-| File() | Generic object to manage a file. You need to define a FileConnector to say to the object File where to store the file |
-| BlobFile() | Store the file directly in the datastructure. You don't need any FileConnector. Reserved for small files. |
+| File() | Generic object to manage a file. You need to define a FileConnector to indicate the object File where to store the file |
+| BlobFile() | File data is integrated literally into the datastructure, so there is no need for a FileConnector. Reserved for small files. |
 
 You can use all [parameters](https://github.com/bwallrich/stricto?tab=readme-ov-file#types) for Files like other fields. 
 
 
-You have specific parameters :
+However there are extra specific parameters :
 
 | Option | Default | Description |
 | - | - | - |
-| ```mime_types=[ str ]``` | None | The list of avaiable content types you want. |
+| ```mime_types=[ str ]``` | None | The list of allowed content types |
 | ```max_size=8192``` | None | The maximum size of the file |
-| ```work_connector=FileConnector``` | None | The fileConnector to use ( = the place to store the file) |
-| ```storage_connector=FileConnector``` | None | The second fileConnector to use to move the file when the Item is saved. If *None*, files stay il the *work_connector* |
+| ```work_connector=FileConnector``` | None | File working copy connector (main file location) |
+| ```storage_connector=FileConnector``` | None | Second fileConnector used to store the file permanently after processing. If unset, file unique location is *work_connector* |
 
 
-A file object as attributes and methods :
+Attributes and methods of the File object:
 
 ```python
 a = BlobFile()
@@ -302,37 +302,37 @@ a.get_content() # -> b'Hello word'
 ### BlobFile()
 
 
-Add a file with storage into the structure. That's it.
+Add a file with inlined data: 
 
 ```python
 an_author = Item({
     'name' : String( require=True ),
     'surname' : String(),
     'pict' : BlobFile( require=True , mime_types=[ 'image/jpeg', 'image/png' ])
-    'books' : RefsList( coll='books', field="$.autor" )
+    'books' : RefsList( coll='books', field="$.author" )
 })
 ```
 ### File()
 
 
-Add a file with storage on a specific place on the file system
+Add a file stored in a specific location on the file system:
 
 ```python
 an_author = Item({
     'name' : String( require=True ),
     'surname' : String(),
-    'pict' : File( require=True , mime_types=[ 'image/jpeg', 'image/png' ], work=FileSystemConnector( path="/the_place/to/store/files" ) )
-    'books' : RefsList( coll='books', field="$.autor" )
+    'pict' : File( require=True , mime_types=[ 'image/jpeg', 'image/png' ], work=FileSystemConnector( path="/path/to/store/the/file" ) )
+    'books' : RefsList( coll='books', field="$.author" )
 })
 ```
 
 
 ### routes
 
-In a general context, [routes](#routes-1) are restfull json api calls. But with files, every routes (crud, actions, ... )
+In a general context, [routes](#routes-1) are RESTful JSON API calls. But with files, every routes (CRUD, actions, ... )
 can be called in two ways :
 
-1. With files embedded in json in string format (for text files) or with base64 encoded (for other).
+1. With files embedded in JSON in string format (for text files) or with base64 encoded (for other).
     
     ```bash
         # creating an author with a pict
@@ -341,7 +341,7 @@ can be called in two ways :
    
 2. With a multipart route
     
-    Each file is a part of the html multipart message. The json structure must be encoded in a ```_json``` multipart part.
+    Each file is a part of the HTML multipart message. The JSON structure must be encoded in a ```_json``` multipart part.
    
     ```bash
         # creating an author with a pict
@@ -375,7 +375,7 @@ A collection can have :
 2. Some [Selections](#selection)
 
 
-See [routes](#routes) for resulting RESTFull api routes
+See [routes](#routes) for resulting RESTful API routes.
 
 
 ### example
@@ -404,7 +404,7 @@ books = Collection(
 
 ### rights
 
-a right is a function (or a lambda) with thoses parameters, and must return a bool.
+A right is a function (or a lambda) with thoses parameters, and must return a boolean.
 
 ```python
 def your_function_name(right_name: str, o: Item) -> bool:
@@ -437,7 +437,7 @@ An action is compose by :
 ### example
 
 This is an action to *borrow a book*, with a start time at daytime.
-(all collections ar not described)
+(all collections are not described)
 
 ```python
 
@@ -480,7 +480,7 @@ books.register_action("borrow", borrow_action)
 
 ### rights for actions
 
-a right is a function (or a lambda) with thoses parameters, and must return a bool.
+A right is a function (or a lambda) with these parameters, and must return a boolean.
 
 ```python
 def your_function_name(right_name: str, o: Item) -> bool:
@@ -496,7 +496,7 @@ def your_function_name(right_name: str, o: Item) -> bool:
 ### routes
 
 
-See [actions routes](#actions-routes) for resulting RESTFull api routes
+See [actions routes](#actions-routes) for resulting RESTful API routes.
 
 
 
@@ -517,8 +517,7 @@ An selection is compose by :
 
 ### example
 
-This is a selection of borrowed books
-(all collections ar not described)
+This is a selection of borrowed books (all collections ar not described).
 
 ```python
 # Les livres empruntés
@@ -546,7 +545,7 @@ curl -X GET 'http://localhost/media_library/coll/books/_selections/borrowed?titl
 
 ### rights for selections
 
-a right is a function (or a lambda) with thoses parameters, and must return a bool.
+A right is a function (or a lambda) with these parameters, and must return a boolean.
 
 ```python
 def your_function_name(right_name: str, o: Item) -> bool:
@@ -561,7 +560,7 @@ def your_function_name(right_name: str, o: Item) -> bool:
 ### routes
 
 
-See [actions routes](#actions-routes) for resulting RESTFull api routes
+See [actions routes](#actions-routes) for resulting RESTful API routes.
 
 
 ## Ref and RefsList
@@ -572,10 +571,10 @@ See [Cardinalities](#cardinalities)
 
 ### General
 
-Authentication is not managed by backo. You have to do the auth by yourself. and provide two things :
+Authentication is not managed by backo. Authentication is your side and you have to provide :
 
-1. One or more authentication methode which set a ```jwt token```
-2. A *verify function* wich read the ```jwt token``` and populate the [current_user](#current_user).
+1. One or more authentication methode which set a ```JWT token```
+2. A *verify function* which read the ```JWT token``` and populate the [current_user](#current_user).
 
 > [!IMPORTANT]  
 > The *verify function* must be passed as args to .build_routes() call
@@ -602,7 +601,7 @@ flowchart LR
 
 This is an short and uncompleted example to authenticate and fill [current_user](#current_user).
 
-first, the login part. a `/login` route in flas to make the login, and return a jwt
+First, the connection part. a `/login` route allows the login and returns a JWT.
 
 ```python
 app = Flask(__name__)
@@ -637,7 +636,7 @@ def login():
     return response
 ```
 
-Second par : The decorator for authenticate the route and fill [current_user](#current_user)
+Second part : The decorator used to authenticate the route and to populate [current_user](#current_user)
 
 ```python
 def token_required(f):
@@ -668,7 +667,7 @@ myapp.build_routes(flask, "", check_user_token)
 
 ## current_user
 
-`current_user`is a object containing information of the authenticated user currently connected.
+`current_user` represents the currently loggued user.
 
 ### usage
 
@@ -691,7 +690,7 @@ if current_user.has_role('teamManager'):
 However, using jwt is a goot solution. See [Authentication](#authentication) for that.
 
 
-### current_user api
+### current_user API
 
 `current_user` is a very simple [Stricto Dict](https://github.com/bwallrich/stricto?tab=readme-ov-file#dict) (but can be [extended](#extend-current_user)). It contains :
 
@@ -821,7 +820,7 @@ Create a new item for the collection `collection name`.
 curl -X POST 'http://localhost/myApp/users/' -d '{"name":"John","surname":"Rambo"}'
 ```
 
-It returns the created *user* JSON object with a generated unique identifier `_id` and some _metadatas or an error otherwise.
+It returns the created *user* JSON object with a generated unique identifier `_id` and some _metadata or an error otherwise.
 
 
 #### PUT /\<my-app-name\>/\<collection name\>/\<_id\>
@@ -864,7 +863,7 @@ Patch content can be a *list of patch operations*.
 
 #### POST /\<my-app-name\>/\<collection name\>/_check
 
-Check the validity a field of the item
+Check the validity of an item field.
 
 Please refer to [stricto selectors](https://github.com/bwallrich/stricto#selectors) for more details on selectors.
 
@@ -893,7 +892,7 @@ curl -X POST 'http://localhost/myApp/users/_check' -d '{ "item" : { "name" : "
 }
 ```
 
-The response is a *status 200* even if the check return an error. The request is correct.
+The response is a *status 200* even if the check returns an error. The request is correct.
 
 ```bash
 curl -X POST 'http://localhost/myApp/users/_check' -d '{ "item" : { "surname" : "Johnny" }, "path" : "$.surname" }' 
@@ -942,12 +941,11 @@ curl -X GET 'http://localhost/media_library/coll/books/_selections/borrowed?titl
 
 
 ### Meta routes
-
-there is some route availables to get informations on the applications (its structure, rights, etc)
+Meta route are used to retrieve introspective informations about the application itself (structure, rights, ...).
 
 #### GET /\<my-app-name\>/_meta
 
-Return the structure of the application as a json with thoses keys :
+Return the structure of the application as a JSON with thoses keys :
 
 | key | type | description |
 | - | - | - |
@@ -1105,7 +1103,7 @@ curl -X GET  'http://localhost/myApp/_meta'
 
 #### POST /\<my-app-name\>/\<collection name\>/_meta
 
-Ask the backoffice the currents meta information for this collection object.
+Ask the backoffice the current meta informations for this collection object.
 
 
             "type": ty,
@@ -1210,7 +1208,7 @@ curl -X POST 'http://localhost/myApp/users/_meta' -d { 'name' : "John" }
 ```
 
 ## Internal usage
-Typical use case for users and theirs addresses.
+Typical use cases for users and related addresses.
 
 ```python
 # Create an adress, save it in the DB and provide the object with a unique id.
@@ -1405,14 +1403,14 @@ Currently available loggers are :
 ## migration
 
 
-If you change an [Item](#item) of a [Collection](#collection), datas currently in the database can be rejected by the model.
+If you change an [Item](#item) of a [Collection](#collection), data currently stored in the database can be rejected by the model.
 You need to migrate them and there is a tool for that.
 
 ### How it works
 
 You have to write a script importing your backoffice object call the ```.migrate()``` method of the backoffice, and provide a function to make change to the object.
 
-the givent function must be like that :
+Below a migration function example:
 
 ```python
 def transform_function( o: dict) -> dict:
@@ -1439,7 +1437,7 @@ By default, the flag ```dry_run``` is ```True```. so you will broke nothing. ```
 Imagine a *books* collection. 
 You modify the book [Item](#item) to add a *note* field which is a float and is required. 
 If you do nothing, the ```load()``` of a old item in the DB will failed on the new field *note* (required). 
-This is an example for migrate datas
+This is an example for migrating data.
 
 
 ```python
@@ -1493,7 +1491,7 @@ report = mybackoffice.migrate("books", update_with_note, dry_run=False)  # All i
 
 ### report
 
-The migration return a report structure :
+The migration returns a report structure :
 
 * ```report.nochanges._ids``` 
   The list (array) of unchanged _ids
