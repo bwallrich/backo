@@ -4,6 +4,7 @@ The Collection module
 
 # pylint: disable=logging-fstring-interpolation, too-many-public-methods
 import json
+import re
 import sys
 import copy
 import pprint
@@ -41,6 +42,7 @@ from .request_decorators import error_to_http_handler, check_content_type
 from .api_toolbox import multidict_to_filter, append_path_to_filter, request_to_object
 from .patch import Patch
 from .migration_report import MigrationReport
+from .file.file import File
 
 log = log_system.get_or_create_logger("collection", LogLevel.INFO)
 log_migration = log_system.get_or_create_logger("migration")
@@ -492,6 +494,18 @@ class Collection:
                 self.http_get_by_id
             )
 
+            # Get path
+            log.info(f"Add route GET {self.name}/<string:_id>/<string:path>")
+
+            collection_blueprint.add_url_rule(
+                "/<string:_id>/<string:path>",
+                "get_path",
+                methods=["GET"],
+            )
+            collection_blueprint.view_functions[f"{self.name}.get_path"] = (
+                self.http_get_path_by_id
+            )
+
         # PUT /<_id> Modify Data
         if self._permissions.is_strictly_allowed_to("modify") is not False:
             log.info(f"Add route PUT {self.name}/<string:_id>")
@@ -623,6 +637,43 @@ class Collection:
 
         log.debug(f"get by _id {_id} in {self.name} in view {_view}")
         return (json.dumps(obj.get_view(_view), cls=StrictoEncoder), 200)
+
+    @error_to_http_handler
+    def http_get_path_by_id(self, _id: str, path: str):
+        """
+        GET HTTP
+
+        :meta private:
+
+        """
+
+        log.debug(f"http_get_path_by_id _id={_id} path={path}")
+
+        query = request.args
+        _view = query.get("_view", "client")
+
+        obj = self.new_item()
+        obj.load(_id)
+
+        # add the $. at the beginning of the path if not
+        mypath = path if re.match(r"^\$\.", path) else f"$.{path}"
+        field = obj.select(mypath)
+
+        if field is None:
+            raise PathNotFoundError('{0}: path "{1}" not found', self.name, mypath)
+
+        if not isinstance(field, File):
+            raise PathNotFoundError(
+                '{0}: path "{1}" must be a File(), and actually is "{2}"',
+                self.name,
+                mypath,
+                type(field),
+            )
+
+        return field.read_content_generator(), {
+            "Content-Type": field.content_type.get_value(),
+            "Content-Length": field.size.get_value(),
+        }
 
     @error_to_http_handler
     def filtering(self):

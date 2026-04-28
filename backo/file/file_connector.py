@@ -14,7 +14,7 @@ from stricto import Kparse, validation_parameters
 
 
 KPARSE_MODEL = {
-    "buffer_size": {"type": int, "default": 3},
+    "buffer_size": {"type": int, "default": 8192},
 }
 
 
@@ -54,7 +54,6 @@ class FileConnector:  # pylint: disable=too-many-instance-attributes
         """
         return False
 
-
     def clear(self, file_id: str) -> None:
         """
         Set the file given by its file_id to empty
@@ -63,9 +62,7 @@ class FileConnector:  # pylint: disable=too-many-instance-attributes
         :type file_id: str
         """
 
-    def get(
-        self, file_id: str, mode: str = "rb", encoding: str | None = None
-    ) -> bytes :
+    def get(self, file_id: str, mode: str = "rb", encoding: str | None = None) -> bytes:
         """
         Return the content of the file
 
@@ -79,7 +76,7 @@ class FileConnector:  # pylint: disable=too-many-instance-attributes
 
     def read_chunk(self, file_id: str) -> Generator:
         """
-        
+
         Read a chunk of the file
 
         :param file_id: file id
@@ -92,8 +89,8 @@ class FileConnector:  # pylint: disable=too-many-instance-attributes
         return None
 
     def write_chunk(self, filename: str, chunk: bytes) -> str | None:
-        """        
-        
+        """
+
         Append a chunk to the file
 
         :param file_id: file id

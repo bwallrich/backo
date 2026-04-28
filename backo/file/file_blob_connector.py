@@ -82,7 +82,7 @@ class FileBlobConnector(FileConnector):  # pylint: disable=too-many-instance-att
 
     def read_chunk(self, file_id: str) -> Generator:
         """
-        
+
         Read a chunk of the file
 
         :param file_id: file id
@@ -104,8 +104,8 @@ class FileBlobConnector(FileConnector):  # pylint: disable=too-many-instance-att
         return barray[index : index + self._buffer_size]
 
     def write_chunk(self, file_id: str, chunk: bytes) -> None:
-        """        
-        
+        """
+
         Append a chunk to the file
 
         :param file_id: file id

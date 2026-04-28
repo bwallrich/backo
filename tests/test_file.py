@@ -1,4 +1,4 @@
-# pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code, unused-argument
+# pylint: disable=wrong-import-position, too-many-statements, no-member, import-error, protected-access, wrong-import-order, duplicate-code, unused-argument
 
 """
 test for File()
@@ -434,6 +434,18 @@ class TestFile(unittest.TestCase):
         u = model.copy()
         u.set(json.loads(response.data))
         self.assertEqual(u.f.get_content(), b"yeswecanornot")
+
+        # get the file as a link
+        # check a wrong path name
+        response = client.get(f"/myApp/users/{v['_id']}/a.b.c[0]")
+        self.assertEqual(response.status_code, 400)
+        # Get the good one
+        response = client.get(f"/myApp/users/{v['_id']}/f")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content_type, "text/plain")
+        self.assertEqual(response.content_length, len(b"yeswecanornot"))
+        self.assertEqual(response.data, b"yeswecanornot")
+
         # delete
         response = client.delete(f"/myApp/users/{v['_id']}")
         self.assertEqual(response.status_code, 200)
@@ -447,8 +459,8 @@ class TestFile(unittest.TestCase):
             f.write("Now the file has more content!")
 
         for file_connector in [
-            BlobFile(),
-            File(work=self.work_connector),
+            BlobFile(buffer_size=3),
+            File(work=self.work_connector, buffer_size=3),
             File(work=FileBlobConnector()),
         ]:
             with self.subTest(file_connector=file_connector):

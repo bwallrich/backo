@@ -2,6 +2,7 @@
 """Module providing the BlobFile Class"""
 
 import sys
+from typing import Generator
 from werkzeug.datastructures import FileStorage
 
 
@@ -29,10 +30,10 @@ class BlobFile(File):
     def __init__(self, **kwargs):
         """
         Object to manage files directly in the data File object.
-        
+
         With this object, file are store with meta_datas ( filename, file_id, size, content_type...) in the DB
         Interesting for small files.
-              
+
         """
 
         kwargs["work_connector"] = FileBlobConnector()
@@ -53,6 +54,33 @@ class BlobFile(File):
             raise FileError("{0} file doesnt exists (no file_id)", self.path_name())
 
         return self.content.get_value()
+
+    def read_chunk(self) -> Generator:
+        """Read chunk by chunk
+
+        :yield: a chunk
+        :rtype: Generator
+        """
+        barray = bytearray(self.content.get_value())
+        index = 0
+        while index < len(barray):
+            chunk = barray[index : index + self._buffers_size]
+            yield chunk
+            index += self._buffers_size
+        return chunk
+
+    def read_content_generator(self) -> Generator:
+        """
+        Return a generator which read chunk into the storage
+
+        :yield: a chunk
+        :rtype: Generator
+        """
+        f_id = self.file_id.get_value()
+        if f_id is None:
+            raise FileError("{0} file not found", self.path_name())
+
+        return self.read_chunk()
 
     def _set_content_from_filestorage(self, content: FileStorage) -> None:
         """Set the content of the file from a FileStorage

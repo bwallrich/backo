@@ -101,7 +101,7 @@ class FileSystemConnector(
 
     def read_chunk(self, file_id: str) -> Generator:
         """
-        
+
         Read a chunk of the file
 
         :param file_id: file id
@@ -121,8 +121,8 @@ class FileSystemConnector(
         return chunk
 
     def write_chunk(self, file_id: str, chunk: bytes) -> None:
-        """        
-        
+        """
+
         Append a chunk to the file
 
         :param file_id: file id

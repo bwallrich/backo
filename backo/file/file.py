@@ -3,7 +3,7 @@
 
 import copy
 import uuid
-from typing import Any
+from typing import Any, Generator
 import re
 import base64
 import binascii
@@ -93,7 +93,7 @@ def transform_to_filestorage(  # pylint: disable=unused-argument
 
 
 KPARSE_MODEL = {
-    "buffer_size": {"type": int, "default": 3},
+    "buffer_size": {"type": int, "default": 8192},
     "mime_types|content_type": list[str],
     "max_size|max": int,
     "work_connector|work|connector|wc|wconnector*": {
@@ -124,7 +124,7 @@ class File(Dict):
         :type max_size=: int
         :param mime_types=: The list of available mime_types
         :type mime_types=: list [ str ]
-              
+
         """
 
         log.setLevel(LogLevel.DEBUG)
@@ -309,6 +309,25 @@ class File(Dict):
         for chunk in chunk_iterator:
             dst.write_chunk(f_id_dst, chunk)
         return None
+
+    def read_content_generator(self) -> Generator:
+        """
+        Return a generator which read chunk into the storage
+
+        :yield: a chunk
+        :rtype: Generator
+        """
+        f_id = self.file_id.get_value()
+        if f_id is None:
+            raise FileError("{0} file not found", self.path_name())
+
+        if self._work_connector.has_file(f_id):
+            return self._work_connector.read_chunk(f_id)
+
+        if self._storage_connector and self._work_connector.has_file(f_id):
+            return self._work_connector.read_chunk(f_id)
+
+        raise FileError("{0} unable to get file", self.path_name())
 
     def load(self) -> None:
         """

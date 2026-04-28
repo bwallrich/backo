@@ -355,6 +355,11 @@ can be called in two ways :
 
     ```
 
+
+3. link to the file are GET \<my-app-name\>/\<collection name\>/\<_id\>/\<path\>
+
+
+
 See [routes](#routes-1) for more details 
 
 
@@ -811,6 +816,19 @@ Select all users whose name includes 'do' and present the result list with 10 it
 ```bash
 curl -X GET 'http://localhost/myApp/users/?name.$re=do&_page=10'  
 ```
+
+#### GET \<my-app-name\>/\<collection name\>/\<_id\>/\<path\>
+
+Get the file content (if path refer to a file, otherwhise an error)
+
+```bash
+curl -X GET 'http://localhost/myApp/users/1234/pict'
+
+# will probably return a content_type 'image/--'  and its content.
+
+```
+
+
 
 #### POST \<my-app-name\>/\<collection name\>
 Create a new item for the collection `collection name`.
