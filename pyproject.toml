@@ -1,6 +1,6 @@
 [project]
 name = "backo"
-version = "0.1.1"
+version = "0.1.2"
 authors = [
   { name="Bertrand Wallrich", email="Bertrand.Wallrich@inria.fr" },
 ]
@@ -19,7 +19,7 @@ dependencies = [
   "pyyaml",
   "deepdiff",
   "python-magic",
-  "stricto>=0.1.1"
+  "stricto>=0.1.2"
 ]
 
 [project.urls]

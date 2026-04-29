@@ -4,4 +4,4 @@ flask
 pyjwt
 deepdiff
 python-magic
-stricto>=0.1.1
+stricto>=0.1.2
