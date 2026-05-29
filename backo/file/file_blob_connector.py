@@ -17,16 +17,15 @@ log = log_system.get_or_create_logger("file", LogLevel.DEBUG)
 
 
 class FileBlobConnector(FileConnector):  # pylint: disable=too-many-instance-attributes
+    """
+    File connector in memory
+    This is the way to save files just in memory.
+
+    """
 
     @validation_parameters
     def __init__(self, **kwargs):
-        """
-        File connector in memory
-
-        This is the way to save files just in memory.
-
-
-        """
+        """ """
 
         # The array of bytes
         self._blobs = {}

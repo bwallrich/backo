@@ -46,7 +46,6 @@ def transform_to_filestorage(  # pylint: disable=unused-argument
     :rtype: FileStorage
     """
     if v is None:
-        print("transform None")
         return None
 
     if isinstance(v, File):
@@ -106,11 +105,17 @@ KPARSE_MODEL = {
 
 
 class File(Dict):
+    """
+    Object to manage files.
+    inherite from https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict
+
+
+    :param Dict: Dict
+    :type Dict: https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict
+    """
 
     def __init__(self, **kwargs):
         """
-        Object to manage files.
-        inherite from https://stricto.readthedocs.io/en/latest/api_reference.html#stricto.Dict
 
 
         :param buffer_size=: The buffer size to read chunk on this file
@@ -268,13 +273,40 @@ class File(Dict):
             transform_to_filestorage(content, None)
         )
 
-    def set_value_without_checks(self, value):
+    def set_value(self, value: Any) -> bool:
+        """Set the value of the file.
 
+        If the value is a dict, handle it as file structure. if a str|bytes|FileStorage,
+        set the content and fill meta datas in the structure.
+
+        :param value: The file Structure or content
+        :type value: Any
+        :return: True if modifications or False if nothing changed.
+        :rtype: bool
+        """
         if isinstance(value, (FileStorage, str, bytes)):
+            old_content = None
+            if self.has_file() is True:
+                old_content = self.get_content()
             self.set_content(value)
-            return
-        super().set_value_without_checks(value)
-        return
+            if self.get_content() == old_content:
+                return False
+            return True
+
+        return super().set_value(value)
+
+    def compute_value(self) -> bool:
+        """compute the value if needed
+
+        :return: True if changed
+        :rtype: bool
+        """
+
+        if callable(self._auto_set):
+            value = self._auto_set(self.get_root())
+            return self.set_value(value)
+
+        return False
 
     def delete_content(self) -> None:
         """Delete the file"""
@@ -407,6 +439,8 @@ class File(Dict):
                 size = value.size.get_value()
             if isinstance(value, FileStorage):
                 size = value.content_length
+            if isinstance(value, dict):
+                size = value.get("size")
 
             if size is not None and size > self._max_size:
                 raise SConstraintError(
@@ -417,11 +451,17 @@ class File(Dict):
 
         # check the content_type
         if self._authorized_mime_types is not None:
+            print(
+                f"File check constraint mime types {type(value)} {self._authorized_mime_types}"
+            )
+
             mt = None
             if isinstance(value, File):
                 mt = value.content_type.get_value()
             if isinstance(value, FileStorage):
                 mt = value.content_type
+            if isinstance(value, dict):
+                mt = value.get("content_type")
 
             if mt not in self._authorized_mime_types:
                 raise SConstraintError(

@@ -19,13 +19,19 @@ KPARSE_MODEL = {
 
 
 class FileConnector:  # pylint: disable=too-many-instance-attributes
+    """
+    Abstract Class fir File connector.
+    this is the family (parent) object for files connector
+    """
 
     @validation_parameters
     def __init__(self, **kwargs):
         """
-        File connector main object.
+        :param kwargs: arguments as kwargs for the FileConnector
+        :type kwargs: object
 
-        this is the family (parent) object for files connector
+        :keyword buffer_size: The biffer size (default = 0812)
+        :type buffer_size: int
         """
 
         options = Kparse(kwargs, KPARSE_MODEL, strict=True)

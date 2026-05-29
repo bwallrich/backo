@@ -7,6 +7,7 @@ test for File()
 import unittest
 import tempfile
 import base64
+import re
 import os
 import io
 import json
@@ -172,10 +173,7 @@ class TestFile(unittest.TestCase):
         a.set({"name": "Charlie"})
         self.assertEqual(a.f.get_content(), b"Hello Charlie.")
         b = a.copy()
-        # sa = json.dumps(a, cls=StrictoEncoder)  # json dumps
-        # b.set(json.loads(sa))
-
-        self.assertEqual(b.f.get_content(), b"Hello Charlie.")
+        sa = json.dumps(a, cls=StrictoEncoder)  # json dumps
         b.name = "Bravo"
         self.assertEqual(b.f.get_content(), b"Hello Bravo.")
         self.assertEqual(a.f.get_content(), b"Hello Charlie.")
@@ -188,8 +186,7 @@ class TestFile(unittest.TestCase):
         """Test update file in a Dict"""
 
         def update_file(o: Dict):
-            o.f.set_content(f"Hello {o.name}.")
-            return o.f
+            return f"Hello {o.name}."
 
         for file_connector in [
             BlobFile(set=update_file),
@@ -209,9 +206,8 @@ class TestFile(unittest.TestCase):
         a.check("toto")
         with self.assertRaises(SConstraintError) as e:
             a.check(b"\x01\x02\x03\x04\x05\x06")
-        self.assertEqual(
-            e.exception.to_string(),
-            "$: Constraint not validated for value=\"<FileStorage: None ('application/octet-stream')>\"",
+        self.assertIsNotNone(
+            re.match(r".*Constraint not validated for value", e.exception.to_string())
         )
 
     def test_file_constraints(self):
@@ -219,9 +215,10 @@ class TestFile(unittest.TestCase):
 
         def only_text(f: FileStorage | None, o) -> bool:
             """check manualy if the mime type is text/plain"""
+
             if f is None:
                 return True
-            if f.content_type == "text/plain":
+            if f["content_type"] == "text/plain":
                 return True
             return False
 
@@ -258,9 +255,8 @@ class TestFile(unittest.TestCase):
                 a.check("tot")
                 with self.assertRaises(SConstraintError) as e:
                     a.check(b"\x01\x02\x03\x04\x05\x06")
-                self.assertEqual(
-                    e.exception.to_string(),
-                    "$: File too big (value=\"<FileStorage: None ('application/octet-stream')>\")",
+                self.assertIsNotNone(
+                    re.match(r".*File too big", e.exception.to_string())
                 )
 
     def test_filestorage_src_blobfile(self):

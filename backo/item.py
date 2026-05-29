@@ -21,7 +21,14 @@ log = log_system.get_or_create_logger("Item")
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
-from stricto import Dict, String, SRightError, Kparse, validation_parameters
+from stricto import (
+    Dict,
+    String,
+    SRightError,
+    Kparse,
+    EVENT_MANAGER,
+    validation_parameters,
+)
 
 KPARSE_MODEL = {
     "meta_data_handler": {
@@ -83,9 +90,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         Dict.__init__(self, schema, **kwargs)
 
         # Append then change event to the item
-        if "change" not in self._events:
-            self._events["change"] = []
-        self._events["change"].append(self.on_change)
+        EVENT_MANAGER.register_event(self, "change", self.on_change)
 
         # adding _id to the model
         self.add_to_model("_id", String(can_modify=False))
@@ -192,7 +197,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         # if kwargs.get("m_path") is None:
         #     kwargs["m_path"] = []
 
-        self.trigg("loaded", id(self), **kwargs)
+        self.trigg("loaded", **kwargs)
 
         # print(f"Load {int(datetime.timestamp(datetime.now()))}", self)
 
@@ -227,7 +232,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         # if kwargs.get("m_path") is None:
         #     kwargs["m_path"] = []
 
-        self.trigg("loaded", id(self), **kwargs)
+        self.trigg("loaded", **kwargs)
 
     def save(self, **kwargs) -> None:
         """
@@ -275,7 +280,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
             self.__dict__["_loaded_object"] = a
 
         kwargs["old_object"] = self.__dict__["_loaded_object"]
-        self.trigg("before_save", id(self), **kwargs)
+        self.trigg("before_save", **kwargs)
 
         # print(f"Save {int(datetime.timestamp(datetime.now()))}", self)
         dict_to_save = self.get_view("save").get_encoded()
@@ -295,7 +300,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
             self.__dict__["_loaded_object"].get_value(),
         )
 
-        self.trigg("saved", id(self), **kwargs)
+        self.trigg("saved", **kwargs)
 
     def delete(self, **kwargs) -> None:
         """
@@ -332,7 +337,7 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
             )
 
         # Send delete event before deletion to do  some stufs
-        self.trigg("before_delete", id(self), **kwargs)
+        self.trigg("before_delete", **kwargs)
         self.db_handler.delete_by_id(self._id.get_value())
 
         log.info(
@@ -437,4 +442,5 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
             self._collection.name,
             self._id,
         )
-        self.trigg("created", id(self), **kwargs)
+        print(f"Item trigg created {id(self)} {self.get_value()}")
+        self.trigg("created", **kwargs)

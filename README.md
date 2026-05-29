@@ -1127,7 +1127,7 @@ Ask the backoffice the current meta informations for this collection object.
             "type": ty,
             "type_short" : re.sub(".*\.|\'>", '', ty),
             "description": self.get_as_string(self._description),
-            "required": self.get_as_string(self._not_none),
+            "required": self.get_as_string(self._required),
             "in": self.get_as_string(self._union),
             "constraints": self.get_as_string(self._constraints),
             "default": self.get_as_string(self._default),

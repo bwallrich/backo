@@ -357,7 +357,7 @@ class TestRoutes(unittest.TestCase):
         """
         response = self.client.post(
             "/myApp/users/_meta",
-            json={"name": "bert3", "surname": 21},
+            json={"name": "bert3", "surname": "toto"},
         )
         self.assertEqual(response.status_code, 200)
         results = json.loads(response.data)

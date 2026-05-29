@@ -146,6 +146,8 @@ class TestMigrations(unittest.TestCase):
         self.backo.users.model.remove_model("age")
         with self.assertRaises(SAttributeError) as e:
             self.backo.migrate("users", _id="User_al0_al0")
-        self.assertEqual(e.exception.to_string(), '$: Unknown key "age"')
+        self.assertEqual(
+            e.exception.to_string(), '$: Dict object has no attribute "age"'
+        )
         report = self.backo.migrate("users", remove_age, dry_run=False)
         self.assertEqual(report.changes.total, 10)

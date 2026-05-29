@@ -29,18 +29,20 @@ KPARSE_MODEL = {
 class FileSystemConnector(
     FileConnector
 ):  # pylint: disable=too-many-instance-attributes
+    """
+    File connector on a file system
+
+    This is the way to save / store / retrieve objects
+    """
 
     @validation_parameters
     def __init__(self, **kwargs):
         """
-        File connector on a file system
+        :param kwargs: arguments as kwargs for the FileSystemConnector
+        :type kwargs: object
 
-        This is the way to save / store / retrieve objects
-
-
-        :param path=: The directory to store files
-        :type path=: str
-
+        :keyword path: The path to store files
+        :type path: str
         """
 
         options = Kparse(kwargs, KPARSE_MODEL)

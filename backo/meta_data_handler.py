@@ -64,14 +64,15 @@ class StandardMetaDataHandler(
         if o._meta.ctime == None:  # pylint: disable=singleton-comparison
             o._meta.ctime = now
 
+        login = current_user.login.copy()
+        user_id = current_user._id.copy()
+
         if o._meta.created_by._id == None:  # pylint: disable=singleton-comparison
-            o._meta.created_by._id = current_user._id.copy()
-            o._meta.created_by.login = current_user.login.copy()
+            o._meta.created_by.set({"_id": user_id, "login": login})
 
         # Set modificattion time and last updater
-        o._meta.mtime = now
-        o._meta.modified_by._id = current_user._id.copy()
-        o._meta.modified_by.login = current_user.login.copy()
+        o._meta.modified_by.set({"_id": user_id, "login": login})
+        o._meta.mtime.set(now)
 
         # Put permission back
         if permission_enabled is True:

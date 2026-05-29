@@ -27,7 +27,10 @@ from .backoffice import Backoffice
 from .collection import Collection
 from .selection import Selection
 from .log import Logger, log_system, LogLevel, stack
-from .reference import Ref, RefsList, FillStrategy, DeleteStrategy
+
+# from .reference import Ref, RefsList, FillStrategy, DeleteStrategy
+from .refslist import RefsList, FillStrategy, DeleteStrategy
+from .ref import Ref
 from .file.file import File
 from .file.file_connector import FileConnector
 from .file.file_system_connector import FileSystemConnector

@@ -1,5 +1,5 @@
 """
-test for References()
+test for Selections()
 """
 
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code

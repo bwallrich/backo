@@ -365,7 +365,8 @@ class Collection:
 
             # Check if the object match the model despite the fact there is no change
             o = self.new_item()
-            print(o)
+            print(f">> {o}")
+            print(f"<< {new_obj}")
             o.set(new_obj)
 
             return None
@@ -877,7 +878,7 @@ class Collection:
 
         # Create a partial object with values given in request.item
         obj = self.new_item()
-        obj.set_value_without_checks(c.item.get_value())
+        obj.set_value(c.item.get_value())
         obj.enable_permissions()
         sub_object = obj.select(c.path)
         if sub_object is None:
@@ -916,7 +917,7 @@ class Collection:
 
         # Create a partial object with values given in request.item
         obj = self.new_item()
-        obj.set_value_without_checks(c.get_value())
+        obj.set_value(c.get_value())
         obj.enable_permissions()
 
         return (json.dumps(obj.get_current_meta()), 200)
@@ -952,6 +953,7 @@ class Collection:
             # apply patches
             for p in patch_list:
                 patch = Patch()
+                print(f"patch {p}")
                 patch.set(p)
                 obj.patch(patch.op, patch.path, patch.value)
 
