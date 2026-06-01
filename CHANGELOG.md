@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.2.0] 2026-06-01
+    * Internal
+      * Refactoring to follow stricto 0.1.x to 0.2.0
+  
 ## [0.1.2] 2026-04-29
     * Feature
       * Files management with File() / BlobFile() objects & co, with documentations, tests.
