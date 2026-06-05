@@ -586,7 +586,6 @@ class RefsList(List):
         )
 
         # set the _coll_ref (in case of)
-        print(f" me type={type(me)}")
         me.set_collection_reference()
 
         # modify ref to me to the new one

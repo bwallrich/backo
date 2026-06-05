@@ -95,10 +95,7 @@ KPARSE_MODEL = {
     "buffer_size": {"type": int, "default": 8192},
     "mime_types|content_type": list[str],
     "max_size|max": int,
-    "work_connector|work|connector|wc|wconnector*": {
-        "type": FileConnector,
-        "default": FileConnector(),
-    },
+    "work_connector|work|connector|wc|wconnector*": FileConnector,
     "storage_connector|storage|cold|cold_connector": FileConnector,
     "on": {"type": list[tuple], "default": []},
 }

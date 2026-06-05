@@ -5,12 +5,9 @@ test for Meta data
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code
 
 import unittest
-import pprint
+import json
 
-pp = pprint.PrettyPrinter(indent=2)
-
-
-from backo import Item, Collection
+from backo import Item, Collection, Selection
 from backo import DBYmlConnector
 from backo import Backoffice, current_user
 from backo import Ref, RefsList, DeleteStrategy
@@ -73,6 +70,10 @@ class TestMeta(unittest.TestCase):
             ),
             self.yml_sites,
         )
+
+        my_selection = Selection(["$.name", "$.male"])
+        self.users.register_selection("myselection", my_selection)
+
         self.backoffice.register_collection(self.users)
         self.backoffice.register_collection(self.sites)
 
@@ -111,8 +112,11 @@ class TestMeta(unittest.TestCase):
         self.assertEqual(list(d.keys()), ["name", "collections"])
         for collection in d["collections"]:
             self.assertEqual("item" in collection.keys(), True)
+            self.assertEqual(isinstance(collection["actions"], list), True)
+            self.assertEqual(isinstance(collection["selections"], list), True)
+            print(json.dumps(collection["selections"], indent=2))
             schema = collection["item"]
-            self.assertEqual("type" in schema, True)
+            self.assertEqual("types" in schema, True)
 
     def test_get_current_meta(self):
         """

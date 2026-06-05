@@ -95,7 +95,7 @@ coll_users = Collection(
     }),
     yml_users,
 )
-my_backoffice.add_collection(coll_users)
+my_backoffice.register_collection(coll_users)
 
 # -- Add the collection "addrs" into this backoffice (with reference to the "usres" collection)
 coll_addrs = Collection(
@@ -1150,7 +1150,7 @@ def can_see_and_modify_salary(right_name, o, other):
         return True
     return False
 
-my_backoffice.add_collection(
+my_backoffice.register_collection(
     "users",
     Item(
         {

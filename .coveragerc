@@ -1,0 +1,6 @@
+[run]
+source = .
+omit = 
+    tests/*
+    *stricto*
+    *__init__.py

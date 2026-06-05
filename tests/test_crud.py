@@ -12,7 +12,7 @@ from ipaddress import IPv4Address
 from backo import Item, Collection
 from backo import DBYmlConnector
 from backo import Backoffice, NotFoundError, BackoError, current_user
-from backo import String, Bool, SRightError, Ipaddress
+from backo import String, Bool, Int, SRightError, Ipaddress
 
 YML_DIR = "/tmp/backo_tests_crud"
 
@@ -65,6 +65,11 @@ class TestCRUD(unittest.TestCase):
             v.delete()
         self.assertEqual(
             e.exception.to_string(), "Cannot delete an unset object in users"
+        )
+        with self.assertRaises(BackoError) as e:
+            v.reload()
+        self.assertEqual(
+            e.exception.to_string(), "Cannot reload an unset object in users"
         )
         with self.assertRaises(BackoError) as e:
             v.save()
@@ -195,6 +200,75 @@ class TestCRUD(unittest.TestCase):
         self.assertEqual(
             repr(e.exception), 'RightsError("$._meta.ctime: cannot modify value")'
         )
+        current_user.standalone = False
+
+    def test_crud_rights(self):
+        """
+        create
+        and delete
+        """
+
+        backoffice = Backoffice("myApp")
+        coll = Collection(
+            "users",
+            Item(
+                {
+                    "name": String(),
+                    "surname": String(),
+                    "age": Int(),
+                }
+            ),
+            self.yml_users,
+            can_read=False,
+            can_modify=False,
+            can_create=False,
+            can_delete=False,
+        )
+
+        backoffice.register_collection(coll)
+
+        self.yml_users.drop()
+
+        current_user.standalone = True
+        # -- creation error
+        u = backoffice.users.new()
+        with self.assertRaises(SRightError) as e:
+            u.create({"name": "bebert", "surname": "toto", "age": 11})
+        self.assertEqual(
+            repr(e.exception),
+            'RightsError("No permission to create in collection users")',
+        )
+
+        # set right to create to on to continue
+        coll._permissions.add_or_modify_permission("create", True)
+        u.create({"name": "bebert"})
+        u.set({"age": 12})
+        with self.assertRaises(SRightError) as e:
+            u.reload()
+        self.assertEqual(
+            repr(e.exception),
+            'RightsError("No permission to read element in collection users")',
+        )
+        with self.assertRaises(SRightError) as e:
+            u.save()
+        self.assertEqual(
+            repr(e.exception),
+            'RightsError("No permission to modify element in collection users")',
+        )
+        with self.assertRaises(SRightError) as e:
+            u.delete()
+        self.assertEqual(
+            repr(e.exception),
+            'RightsError("No permission to delete element in collection users")',
+        )
+        v = backoffice.users.new()
+        with self.assertRaises(SRightError) as e:
+            v.load(u._id)
+        self.assertEqual(
+            repr(e.exception),
+            'RightsError("No permission to read element in collection users")',
+        )
+
         current_user.standalone = False
 
     def test_crud_no_meta(self):

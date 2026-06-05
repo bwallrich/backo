@@ -35,6 +35,21 @@ class CollectionAddon:
         # Enable directly all permissions
         self._permissions.enable()
 
+    def get_schema(self) -> dict:
+        """
+        Return a schema for this object
+
+        :param self: Description
+        :return: the schema as a json object (dict)
+        :rtype: dict
+
+        Return a schema for this object
+        """
+        a = {
+            "rights": self._permissions.get_as_dict_of_strings(),
+        }
+        return a
+
     def is_allowed_to(self, right_name: str, root: any = None) -> bool:
         """
         check the right "right_name"

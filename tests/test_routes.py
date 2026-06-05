@@ -419,3 +419,18 @@ class TestRoutes(unittest.TestCase):
 
         response = self.client.delete(f"/myApp/users/{u._id}")
         self.assertEqual(response.status_code, 200)
+
+    def test_get_route_meta(self):
+        """Test route meta"""
+        response = self.client.get(
+            "/myApp/_meta",
+        )
+        self.assertEqual(response.status_code, 200)
+        d = json.loads(response.data)
+        for collection in d["collections"]:
+            self.assertEqual("item" in collection.keys(), True)
+            self.assertEqual(isinstance(collection["actions"], list), True)
+            self.assertEqual(isinstance(collection["selections"], list), True)
+            print(json.dumps(collection["selections"], indent=2))
+            schema = collection["item"]
+            self.assertEqual("types" in schema, True)

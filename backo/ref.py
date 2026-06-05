@@ -256,6 +256,10 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         # try to load the coresponding field
         other = me._coll_ref.new()
         other.load(target_id)
+        # try:
+        # except Exception as e:
+        #     log.warning(f'{self.path_name()} : load {target_id} in collection {me._collection} return an error ({e})')
+        #     return
 
         # fill the field
         reverse_field = other.select(me._reverse)
@@ -294,7 +298,7 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
 
     def on_delete(
         self, event_name, root, me, **kwargs
-    ):  # pylint: disable=unused-argument
+    ):  # pylint: disable=unused-argument, too-many-return-statements
         """
         The object will be deleted
         clean structure
@@ -330,7 +334,13 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         me.set_collection_reference()
         # try to load the coresponding field
         other = me._coll_ref.new()
-        other.load(me.get_value())
+        try:
+            other.load(me.get_value())
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            log.warning(
+                f"{self.path_name()} : load {me.get_value()} in collection {me._collection} return an error ({e})"
+            )
+            return
 
         # fill the field
         reverse_field = other.select(me._reverse)

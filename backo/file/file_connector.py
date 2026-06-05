@@ -6,6 +6,7 @@ Module providing the Generic() Class for file connector
 import uuid
 import sys
 from typing import Generator
+from abc import ABC, abstractmethod
 
 # used for developpement
 sys.path.insert(1, "../../../stricto")
@@ -18,7 +19,7 @@ KPARSE_MODEL = {
 }
 
 
-class FileConnector:  # pylint: disable=too-many-instance-attributes
+class FileConnector(ABC):  # pylint: disable=too-many-instance-attributes
     """
     Abstract Class fir File connector.
     this is the family (parent) object for files connector
@@ -47,6 +48,7 @@ class FileConnector:  # pylint: disable=too-many-instance-attributes
         """
         return str(uuid.uuid4().int >> 64)
 
+    @abstractmethod
     def has_file(self, file_id: str) -> bool:
         """
         check if the file exists
@@ -58,8 +60,8 @@ class FileConnector:  # pylint: disable=too-many-instance-attributes
         :rtype: bool
 
         """
-        return False
 
+    @abstractmethod
     def clear(self, file_id: str) -> None:
         """
         Set the file given by its file_id to empty
@@ -68,6 +70,7 @@ class FileConnector:  # pylint: disable=too-many-instance-attributes
         :type file_id: str
         """
 
+    @abstractmethod
     def get(self, file_id: str, mode: str = "rb", encoding: str | None = None) -> bytes:
         """
         Return the content of the file
@@ -78,8 +81,8 @@ class FileConnector:  # pylint: disable=too-many-instance-attributes
         :return: the file content
         :rtype: bytes
         """
-        return None
 
+    @abstractmethod
     def read_chunk(self, file_id: str) -> Generator:
         """
 
@@ -92,8 +95,8 @@ class FileConnector:  # pylint: disable=too-many-instance-attributes
         :rtype: Generator
 
         """
-        return None
 
+    @abstractmethod
     def write_chunk(self, filename: str, chunk: bytes) -> str | None:
         """
 
@@ -106,8 +109,8 @@ class FileConnector:  # pylint: disable=too-many-instance-attributes
 
 
         """
-        return None
 
+    @abstractmethod
     def delete(self, filename: str) -> None:
         """
         Delete the file
@@ -115,4 +118,3 @@ class FileConnector:  # pylint: disable=too-many-instance-attributes
         :param file_id: file id
         :type file_id: str
         """
-        return

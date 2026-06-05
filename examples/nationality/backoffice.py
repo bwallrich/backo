@@ -18,8 +18,8 @@ flask = Flask("nationality")
 
 
 myapp = Backoffice("nationality")
-myapp.add_collection(countries)
-myapp.add_collection(people)
+myapp.register_collection(countries)
+myapp.register_collection(people)
 
 # To check if you have some syntax issue
 myapp.check_syntax()

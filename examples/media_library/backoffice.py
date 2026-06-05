@@ -115,8 +115,8 @@ def logout():
 
 
 myapp = Backoffice("media_library")
-myapp.add_collection(books)
-myapp.add_collection(users)
+myapp.register_collection(books)
+myapp.register_collection(users)
 
 # To check if you have some syntax issue
 myapp.check_syntax()

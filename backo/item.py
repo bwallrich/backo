@@ -72,6 +72,9 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
 
     """
 
+    meta_data_handler: GenericMetaDataHandler = None
+    """The metadata handler to apply"""
+
     @validation_parameters
     def __init__(self, schema: dict, **kwargs):
         """
@@ -185,6 +188,13 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
                 "Cannot load an non-unset object in {0}", self._collection.name
             )
 
+        # Check if right to read
+        if self._collection.is_allowed_to("read", self) is not True:
+            raise SRightError(
+                "No permission to read element in collection {0}",
+                self._collection.name,
+            )
+
         _id_to_load = _id.get_value() if isinstance(_id, String) else str(_id)
 
         obj = self.db_handler.get_by_id(_id_to_load)
@@ -216,6 +226,13 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         if self._status != StatusType.SAVED:
             raise BackoError(
                 "Cannot reload an unset object in {0}", self._collection.name
+            )
+
+        # Check if right to read
+        if self._collection.is_allowed_to("read", self) is not True:
+            raise SRightError(
+                "No permission to read element in collection {0}",
+                self._collection.name,
             )
 
         obj = self.db_handler.get_by_id(self._id.get_value())
@@ -333,7 +350,8 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
         # Check if right to create
         if self._collection.is_allowed_to("delete", self) is not True:
             raise SRightError(
-                "No permission to delete in collection {0}", self._collection.name
+                "No permission to delete element in collection {0}",
+                self._collection.name,
             )
 
         # Send delete event before deletion to do  some stufs

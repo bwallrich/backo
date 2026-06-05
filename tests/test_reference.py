@@ -256,6 +256,66 @@ class TestReferences(unittest.TestCase):
         # -- delete site
         si.delete()
 
+    def test_references_one_to_many_noreverse(self):
+        """
+        creating an backoffice with ref one to many
+        and delete with NO REVERSE
+        """
+
+        backoffice = Backoffice("myApp")
+
+        backoffice.register_collection(
+            Collection(
+                "users",
+                Item(
+                    {
+                        "name": String(),
+                        "surname": String(),
+                        "site": Ref(coll="sites", field="$.users", required=True),
+                        "male": Bool(default=True),
+                    }
+                ),
+                self.yml_users,
+            )
+        )
+        backoffice.register_collection(
+            Collection(
+                "sites",
+                Item(
+                    {
+                        "name": String(),
+                        "address": String(),
+                        "users": RefsList(
+                            coll="users",
+                            ods=DeleteStrategy.MUST_BE_EMPTY,
+                        ),
+                    }
+                ),
+                self.yml_sites,
+            )
+        )
+
+        # Hard clean before tests
+        self.yml_sites.drop()
+        self.yml_users.drop()
+
+        current_user.standalone = True
+        si = backoffice.sites.create({"name": "moon", "address": "far"})
+
+        u = backoffice.users.create(
+            {"name": "bebert", "surname": "bebert", "site": si._id}
+        )
+
+        # -- Check reverse must not be filled
+        si.reload()
+        self.assertEqual(len(si.users), 1)
+
+        # -- delete si (we can because we don't know wich field from users point to us)
+        si.delete()
+
+        # -- check if deletion reverse is OK
+        u.delete()
+
     def test_references_one_to_many_strategy_clean(self):
         """
         creating an backoffice with ref one to many

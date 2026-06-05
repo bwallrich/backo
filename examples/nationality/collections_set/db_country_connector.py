@@ -5,7 +5,7 @@ Module providing the Yml DB like
 # pylint: disable=logging-fstring-interpolation
 import json
 import http.client
-from backo import DBConnector, log_system, LogLevel, NotFoundError
+from backo import DBConnector, log_system, LogLevel, NotFoundError, DBError
 
 log = log_system.get_or_create_logger("wget", LogLevel.DEBUG)
 
@@ -42,6 +42,16 @@ class MyDBRestfullConnector(
         """
         del o["name"]["nativeName"]
         o["_id"] = self.generate_id(o)
+
+
+    def drop(self):  # pylint: disable=unused-argument
+        raise DBError('MyDBRestfullConnector doenst implement drop() method')
+    def create(self, o: dict) -> str:  # pylint: disable=unused-argument
+        raise DBError('MyDBRestfullConnector doenst implement create() method')
+    def save(self, _id: str, o: dict):  # pylint: disable=unused-argument
+        raise DBError('MyDBRestfullConnector doenst implement save() method')
+    def delete_by_id(self, _id: str):  # pylint: disable=unused-argument
+        raise DBError('MyDBRestfullConnector doenst implement delete_by_id() method')
 
     def get_by_id(self, _id: str) -> dict:
         """See :func:`DBConnector.get_by_id`"""

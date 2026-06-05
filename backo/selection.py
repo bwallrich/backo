@@ -16,6 +16,7 @@ from stricto import (
     SSyntaxError,
     Kparse,
     validation_parameters,
+    get_content,
 )
 
 # from .item import Item
@@ -98,6 +99,21 @@ class Selection(CollectionAddon):
         CollectionAddon.__init__(self)
         self._permissions = Permissions(**kwargs)
         self._permissions.add_or_modify_permission("read", options.get("can_read"))
+
+    def get_schema(self) -> dict:
+        """
+        Return schema for this selection
+
+        :param self: Description
+        :return: the schema as a json object (dict)
+        :rtype: dict
+
+        Return the schema for this selection
+        """
+        a = CollectionAddon.get_schema(self)
+        a["selectors"] = get_content(self._selectors)
+
+        return a
 
     def can_read(self) -> bool:
         """

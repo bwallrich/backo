@@ -5,18 +5,17 @@ Module providing the Generic() Class for connection on DB
 import uuid
 import sys
 from typing import Callable
+from abc import ABC, abstractmethod
 
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
 from stricto import Kparse
 
-from .error import DBError
-
 KPARSE_MODEL = {"restriction": Callable}
 
 
-class DBConnector:  # pylint: disable=too-many-instance-attributes
+class DBConnector(ABC):  # pylint: disable=too-many-instance-attributes
     """Database Connector
 
     This is the way to save / store / retrieve objects
@@ -35,6 +34,7 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
 
         self.restriction_filter = options.get("restriction")
 
+    @abstractmethod
     def drop(self):  # pylint: disable=unused-argument
         """Drop the collection
 
@@ -43,7 +43,6 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
 
         :raise Error: Raise an error DBError or any db error
         """
-        raise DBError("drop() is not implemented for {0}", type(self))
 
     def generate_id(self, o: dict) -> str:  # pylint: disable=unused-argument
         """
@@ -60,6 +59,7 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
         """
         return str(uuid.uuid4().int >> 64)
 
+    @abstractmethod
     def create(self, o: dict) -> str:  # pylint: disable=unused-argument
         """Create the object into the DB and return the _id
 
@@ -68,8 +68,8 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
         :raise Error: Raise an error DBError or any db error
 
         """
-        raise DBError("create() is not implemented for {0}", type(self))
 
+    @abstractmethod
     def save(self, _id: str, o: dict):  # pylint: disable=unused-argument
         """Save the objet
 
@@ -80,8 +80,8 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
         :raise Error: Raise an error DBError or any db error
 
         """
-        raise DBError("save() is not implemented for {0}", type(self))
 
+    @abstractmethod
     def get_by_id(self, _id: str) -> dict:  # pylint: disable=unused-argument
         """
         get an object by _id in the DB and return it
@@ -93,8 +93,8 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
         :raise Error: Raise an error DBError or any db error
 
         """
-        raise DBError("get_by_id() is not implemented for {0}", type(self))
 
+    @abstractmethod
     def delete_by_id(self, _id: str):  # pylint: disable=unused-argument
         """The _id to delete on the db
 
@@ -102,8 +102,8 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
         :type _id: str
         :raise Error: Raise an error DBError or any db error
         """
-        raise DBError("delete_by_id() is not implemented for {0}", type(self))
 
+    @abstractmethod
     def select(
         self,
         select_filter,
@@ -127,4 +127,3 @@ class DBConnector:  # pylint: disable=too-many-instance-attributes
         :raise Error: Raise an error DBError or any db error
 
         """
-        raise DBError("select() is not implemented for {0}", type(self))

@@ -57,16 +57,14 @@ class FileBlobConnector(FileConnector):  # pylint: disable=too-many-instance-att
         :return: the file content
         :rtype: bytes
         """
-        if file_id not in self._blobs:
-            return None
+        if file_id in self._blobs:
+            b = self._blobs[file_id]
+            if mode == "rb":
+                return b.get_value()
+            if mode == "r":
+                return b.get_value().decode(encoding)
 
-        b = self._blobs[file_id]
-        if mode == "rb":
-            return b.get_value()
-        if mode == "r":
-            return b.get_value().decode(encoding)
-
-        # unknown mode
+        # unknown
         return None
 
     def clear(self, file_id: str) -> None:

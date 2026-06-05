@@ -36,6 +36,7 @@ from stricto import (
 from .item import Item
 from .action import Action
 from .selection import Selection
+from .db_connector import DBConnector
 from .error import PathNotFoundError
 from .log import log_system, LogLevel
 from .request_decorators import error_to_http_handler, check_content_type
@@ -119,8 +120,15 @@ class Collection:
 
     """
 
+    name: str = None
+    """The name of the collection"""
+    model: Item = None
+    """The item definition"""
+    db_handler: DBConnector = None
+    """The database connector"""
+
     @validation_parameters
-    def __init__(self, name: str, model: Item, db_handler, **kwargs):
+    def __init__(self, name: str, model: Item, db_handler: DBConnector, **kwargs):
         """Constructor"""
         self.db_handler = db_handler
         self.name: str = name
@@ -159,12 +167,27 @@ class Collection:
         self.register_selection("_all", Selection(None, can_read=can_read))
 
     def get_meta(self) -> dict:
-        """Return the meta data for this collection and actions
+        """Return the meta data for this collection and actions"""
 
-        :meta private:
+        actions = []
+        for action_name, action in self._actions.items():
+            m = action.get_schema()
+            m["name"] = action_name
+            actions.append(m)
 
-        """
-        d = {"name": self.name, "item": self.model.get_schema()}
+        selections = []
+        for sel_name, sel in self._selections.items():
+            m = sel.get_schema()
+            m["name"] = sel_name
+            selections.append(m)
+
+        d = {
+            "name": self.name,
+            "item": self.model.get_schema(),
+            "rights": self._permissions.get_as_dict_of_strings(),
+            "actions": actions,
+            "selections": selections,
+        }
         return d
 
     def set(self, datas: dict | list) -> Item | list:
@@ -551,7 +574,7 @@ class Collection:
                 "go",
                 methods=["POST"],
             )
-            collection_blueprint.view_functions[f"{self.name}.go"] = self.action_go
+            collection_blueprint.view_functions[f"{self.name}.go"] = self._action_go
 
         # Selections
         if self._permissions.is_strictly_allowed_to("read") is not False:
@@ -578,7 +601,7 @@ class Collection:
 
     @check_content_type
     @error_to_http_handler
-    def action_go(self, _action_name: str, _id: str):
+    def _action_go(self, _action_name: str, _id: str):
         """_summary_
 
         :param _id: The _id

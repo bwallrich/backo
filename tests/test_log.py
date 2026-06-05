@@ -5,7 +5,7 @@ test for CRUD()
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code
 
 import unittest
-from backo import Logger, LogLevel
+from backo import Logger, LogLevel, stack
 
 
 class TestLog(unittest.TestCase):
@@ -37,3 +37,10 @@ class TestLog(unittest.TestCase):
         log_system.setLevel(LogLevel.INFO)
         log1.debug("hey baby 2")
         self.assertEqual(log1.get_last_message().message, "hey baby")
+
+    def test_stack(self):
+        """
+        test stack()
+        """
+        a = stack(3)
+        self.assertNotEqual(a, "")

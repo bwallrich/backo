@@ -48,12 +48,17 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
 
     """
 
+    name: str = None
+    """The name of the backoffice"""
+    collections: dict = {}
+    """The list of collections, per name"""
+
     @validation_parameters
     def __init__(self, name: str):
         """Constructor for backoffice"""
         self.name = name
         self.collections = {}
-        self.transaction_id_reference = 1
+        self._transaction_id_reference = 1
         self.transactions = {}
 
     @validation_parameters
@@ -76,10 +81,6 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
         coll.backoffice = self
         setattr(self, coll.name, coll)
 
-    def add_collection(self, coll: Collection) -> None:
-        """See :func:`register_collection`"""
-        return self.register_collection(coll)
-
     def start_transaction(self) -> int:
         """Chose an id for the transaction and start the transaction structure
 
@@ -88,8 +89,8 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
         :meta private:
 
         """
-        self.transaction_id_reference += 1
-        my_id = self.transaction_id_reference
+        self._transaction_id_reference += 1
+        my_id = self._transaction_id_reference
         self.transactions[my_id] = []
         return my_id
 
