@@ -19,7 +19,7 @@ dependencies = [
   "pyyaml",
   "deepdiff",
   "python-magic",
-  "stricto>=0.2.0"
+  "stricto>=0.2.1"
 ]
 
 [project.urls]
