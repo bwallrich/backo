@@ -17,11 +17,10 @@ from .db_connector import DBConnector
 from .error import NotFoundError, DBError
 from .log import log_system
 
-
 KPARSE_MODEL = {
-    "path": {"type": str, "default": "/tmp"}, 
+    "path": {"type": str, "default": "/tmp"},
     "dbname": {"type": str, "default": "default"},
-    "collection": {"type": str, "default": ""}
+    "collection": {"type": str, "default": ""},
 }
 
 log = log_system.get_or_create_logger("test")
@@ -59,10 +58,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             self._con = sqlite3.connect(f"{self._path}/{self._dbname}.db")
             self._cursor = self._con.cursor()
         except Exception as e:
-            raise DBError(
-                'SQLLite connection error at "{0}"', self._path
-            ) from e
-
+            raise DBError('SQLLite connection error at "{0}"', self._path) from e
 
         # if self.restriction_filter is not None:
         #     raise DBError("Restriction filter not implemented for yml")
@@ -76,14 +72,11 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
     #         ) from e
 
     def _to_sql_type(self, str_type):
-        return {
-            'String': 'TEXT',
-            "Bool": "INTEGER"
-        }[str_type]
+        return {"String": "TEXT", "Bool": "INTEGER"}[str_type]
 
     def create_table(self, meta):
         str_cols = []
-        
+
         print(f"TABLE {meta["name"]}")
 
         for col_name, col_data in meta["item"]["sub_scheme"].items():
@@ -94,13 +87,13 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
                 print(f"TYPE: {col_type}")
 
         str_request = f"""
-        CREATE TABLE IF NOT EXISTS {meta["name"]} (
-            id INTEGER PRIMARY KEY, 
+        CREATE TABLE IF NOT EXISTS {self._collection_name} (
+            _id TEXT PRIMARY KEY, 
             {",".join(str_cols)}
         );
         """
         print(str_request)
-        
+
         try:
             self._cursor.execute(str_request)
             self._con.commit()
@@ -124,14 +117,14 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             print(self._path)
             self._cursor.execute(f"DELETE FROM {self._collection_name}")
             self._con.commit()
-            
+
             # Check how many rows were deleted
             deleted_rows = self._cursor.rowcount
             print(f"✓ Deleted {deleted_rows} row(s)")
-            
+
             if deleted_rows == 0:
                 print("⚠ Warning: No rows matched the condition")
-            
+
         except sqlite3.OperationalError as e:
             self._con.rollback()
             raise DBError(
@@ -143,68 +136,76 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         except sqlite3.Error as e:
             print(f"✗ Database Error: {e}")
             self._con.rollback()
-        # finally:
-        #     if conn:
-        #         conn.close()
-
+        finally:
+            pass
 
     def save(self, _id: str, o: dict) -> None:
         """See :func:`DBConnector.save`"""
         log.debug(f"save {_id} ")
 
-        try:
-            # Insert
+    def _format_val(self, val):
+        if isinstance(val, bool):
+            return "TRUE" if val else "FALSE"
+        elif isinstance(val, str):
+            return f"'{val}'"
+        else:
+            return val
 
-            str_request = f'INSERT INTO users (name, surname, male) VALUES ({o["name"]}, {o["surname"]}, TRUE)'
-            print(str_request)
-            self._cursor.execute()
-            self._con.commit()
-            
-            # Check how many rows were deleted
-            # deleted_rows = self._cursor.rowcount
-            # print(f"✓ Deleted {deleted_rows} row(s)")
-            
-            # if deleted_rows == 0:
-            #     print("⚠ Warning: No rows matched the condition")
-            
-        except sqlite3.OperationalError as e:
-            self._con.rollback()
-            raise DBError(
-                f'✗ Operational Error: {e} while "{self._collection_name}.save()"'
-            ) from e
-        except sqlite3.IntegrityError as e:
-            print(f"✗ Integrity Error: {e}")
-            self._con.rollback()
-        except sqlite3.Error as e:
-            print(f"✗ Database Error: {e}")
-            self._con.rollback()
-
+    def _is_internal_field(self, field):
+        return field.startswith("_")
 
     def create(self, o: dict) -> str:
         """See :func:`DBConnector.create`"""
-        return -1
-        # _id = o["_id"]
+        _id = self.generate_id(o)
+        o["_id"] = _id
 
-        # log.debug(f"create {_id} ")
-        # filename = os.path.join(self._path, _id + ".yml")
+        log.debug(f"create {_id} ")
 
-        # if os.path.exists(filename):
-        #     raise DBError('_id "{0}" already exist in path "{1}"', _id, self._path)
+        try:
+            str_col_names = ",".join(
+                col_name
+                for col_name, _ in o.items()
+                if not self._is_internal_field(col_name)
+            )
+            str_values = ",".join(
+                self._format_val(val)
+                for col_name, val in o.items()
+                if not self._is_internal_field(col_name)
+            )
 
-        # log.debug(f"try to create {filename}")
-        # with open(filename, mode="w", encoding="utf-8") as outfile:
-        #     yaml.dump(o, outfile, default_flow_style=False)
-        # return _id
+            # Insert
+            str_request = f"INSERT INTO {self._collection_name} (_id, {str_col_names}) VALUES ('{_id}', {str_values})"
+            print(str_request)
+            self._cursor.execute(str_request)
+            self._con.commit()
+
+            log.debug(f"✓ Created {self._collection_name} {_id}")
+
+            return _id
+
+        except sqlite3.OperationalError as e:
+            self._con.rollback()
+            raise DBError(
+                f'✗ Operational Error: {e} while "{self._collection_name}.create()"'
+            ) from e
+        except sqlite3.IntegrityError as e:
+            self._con.rollback()
+            raise DBError(
+                f'✗ Integrity Error: {e} while "{self._collection_name}.create()"'
+            ) from e
+        except sqlite3.Error as e:
+            self._con.rollback()
+            raise DBError(
+                f'✗ Database Error: {e} while "{self._collection_name}.create()"'
+            ) from e
 
     def get_by_id(self, _id: str) -> dict:
         """See :func:`DBConnector.get_by_id`"""
         log.debug(f"read {_id} ")
 
-
     def delete_by_id(self, _id: str) -> bool:
         """See :func:`DBConnector.delete_by_id`"""
         log.debug(f"delete {_id}")
-
 
     def select(
         self,

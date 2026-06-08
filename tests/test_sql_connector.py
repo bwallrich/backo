@@ -28,16 +28,10 @@ class TestMongo(unittest.TestCase):
         super().__init__(*args, **kwargs)
 
         # --- DB for user
-        self.db_users = DBSQLConnector(
-            collection="Users",
-            path="sqlite_test_db"
-        )
+        self.db_users = DBSQLConnector(collection="Users", path="sqlite_test_db")
 
         # --- DB for sites
-        self.db_site = DBSQLConnector(
-            collection="Sites",
-            path="sqlite_test_db"
-        )
+        self.db_site = DBSQLConnector(collection="Sites", path="sqlite_test_db")
 
     def tearDown(self):
         self.db_site.close()
@@ -57,10 +51,9 @@ class TestMongo(unittest.TestCase):
                 Item(
                     {"name": String(), "surname": String(), "male": Bool(default=True)}
                 ),
-                self.db_users
+                self.db_users,
             )
         )
-        
 
         # ignore sessions for this campaign of tests.
         current_user.standalone = True
@@ -70,8 +63,10 @@ class TestMongo(unittest.TestCase):
 
         # print(json.dumps(backoffice.users.get_meta(), indent=4))
         self.db_users.create_table(backoffice.users.get_meta())
-        # u = backoffice.users.create({"name": "bebert", "surname": "bebert"})
+        # self.db_users.drop()
+
+        u = backoffice.users.create({"name": "bebert", "surname": "bebert"})
+        # print(u.name)
+        # u.name = "bobi"
         # v = backoffice.users.new()
-        # u.save()
         # v.load(u._id)
-        self.db_users.drop()
