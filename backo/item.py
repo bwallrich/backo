@@ -15,7 +15,6 @@ from .meta_data_handler import StandardMetaDataHandler, GenericMetaDataHandler
 from .loop_path import LoopPath
 from .status import StatusType
 
-
 log = log_system.get_or_create_logger("Item")
 
 # used for developpement

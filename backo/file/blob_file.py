@@ -5,7 +5,6 @@ import sys
 from typing import Generator
 from werkzeug.datastructures import FileStorage
 
-
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
