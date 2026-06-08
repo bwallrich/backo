@@ -14,6 +14,7 @@ from .item import Item
 from .db_yml_connector import DBYmlConnector
 from .db_mongo_connector import DBMongoConnector
 from .db_connector import DBConnector
+from .db_restfull_connector import DBRestfullConnector
 from .current_user import current_user, CurrentUser, CurrentUserWrapper
 from .error import (
     DBError,
@@ -22,6 +23,7 @@ from .error import (
     BackoError,
     SessionError,
     FileError,
+    RestAPIError,
 )
 from .backoffice import Backoffice
 from .collection import Collection

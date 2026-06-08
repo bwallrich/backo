@@ -3,24 +3,25 @@ Module providing the Yml DB like
 """
 
 # pylint: disable=logging-fstring-interpolation
-import json
-import http.client
-from backo import DBConnector, log_system, LogLevel, NotFoundError, DBError
+from backo import DBRestfullConnector, log_system, LogLevel, NotFoundError, DBError, RestAPIError
 
 log = log_system.get_or_create_logger("wget", LogLevel.DEBUG)
 
 
 class MyDBRestfullConnector(
-    DBConnector
+    DBRestfullConnector
 ):  # pylint: disable=too-many-instance-attributes
     """An example of a rest API connector"""
 
     def __init__(self, **kwargs):
         """constructor"""
-        self._prefix = "https://restcountries.com/v3.1"
-        self._host = "restcountries.com"
-
-        DBConnector.__init__(self, **kwargs)
+        DBRestfullConnector.__init__(
+            self,
+            host="restcountries.com",
+            tls=True,
+            prefix="v3.1",
+            **kwargs,
+        )
 
     def generate_id(self, o: dict) -> str:  # pylint: disable=unused-argument
         """
@@ -57,29 +58,21 @@ class MyDBRestfullConnector(
 
     def get_by_id(self, _id: str) -> dict:
         """See :func:`DBConnector.get_by_id`"""
-        log.debug(f"wget {_id} ")
-        connection = http.client.HTTPSConnection(self._host)
-        connection.request("GET", f"/v3.1/alpha/{_id}?fields=name,flags,cca2,cca3")
-        response = connection.getresponse()
-        if response.status == 200:
-            data_string = response.read().decode()
-            log.debug(f"wget {_id} got {data_string}")
-
-            data = json.loads(data_string)
-
-            # Clean datas
-            self._clean_data(data)
-            connection.close()
-            return data
-
-        connection.close()
-        raise NotFoundError(
-            '_id "{0}" not found country "{1}/{2}"',
-            _id,
-            response.status,
-            response.reason,
-        )
-
+        try: 
+            return super().get_by_id(
+                _id,
+                endpoint="alpha",
+                query_options={"fields": "name,flags,cca2,cca3"},
+            )
+        except RestAPIError as e:
+            # restcountries.com returns a 400 - Bad request when a country is not found, so we consider that as a NotFoundError
+            status_code = None
+            if len(e.args) > 0 and isinstance(e.args[-1], int):
+                status_code = e.args[-1]
+            if status_code == 400:
+                raise NotFoundError('_id "{0}" not found', _id) from e
+            raise e
+        
     def select(
         self,
         select_filter,
@@ -102,20 +95,35 @@ class MyDBRestfullConnector(
             page_size,
         )
 
-        connection = http.client.HTTPSConnection(self._host)
-        connection.request("GET", "/v3.1/all?fields=name,flags,cca2,cca3")
-        response = connection.getresponse()
-        if response.status == 200:
-            data_string = response.read().decode()
-            connection.close()
-            list_of_countries = json.loads(data_string)
+        try:
+            status_code, list_of_countries = self._request(
+                endpoint="all",
+                query_options={"fields": "name,flags,cca2,cca3"},
+                method="GET",
+            )
+        except RestAPIError as e:
+            # restcountries.com may return 400 for invalid request parameters.
+            status_code = None
+            if len(e.args) > 0 and isinstance(e.args[-1], int):
+                status_code = e.args[-1]
+            if status_code == 400:
+                raise NotFoundError('selection error country "{0}"', status_code) from e
+            raise e
 
-            for c in list_of_countries:
-                self._clean_data(c)
+        if status_code == 404:
+            raise NotFoundError('selection error country "{0}"', status_code)
 
-            return list_of_countries
+        if status_code != 200:
+            raise RestAPIError(
+                'REST API returned status "{0}" for countries selection',
+                status_code,
+                status_code,
+            )
 
-        connection.close()
-        raise NotFoundError(
-            'selection error country "{0}/{1}"', response.status, response.reason
-        )
+        if list_of_countries is None:
+            return []
+
+        for c in list_of_countries:
+            self._clean_data(c)
+
+        return list_of_countries

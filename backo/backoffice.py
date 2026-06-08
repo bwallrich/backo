@@ -21,7 +21,6 @@ from .collection import Collection
 from .migration_report import MigrationReport
 from .log import log_system, LogLevel
 
-
 log = log_system.get_or_create_logger("backoffice", LogLevel.INFO)
 
 KPARSE_MIGRATION_MODEL = {
