@@ -5,13 +5,11 @@ test for CRUD()
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code
 
 import unittest
-import time
-import json
 
 
 from backo import Item, Collection
 from backo import DBSQLConnector
-from backo import Backoffice, NotFoundError, DBError, current_user
+from backo import Backoffice, current_user
 
 from backo import String, Bool  # , Error as StrictoError
 
@@ -65,7 +63,7 @@ class TestMongo(unittest.TestCase):
         self.db_users.create_table(backoffice.users.get_meta())
         # self.db_users.drop()
 
-        u = backoffice.users.create({"name": "bebert", "surname": "bebert"})
+        # u = backoffice.users.create({"name": "bebert", "surname": "bebert"})
         # print(u.name)
         # u.name = "bobi"
         # v = backoffice.users.new()

@@ -5,7 +5,6 @@ Module providing the Test DB like
 # pylint: disable=logging-fstring-interpolation
 import os
 import sys
-import re
 import sqlite3
 
 # used for developpement
@@ -14,7 +13,8 @@ sys.path.insert(1, "../../stricto")
 from stricto import Kparse
 
 from .db_connector import DBConnector
-from .error import NotFoundError, DBError
+# from .error import NotFoundError, DBError
+from .error import DBError
 from .log import log_system
 
 KPARSE_MODEL = {
@@ -75,6 +75,9 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         return {"String": "TEXT", "Bool": "INTEGER"}[str_type]
 
     def create_table(self, meta):
+        """
+        Table creation from schema
+        """
         str_cols = []
 
         print(f"TABLE {meta["name"]}")
@@ -146,10 +149,10 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
     def _format_val(self, val):
         if isinstance(val, bool):
             return "TRUE" if val else "FALSE"
-        elif isinstance(val, str):
+        if isinstance(val, str):
             return f"'{val}'"
-        else:
-            return val
+        
+        return val
 
     def _is_internal_field(self, field):
         return field.startswith("_")
