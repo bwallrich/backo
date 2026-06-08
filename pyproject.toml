@@ -19,6 +19,7 @@ dependencies = [
   "pyyaml",
   "deepdiff",
   "python-magic",
+  "pymongo",
   "stricto>=0.2.1"
 ]
 
