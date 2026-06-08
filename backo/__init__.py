@@ -13,6 +13,7 @@ from stricto import *
 from .item import Item
 from .db_yml_connector import DBYmlConnector
 from .db_mongo_connector import DBMongoConnector
+from .db_sql_connector import DBSQLConnector
 from .db_connector import DBConnector
 from .current_user import current_user, CurrentUser, CurrentUserWrapper
 from .error import (
