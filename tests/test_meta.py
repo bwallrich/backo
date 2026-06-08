@@ -47,7 +47,7 @@ class TestMeta(unittest.TestCase):
             "users",
             Item(
                 {
-                    "name": String(),
+                    "name": String(description="this is the name of the user"),
                     "surname": String(),
                     "site": Ref(coll="sites", field="$.users"),
                     "male": Bool(default=True),

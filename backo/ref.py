@@ -126,6 +126,18 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
 
         return
 
+    def get_schema(self) -> dict:
+        """get schema for ref with specific elements
+        collection and reverse
+
+        :return: the schema
+        :rtype: dict
+        """
+        a = super().self.get_schema()
+        a["collection"] = self._collection
+        a["reverse"] = self._reverse
+        return a
+
     def check_syntax(
         self, event_name: str, root, me, **kwargs
     ):  # pylint: disable=unused-argument
