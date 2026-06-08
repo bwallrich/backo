@@ -13,7 +13,7 @@ sys.path.insert(1, "../../stricto")
 from stricto import Kparse
 
 from .db_connector import DBConnector
-# from .error import NotFoundError, DBError
+from .error import NotFoundError
 from .error import DBError
 from .log import log_system
 
@@ -80,9 +80,9 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         """
         str_cols = []
 
-        print(f"TABLE {meta["name"]}")
+        print(f"TABLE {self._collection_name}")
 
-        for col_name, col_data in meta["item"]["sub_scheme"].items():
+        for col_name, col_data in meta["sub_scheme"].items():
             if not col_name.startswith("_"):
                 col_type = col_data["types"][0]
                 str_cols.append(f"{col_name} {self._to_sql_type(col_type)}")
@@ -100,7 +100,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         try:
             self._cursor.execute(str_request)
             self._con.commit()
-            print(self._cursor)
+            self._meta = meta
 
         except sqlite3.OperationalError as e:
             print(f"✗ Operational Error: {e}")
@@ -151,7 +151,13 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             return "TRUE" if val else "FALSE"
         if isinstance(val, str):
             return f"'{val}'"
-        
+
+        return val
+
+    def _map(self, val, target_types):
+        if "Bool" in target_types:
+            return bool(val)
+
         return val
 
     def _is_internal_field(self, field):
@@ -205,6 +211,47 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
     def get_by_id(self, _id: str) -> dict:
         """See :func:`DBConnector.get_by_id`"""
         log.debug(f"read {_id} ")
+
+        try:
+            # Select by id
+            str_request = f"SELECT * FROM {self._collection_name} WHERE _id='{_id}'"
+            print(str_request)
+            self._cursor.execute(str_request)
+            row = self._cursor.fetchone()
+
+            print(row)
+
+            log.debug(f"✓ GetById {self._collection_name} {_id}")
+
+            o = {"_id": row[0]}
+            for i, (col_name, col_data) in enumerate(self._meta["sub_scheme"].items()):
+                if not col_name.startswith("_"):
+                    o[col_name] = self._map(row[i + 1], col_data["types"])
+
+            if o is None:
+                raise NotFoundError(
+                    '_id "{0}" not found in collection "{1}"',
+                    _id,
+                    self._collection_name,
+                )
+
+            return o
+
+        except sqlite3.OperationalError as e:
+            self._con.rollback()
+            raise DBError(
+                f'✗ Operational Error: {e} while "{self._collection_name}.create()"'
+            ) from e
+        except sqlite3.IntegrityError as e:
+            self._con.rollback()
+            raise DBError(
+                f'✗ Integrity Error: {e} while "{self._collection_name}.create()"'
+            ) from e
+        except sqlite3.Error as e:
+            self._con.rollback()
+            raise DBError(
+                f'✗ Database Error: {e} while "{self._collection_name}.create()"'
+            ) from e
 
     def delete_by_id(self, _id: str) -> bool:
         """See :func:`DBConnector.delete_by_id`"""
