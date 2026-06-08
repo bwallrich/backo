@@ -60,17 +60,6 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         except Exception as e:
             raise DBError('SQLLite connection error at "{0}"', self._path) from e
 
-        # if self.restriction_filter is not None:
-        #     raise DBError("Restriction filter not implemented for yml")
-
-    # def connect(self):
-    #     try:
-    #         self._cursor = self._con.cursor()
-    #     except Exception as e:
-    #         raise DBError(
-    #             'SQLLite connection error at "{0}"', self._path
-    #         ) from e
-
     def _to_sql_type(self, str_type):
         return {"String": "TEXT", "Bool": "INTEGER"}[str_type]
 
@@ -114,7 +103,8 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
     def drop(self) -> None:
         """See :func:`DBConnector.drop`"""
-        try:
+
+        def delete_all():
             # Delete without condition
             print(self._dbname)
             print(self._path)
@@ -128,19 +118,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             if deleted_rows == 0:
                 print("⚠ Warning: No rows matched the condition")
 
-        except sqlite3.OperationalError as e:
-            self._con.rollback()
-            raise DBError(
-                f'✗ Operational Error: {e} while "{self._collection_name}.drop()"'
-            ) from e
-        except sqlite3.IntegrityError as e:
-            print(f"✗ Integrity Error: {e}")
-            self._con.rollback()
-        except sqlite3.Error as e:
-            print(f"✗ Database Error: {e}")
-            self._con.rollback()
-        finally:
-            pass
+        self._sqlite_try(delete_all)
 
     def save(self, _id: str, o: dict) -> None:
         """See :func:`DBConnector.save`"""
@@ -163,6 +141,29 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
     def _is_internal_field(self, field):
         return field.startswith("_")
 
+    def _sqlite_try(self, callback):
+        """
+        Just a function to factorize
+        the catching of sqlite exceptions
+        """
+        try:
+            return callback()
+        except sqlite3.OperationalError as e:
+            self._con.rollback()
+            raise DBError(
+                f'✗ Operational Error: {e} while "{self._collection_name}.create()"'
+            ) from e
+        except sqlite3.IntegrityError as e:
+            self._con.rollback()
+            raise DBError(
+                f'✗ Integrity Error: {e} while "{self._collection_name}.create()"'
+            ) from e
+        except sqlite3.Error as e:
+            self._con.rollback()
+            raise DBError(
+                f'✗ Database Error: {e} while "{self._collection_name}.create()"'
+            ) from e
+
     def create(self, o: dict) -> str:
         """See :func:`DBConnector.create`"""
         _id = self.generate_id(o)
@@ -170,7 +171,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
         log.debug(f"create {_id} ")
 
-        try:
+        def insert():
             str_col_names = ",".join(
                 col_name
                 for col_name, _ in o.items()
@@ -192,34 +193,24 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
             return _id
 
-        except sqlite3.OperationalError as e:
-            self._con.rollback()
-            raise DBError(
-                f'✗ Operational Error: {e} while "{self._collection_name}.create()"'
-            ) from e
-        except sqlite3.IntegrityError as e:
-            self._con.rollback()
-            raise DBError(
-                f'✗ Integrity Error: {e} while "{self._collection_name}.create()"'
-            ) from e
-        except sqlite3.Error as e:
-            self._con.rollback()
-            raise DBError(
-                f'✗ Database Error: {e} while "{self._collection_name}.create()"'
-            ) from e
+        return self._sqlite_try(insert)
 
     def get_by_id(self, _id: str) -> dict:
         """See :func:`DBConnector.get_by_id`"""
         log.debug(f"read {_id} ")
 
-        try:
-            # Select by id
+        def select():
             str_request = f"SELECT * FROM {self._collection_name} WHERE _id='{_id}'"
             print(str_request)
             self._cursor.execute(str_request)
             row = self._cursor.fetchone()
 
-            print(row)
+            if row is None:
+                raise NotFoundError(
+                    '_id "{0}" not found in collection "{1}"',
+                    _id,
+                    self._collection_name,
+                )
 
             log.debug(f"✓ GetById {self._collection_name} {_id}")
 
@@ -228,30 +219,9 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
                 if not col_name.startswith("_"):
                     o[col_name] = self._map(row[i + 1], col_data["types"])
 
-            if o is None:
-                raise NotFoundError(
-                    '_id "{0}" not found in collection "{1}"',
-                    _id,
-                    self._collection_name,
-                )
-
             return o
 
-        except sqlite3.OperationalError as e:
-            self._con.rollback()
-            raise DBError(
-                f'✗ Operational Error: {e} while "{self._collection_name}.create()"'
-            ) from e
-        except sqlite3.IntegrityError as e:
-            self._con.rollback()
-            raise DBError(
-                f'✗ Integrity Error: {e} while "{self._collection_name}.create()"'
-            ) from e
-        except sqlite3.Error as e:
-            self._con.rollback()
-            raise DBError(
-                f'✗ Database Error: {e} while "{self._collection_name}.create()"'
-            ) from e
+        return self._sqlite_try(select)
 
     def delete_by_id(self, _id: str) -> bool:
         """See :func:`DBConnector.delete_by_id`"""

@@ -83,3 +83,5 @@ class TestMongo(unittest.TestCase):
         w_ = backoffice.users.new()
         w_.load(w._id)
         print(w_)
+        x_ = backoffice.users.new()
+        x_.load("plop")
