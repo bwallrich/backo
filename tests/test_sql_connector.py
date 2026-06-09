@@ -54,10 +54,10 @@ class TestMongo(unittest.TestCase):
         print(json.dumps(self._animal_meta, indent=4))
 
         # --- DB for user
-        self.db_users = DBSQLConnector(collection="Users", path="sqlite_test_db", meta=self._user_meta)
+        self.db_users = DBSQLConnector(collection="Users", path="sqlite_test_db", meta=self._meta)
 
         # --- DB for sites
-        self.db_animals = DBSQLConnector(collection="Animals", path="sqlite_test_db", meta=self._animal_meta)
+        self.db_animals = DBSQLConnector(collection="Animals", path="sqlite_test_db", meta=self._meta)
 
         self._backoffice.register_collection(
             Collection(

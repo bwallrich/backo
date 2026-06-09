@@ -47,6 +47,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         self._dbname = options.get("dbname")
         self._collection_name = options.get("collection")
         self._meta = options.get("meta")
+        self._scheme = self._meta[self._collection_name]["sub_scheme"] # Shortcut to data
 
         DBConnector.__init__(self, **kwargs)
 
@@ -71,14 +72,14 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         """
         str_cols = []
 
-        for col_name, col_data in self._meta["sub_scheme"].items():
+        for col_name, col_data in self._scheme.items():
             col_type = col_data["types"][0]
             if not col_name.startswith("_") and not col_type == "RefsList":
                 str_cols.append(f"{col_name} {self._to_sql_type(col_type)}")
 
 
         # Add one-many relationship
-        for col_name, col_data in self._meta["sub_scheme"].items():
+        for col_name, col_data in self._scheme.items():
             col_type = col_data["types"][0]
             if col_type == "Ref":
                 str_cols.append(f"FOREIGN KEY ({col_name}) REFERENCES {col_data["collection"]}(_id)")
@@ -172,7 +173,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         def insert():
 
             t = []
-            for col_name, col_data in self._meta["sub_scheme"].items():
+            for col_name, col_data in self._scheme.items():
                 col_types = col_data["types"]
                 if "RefsList" not in col_types and col_name != "_meta":
                     t.append((col_name, self._format_val(o[col_name])))
@@ -212,7 +213,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             log.debug(f"✓ GetById {self._collection_name} {_id}")
 
             o = {"_id": row[0]}
-            for i, (col_name, col_data) in enumerate(self._meta["sub_scheme"].items()):
+            for i, (col_name, col_data) in enumerate(self._scheme.items()):
                 col_types = col_data["types"]
                 if "RefsList" not in col_types and not col_name.startswith("_"):
                     o[col_name] = self._map(row[i + 1], col_data["types"])
