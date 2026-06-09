@@ -5,6 +5,7 @@ backoffice : The main application
 import sys
 from flask import Flask
 
+sys.path.insert(1, "../../../stricto")
 sys.path.insert(1, "../../../backo")
 
 from collections_set import countries, people

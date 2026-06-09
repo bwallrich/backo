@@ -9,6 +9,7 @@ from datetime import datetime, timezone, timedelta
 import jwt
 from flask import Flask, request, jsonify, make_response, Response
 
+sys.path.insert(1, "../../../stricto")
 sys.path.insert(1, "../../../backo")
 
 
