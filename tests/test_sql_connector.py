@@ -11,7 +11,7 @@ from backo import Item, Collection
 from backo import DBSQLConnector
 from backo import Backoffice, current_user
 
-from backo import String, Bool  # , Error as StrictoError
+from backo import String, Bool, Ref, RefsList  # , Error as StrictoError
 
 
 class TestMongo(unittest.TestCase):
@@ -29,10 +29,10 @@ class TestMongo(unittest.TestCase):
         self.db_users = DBSQLConnector(collection="Users", path="sqlite_test_db")
 
         # --- DB for sites
-        self.db_site = DBSQLConnector(collection="Sites", path="sqlite_test_db")
+        self.db_animals = DBSQLConnector(collection="Animals", path="sqlite_test_db")
 
     def tearDown(self):
-        self.db_site.close()
+        self.db_animals.close()
         self.db_users.close()
         return super().tearDown()
 
@@ -42,12 +42,26 @@ class TestMongo(unittest.TestCase):
         """
 
         backoffice = Backoffice("myApp")
+
         user_item = Item(
-            {"name": String(), "surname": String(), "male": Bool(default=True)}
+            {
+                "name": String(),
+                "surname": String(),
+                "male": Bool(default=True),
+                "animals": RefsList(coll="animals", field="$.user"),
+            }
         )
 
-        meta = user_item.get_schema()
-        print(meta)
+        animal_item = Item(
+            {
+                "surname": String(),
+                "type": String(),
+                "user": Ref(coll="users", field="$.animals", required=True),
+            }
+        )
+
+        user_meta = user_item.get_schema()
+        animal_meta = animal_item.get_schema()
 
         backoffice.register_collection(
             Collection(
@@ -57,31 +71,46 @@ class TestMongo(unittest.TestCase):
             )
         )
 
+        backoffice.register_collection(
+            Collection(
+                "animals",
+                animal_item,
+                self.db_animals,
+            )
+        )
+
         # ignore sessions for this campaign of tests.
         current_user.standalone = True
 
         current_user.login = "Roger"
         current_user._id = "1234"
 
-        print(json.dumps(meta, indent=4))
-        self.db_users.create_table(meta)
+        print(json.dumps(user_meta, indent=4))
+        print(json.dumps(animal_meta, indent=4))
+        self.db_users.create_table(user_meta)
+        self.db_animals.create_table(animal_meta)
         self.db_users.drop()
+        self.db_animals.drop()
 
-        u = backoffice.users.create({"name": "bebert", "surname": "bebert"})
-        v = backoffice.users.create({"name": "ted", "surname": "teddy"})
-        w = backoffice.users.create(
+        u0 = backoffice.users.create({"name": "bebert", "surname": "bebert"})
+        u1 = backoffice.users.create({"name": "ted", "surname": "teddy"})
+        u2 = backoffice.users.create(
             {"name": "benji", "surname": "benjie", "male": False}
         )
-        # print(u.name)
-        # u.name = "bobi"
-        u_ = backoffice.users.new()
-        u_.load(u._id)
-        print(u_)
-        v_ = backoffice.users.new()
-        v_.load(v._id)
-        print(v_)
-        w_ = backoffice.users.new()
-        w_.load(w._id)
-        print(w_)
-        x_ = backoffice.users.new()
-        x_.load("plop")
+
+        # u0_ = backoffice.users.new()
+        # u0_.load(u0._id)
+        # print(u0_)
+        # u1_ = backoffice.users.new()
+        # u1_.load(u1._id)
+        # print(u1_)
+        # u2_ = backoffice.users.new()
+        # u2_.load(u2._id)
+        # print(u2_)
+
+        print("CREATE!")
+        a0 = backoffice.animals.create({"surname": "cookie", "type": "dog", "user": u0._id})
+        print("CREATE!")
+        a1 = backoffice.animals.create({"surname": "pioo", "type": "bird", "user": u0._id})
+        # x_ = backoffice.users.new()
+        # x_.load("plop")

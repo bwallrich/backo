@@ -61,7 +61,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             raise DBError('SQLLite connection error at "{0}"', self._path) from e
 
     def _to_sql_type(self, str_type):
-        return {"String": "TEXT", "Bool": "INTEGER"}[str_type]
+        return {"String": "TEXT", "Bool": "INTEGER", "Ref": "TEXT"}[str_type]
 
     def create_table(self, meta):
         """
@@ -69,14 +69,19 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         """
         str_cols = []
 
-        print(f"TABLE {self._collection_name}")
-
         for col_name, col_data in meta["sub_scheme"].items():
-            if not col_name.startswith("_"):
-                col_type = col_data["types"][0]
+            col_type = col_data["types"][0]
+            if not col_name.startswith("_") and not (col_type == "RefsList"):
                 str_cols.append(f"{col_name} {self._to_sql_type(col_type)}")
-                print(f"COL: {col_name}")
-                print(f"TYPE: {col_type}")
+
+
+        # Add one-many relationship
+        for col_name, col_data in meta["sub_scheme"].items():
+            col_type = col_data["types"][0]
+            if (col_type == "Ref"):
+                str_cols.append(f"FOREIGN KEY ({col_name}) REFERENCES {col_data["collection"]}(_id)")
+                # str_alter_request = f"ALTER TABLE {self._collection_name} ADD CONSTRAINT FK_{self._collection_name}_{col_name} FOREIGN KEY ({col_name}_id) REFERENCES {col_name}(_id)"
+                print(str_cols)
 
         str_request = f"""
         CREATE TABLE IF NOT EXISTS {self._collection_name} (
@@ -84,30 +89,24 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             {",".join(str_cols)}
         );
         """
+
         print(str_request)
 
-        try:
+
+
+
+        def create_table_execute():
             self._cursor.execute(str_request)
             self._con.commit()
             self._meta = meta
 
-        except sqlite3.OperationalError as e:
-            print(f"✗ Operational Error: {e}")
-        except sqlite3.IntegrityError as e:
-            print(f"✗ Integrity Error: {e}")
-        except sqlite3.ProgrammingError as e:
-            print(f"✗ Programming Error: {e}")
-        except sqlite3.Error as e:
-            print(f"✗ Database Error: {e}")
-        # finally:
+        self._sqlite_try(create_table_execute)
 
     def drop(self) -> None:
         """See :func:`DBConnector.drop`"""
 
         def delete_all():
             # Delete without condition
-            print(self._dbname)
-            print(self._path)
             self._cursor.execute(f"DELETE FROM {self._collection_name}")
             self._con.commit()
 
@@ -172,20 +171,22 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         log.debug(f"create {_id} ")
 
         def insert():
-            str_col_names = ",".join(
-                col_name
-                for col_name, _ in o.items()
-                if not self._is_internal_field(col_name)
-            )
-            str_values = ",".join(
-                self._format_val(val)
-                for col_name, val in o.items()
-                if not self._is_internal_field(col_name)
-            )
+
+            t = []
+            for col_name, col_data in self._meta["sub_scheme"].items():
+                col_types = col_data["types"]
+                if "RefsList" not in col_types and col_name != "_meta":
+                    t.append((col_name, self._format_val(o[col_name])))
+            
+            str_col_names = ",".join(field_name for field_name, _ in t)
+            str_values = ",".join(field_value for _, field_value in t)
+
+            print(str_col_names)
+            print(str_values)
+
+            str_request = f"INSERT INTO {self._collection_name} ({str_col_names}) VALUES ({str_values})"
 
             # Insert
-            str_request = f"INSERT INTO {self._collection_name} (_id, {str_col_names}) VALUES ('{_id}', {str_values})"
-            print(str_request)
             self._cursor.execute(str_request)
             self._con.commit()
 
@@ -216,7 +217,8 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
             o = {"_id": row[0]}
             for i, (col_name, col_data) in enumerate(self._meta["sub_scheme"].items()):
-                if not col_name.startswith("_"):
+                col_types = col_data["types"]
+                if "RefsList" not in col_types and not col_name.startswith("_"):
                     o[col_name] = self._map(row[i + 1], col_data["types"])
 
             return o
