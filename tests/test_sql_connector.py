@@ -25,23 +25,7 @@ class TestMongo(unittest.TestCase):
         """
         super().__init__(*args, **kwargs)
 
-        # --- DB for user
-        self.db_users = DBSQLConnector(collection="Users", path="sqlite_test_db")
-
-        # --- DB for sites
-        self.db_animals = DBSQLConnector(collection="Animals", path="sqlite_test_db")
-
-    def tearDown(self):
-        self.db_animals.close()
-        self.db_users.close()
-        return super().tearDown()
-
-    def test_db_connect(self):
-        """
-        try to connect
-        """
-
-        backoffice = Backoffice("myApp")
+        self._backoffice = Backoffice("myApp")
 
         user_item = Item(
             {
@@ -60,10 +44,22 @@ class TestMongo(unittest.TestCase):
             }
         )
 
-        user_meta = user_item.get_schema()
-        animal_meta = animal_item.get_schema()
+        self._meta = {}
+        self._meta["Users"] = user_item.get_schema()
+        self._meta["Animals"] = animal_item.get_schema()
+        self._user_meta = user_item.get_schema()
+        self._animal_meta = animal_item.get_schema()
 
-        backoffice.register_collection(
+        print(json.dumps(self._user_meta, indent=4))
+        print(json.dumps(self._animal_meta, indent=4))
+
+        # --- DB for user
+        self.db_users = DBSQLConnector(collection="Users", path="sqlite_test_db", meta=self._user_meta)
+
+        # --- DB for sites
+        self.db_animals = DBSQLConnector(collection="Animals", path="sqlite_test_db", meta=self._animal_meta)
+
+        self._backoffice.register_collection(
             Collection(
                 "users",
                 user_item,
@@ -71,7 +67,7 @@ class TestMongo(unittest.TestCase):
             )
         )
 
-        backoffice.register_collection(
+        self._backoffice.register_collection(
             Collection(
                 "animals",
                 animal_item,
@@ -85,16 +81,27 @@ class TestMongo(unittest.TestCase):
         current_user.login = "Roger"
         current_user._id = "1234"
 
-        print(json.dumps(user_meta, indent=4))
-        print(json.dumps(animal_meta, indent=4))
-        self.db_users.create_table(user_meta)
-        self.db_animals.create_table(animal_meta)
+    def tearDown(self):
+        self.db_animals.close()
+        self.db_users.close()
+        return super().tearDown()
+
+    def test_db_connect(self):
+        """
+        try to connect
+        """
+
+
+
+
+        self.db_users.create_table()
+        self.db_animals.create_table()
         self.db_users.drop()
         self.db_animals.drop()
 
-        u0 = backoffice.users.create({"name": "bebert", "surname": "bebert"})
-        u1 = backoffice.users.create({"name": "ted", "surname": "teddy"})
-        u2 = backoffice.users.create(
+        u0 = self._backoffice.users.create({"name": "bebert", "surname": "bebert"})
+        u1 = self._backoffice.users.create({"name": "ted", "surname": "teddy"})
+        u2 = self._backoffice.users.create(
             {"name": "benji", "surname": "benjie", "male": False}
         )
 
@@ -108,9 +115,11 @@ class TestMongo(unittest.TestCase):
         # u2_.load(u2._id)
         # print(u2_)
 
-        print("CREATE!")
-        a0 = backoffice.animals.create({"surname": "cookie", "type": "dog", "user": u0._id})
-        print("CREATE!")
-        a1 = backoffice.animals.create({"surname": "pioo", "type": "bird", "user": u0._id})
+        a0 = self._backoffice.animals.create({"surname": "cookie", "type": "dog", "user": u0._id})
+        a1 = self._backoffice.animals.create({"surname": "pioo", "type": "bird", "user": u0._id})
+
+        
+        print(a0.select("$.user.name"))
+
         # x_ = backoffice.users.new()
         # x_.load("plop")

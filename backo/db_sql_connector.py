@@ -21,6 +21,7 @@ KPARSE_MODEL = {
     "path": {"type": str, "default": "/tmp"},
     "dbname": {"type": str, "default": "default"},
     "collection": {"type": str, "default": ""},
+    "meta": {"type": dict}
 }
 
 log = log_system.get_or_create_logger("test")
@@ -45,6 +46,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         self._path = options.get("path")
         self._dbname = options.get("dbname")
         self._collection_name = options.get("collection")
+        self._meta = options.get("meta")
 
         DBConnector.__init__(self, **kwargs)
 
@@ -63,24 +65,23 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
     def _to_sql_type(self, str_type):
         return {"String": "TEXT", "Bool": "INTEGER", "Ref": "TEXT"}[str_type]
 
-    def create_table(self, meta):
+    def create_table(self):
         """
         Table creation from schema
         """
         str_cols = []
 
-        for col_name, col_data in meta["sub_scheme"].items():
+        for col_name, col_data in self._meta["sub_scheme"].items():
             col_type = col_data["types"][0]
-            if not col_name.startswith("_") and not (col_type == "RefsList"):
+            if not col_name.startswith("_") and not col_type == "RefsList":
                 str_cols.append(f"{col_name} {self._to_sql_type(col_type)}")
 
 
         # Add one-many relationship
-        for col_name, col_data in meta["sub_scheme"].items():
+        for col_name, col_data in self._meta["sub_scheme"].items():
             col_type = col_data["types"][0]
-            if (col_type == "Ref"):
+            if col_type == "Ref":
                 str_cols.append(f"FOREIGN KEY ({col_name}) REFERENCES {col_data["collection"]}(_id)")
-                # str_alter_request = f"ALTER TABLE {self._collection_name} ADD CONSTRAINT FK_{self._collection_name}_{col_name} FOREIGN KEY ({col_name}_id) REFERENCES {col_name}(_id)"
                 print(str_cols)
 
         str_request = f"""
@@ -92,13 +93,9 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
         print(str_request)
 
-
-
-
         def create_table_execute():
             self._cursor.execute(str_request)
             self._con.commit()
-            self._meta = meta
 
         self._sqlite_try(create_table_execute)
 
@@ -107,7 +104,9 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
         def delete_all():
             # Delete without condition
-            self._cursor.execute(f"DELETE FROM {self._collection_name}")
+            str_request = f"DELETE FROM {self._collection_name}"
+            log.debug(f"Execute: {str_request}")
+            self._cursor.execute(str_request)
             self._con.commit()
 
             # Check how many rows were deleted
@@ -181,11 +180,8 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             str_col_names = ",".join(field_name for field_name, _ in t)
             str_values = ",".join(field_value for _, field_value in t)
 
-            print(str_col_names)
-            print(str_values)
-
             str_request = f"INSERT INTO {self._collection_name} ({str_col_names}) VALUES ({str_values})"
-
+            log.debug(f"Execute: {str_request}")
             # Insert
             self._cursor.execute(str_request)
             self._con.commit()
@@ -202,7 +198,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
         def select():
             str_request = f"SELECT * FROM {self._collection_name} WHERE _id='{_id}'"
-            print(str_request)
+            log.debug(f"Execute: {str_request}")
             self._cursor.execute(str_request)
             row = self._cursor.fetchone()
 
