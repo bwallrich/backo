@@ -1,16 +1,18 @@
+"""REST API Connector example using Backoffice."""
+
+# pylint: disable=logging-fstring-interpolation,duplicate-code
+
 import sys
+import logging
 import argparse
-import yaml
 from pathlib import Path
 from flask import Flask
-import os
-from datetime import datetime, timedelta, timezone
+from flask_cors import CORS
+import yaml
 import coloredlogs
-import logging
 
 import constants
-from backo import Backoffice, current_user, log_system, LogLevel
-from flask_cors import CORS
+from backo import Backoffice
 
 app = Flask("bubbles")
 
@@ -29,7 +31,7 @@ def load_config(config_path: str) -> dict:
     if not config_file.exists():
         raise FileNotFoundError(f"Configuration file not found: {config_path}")
 
-    with open(config_file, "r") as f:
+    with open(config_file, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
     return config
@@ -91,7 +93,7 @@ def main():
     # Load configuration
     try:
         config = load_config(args.config)
-    except Exception as e:
+    except (FileNotFoundError, OSError, ValueError) as e:
         print(f"Error loading configuration: {e}")
         sys.exit(1)
 
@@ -99,7 +101,7 @@ def main():
     setup_data_dir(config)
 
     # Import collections only after DATA_DIR is configured from config.
-    from collections_set import vms_coll
+    from collections_set import vms_coll  # pylint: disable=import-outside-toplevel
 
     # Override config with command line arguments
     if args.host:

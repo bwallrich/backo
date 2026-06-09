@@ -1,19 +1,13 @@
+"""Virtual Machines collection set."""
+
+from constants import get_data_dir
 from backo import (
-    Dict,
     String,
-    Int,
     Collection,
     Item,
-    Ref,
-    RefsList,
-    Collection,
-    DeleteStrategy,
     GenericMetaDataHandler,
-    log_system,
-    LogLevel,
     DBYmlConnector,
 )
-from constants import get_data_dir
 
 vms_store = DBYmlConnector(path=str(get_data_dir() / "vms"))
 

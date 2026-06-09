@@ -1,18 +1,52 @@
+"""
+backoffice : The main application
+"""
+
+# pylint: disable=logging-fstring-interpolation,duplicate-code
+
 import sys
 import argparse
-import yaml
-from pathlib import Path
-from flask import Flask
-import os
-from datetime import datetime, timedelta, timezone
-import coloredlogs
 import logging
+from pathlib import Path
 
-import constants
-from backo import Backoffice, current_user, log_system, LogLevel
+import coloredlogs
+import yaml
+from flask import Flask
 from flask_cors import CORS
 
-app = Flask("user-management")
+import constants
+from backo import Backoffice
+
+
+def create_app(config: dict):
+    """Create and configure the Flask app."""
+    app = Flask("user-management")
+
+    # Set up data directory from config
+    setup_data_dir(config)
+
+    # Set up logging
+    setup_logging(config["logging"]["level"])
+
+    # My back office
+    myback = Backoffice("it")
+
+    # collections_set imports are deferred because they rely on DATA_DIR
+    # being set by setup_data_dir() above.
+    from collections_set.vms import vms  # pylint: disable=import-outside-toplevel
+    from collections_set.users import users  # pylint: disable=import-outside-toplevel
+
+    # Add collections to backoffice
+    myback.register_collection(vms)
+    myback.register_collection(users)
+
+    myback.build_routes(app, "api/v1")
+
+    # Check syntax
+    myback.check_syntax()
+
+    CORS(app, origins=["*"])
+    return app
 
 
 def load_config(config_path: str) -> dict:
@@ -29,7 +63,7 @@ def load_config(config_path: str) -> dict:
     if not config_file.exists():
         raise FileNotFoundError(f"Configuration file not found: {config_path}")
 
-    with open(config_file, "r") as f:
+    with open(config_file, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
     return config
@@ -91,12 +125,11 @@ def main():
     # Load configuration
     try:
         config = load_config(args.config)
-    except Exception as e:
+    except (FileNotFoundError, OSError, ValueError) as e:
         print(f"Error loading configuration: {e}")
         sys.exit(1)
 
-    # Set up data directory from config
-    setup_data_dir(config)
+    print(f"Configuration loaded from {args.config}:\n{config}")
 
     # Override config with command line arguments
     if args.host:
@@ -106,25 +139,7 @@ def main():
     if args.log_level:
         config["logging"]["level"] = args.log_level
 
-    # Set up logging
-    setup_logging(config["logging"]["level"])
-
-    # My back office
-    myback = Backoffice("it")
-
-    # Import collections only after DATA_DIR is configured from config.
-    from collections_set import vms, users
-
-    # Add collections to backoffice
-    myback.register_collection(vms)
-    myback.register_collection(users)
-
-    myback.build_routes(app, "api/v1")
-
-    # Check syntax
-    myback.check_syntax()
-
-    CORS(app, origins=["*"])
+    app = create_app(config)
 
     host = config["server"]["host"]
     port = config["server"]["port"]

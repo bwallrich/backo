@@ -166,13 +166,120 @@ class DBRestfullConnector(DBConnector):
     def drop(self, **kwargs):
         pass
 
-    @abstractmethod
     def create(self, o: dict, **kwargs) -> str:  # pylint: disable=unused-argument
-        pass
+        options = Kparse(kwargs, KPARSE_MODEL_ENDPOINT)
+
+        endpoint = options.get("endpoint")
+        url_parameters = options.get("url_parameters")
+        query_options = options.get("query_options")
+
+        log.debug(
+            "Create object on endpoint %r with url_parameters %r and query_options %r",
+            endpoint,
+            url_parameters,
+            query_options,
+        )
+
+        try:
+            status_code, data = self._request(
+                endpoint=endpoint,
+                url_parameters=url_parameters,
+                query_options=query_options,
+                data=o,
+                method="POST",
+            )
+        except RestAPIError as e:
+            status_code = None
+            if len(e.args) > 0 and isinstance(e.args[-1], int):
+                status_code = e.args[-1]
+
+            if status_code == 404:
+                raise NotFoundError('Create endpoint "{0}" not found', endpoint) from e
+
+            if status_code is not None:
+                raise RestAPIError(
+                    'REST API returned status "{0}" while creating object',
+                    status_code,
+                    status_code,
+                ) from e
+
+            raise RestAPIError("REST API error while creating object") from e
+
+        if status_code == 404:
+            raise NotFoundError('Create endpoint "{0}" not found', endpoint)
+
+        if status_code not in (200, 201, 202):
+            raise RestAPIError(
+                'REST API returned status "{0}" while creating object',
+                status_code,
+                status_code,
+            )
+
+        if isinstance(data, dict) and data.get("_id") is not None:
+            return data.get("_id")
+
+        if o.get("_id") is not None:
+            return o.get("_id")
+
+        raise RestAPIError(
+            "REST API create response does not contain _id",
+            status_code,
+        )
 
     @abstractmethod
     def save(self, _id: str, o: dict, **kwargs):  # pylint: disable=unused-argument
-        pass
+        options = Kparse(kwargs, KPARSE_MODEL_ENDPOINT)
+
+        endpoint = options.get("endpoint")
+        url_parameters = options.get("url_parameters")
+        query_options = options.get("query_options")
+
+        log.debug(
+            "Update %r from endpoint %r with url_parameters %r and query_options %r",
+            _id,
+            endpoint,
+            url_parameters,
+            query_options,
+        )
+
+        try:
+            status_code, _ = self._request(
+                endpoint=endpoint,
+                url_parameters=url_parameters or [_id],
+                query_options=query_options,
+                method="PUT",
+                data=o,
+            )
+        except RestAPIError as e:
+            status_code = None
+            if len(e.args) > 0 and isinstance(e.args[-1], int):
+                status_code = e.args[-1]
+
+            if status_code == 404:
+                raise NotFoundError('_id "{0}" not found', _id) from e
+
+            if status_code is not None:
+                raise RestAPIError(
+                    'REST API returned status "{0}" for _id "{1}"',
+                    status_code,
+                    _id,
+                    status_code,
+                ) from e
+
+            raise RestAPIError('REST API error while updating _id "{0}"', _id) from e
+
+        if status_code == 404:
+            raise NotFoundError('_id "{0}" not found', _id)
+
+        if status_code not in (200, 201, 202, 204):
+            raise RestAPIError(
+                'REST API returned status "{0}" for _id "{1}"',
+                status_code,
+                _id,
+                status_code,
+            )
+
+        return True
 
     def delete_by_id(self, _id: str, **kwargs) -> bool:
         options = Kparse(kwargs, KPARSE_MODEL_ENDPOINT)

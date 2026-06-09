@@ -3,7 +3,6 @@
 # pylint: disable=unused-argument, logging-fstring-interpolation
 
 from backo import (
-    Dict,
     String,
     Collection,
     Item,

@@ -1,3 +1,3 @@
 """backoffice as a module (used by tests.py)"""
 
-from .backoffice import app
+from .backoffice import create_app

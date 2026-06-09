@@ -2,6 +2,7 @@
 
 # pylint: disable=unused-argument, logging-fstring-interpolation
 
+from constants import get_data_dir
 from backo import (
     String,
     Collection,
@@ -12,8 +13,6 @@ from backo import (
     LogLevel,
     RefsList,
 )
-
-from constants import get_data_dir
 
 log = log_system.get_or_create_logger("users", LogLevel.INFO)
 

@@ -47,10 +47,23 @@ class VMsConnector(DBRestfullConnector):  # pylint: disable=too-many-instance-at
         raise DBError("VMsConnector doenst implement drop() method")
 
     def create(self, o: dict) -> str:  # pylint: disable=unused-argument
-        raise DBError("VMsConnector doenst implement create() method")
+        try:
+            return super().create(
+                endpoint="vms",
+                o=o,
+            )
+        except RestAPIError as e:
+            raise e
 
     def save(self, _id: str, o: dict):  # pylint: disable=unused-argument
-        raise DBError("VMsConnector doenst implement save() method")
+        try:
+            return super().save(
+                _id,
+                endpoint="vms",
+                o=o,
+            )
+        except RestAPIError as e:
+            raise e
 
     def delete_by_id(self, _id: str):  # pylint: disable=unused-argument
         try:
