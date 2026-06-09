@@ -7,3 +7,4 @@ pyjwt
 deepdiff
 python-magic
 stricto>=0.2.1
+pyhamcrest>=2.1.0
