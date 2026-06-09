@@ -1,0 +1,2 @@
+class DatabaseSearchRequest:
+    pass

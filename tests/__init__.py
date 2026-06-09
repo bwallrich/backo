@@ -19,3 +19,4 @@ from .test_meta import TestMeta
 from .test_current_user import TestCurrentUser
 from .test_migrations import TestMigrations
 from .test_file import TestFile
+from .test_database import TestDatabaseEngine

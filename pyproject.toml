@@ -20,7 +20,7 @@ dependencies = [
   "deepdiff",
   "python-magic",
   "pymongo",
-  "stricto>=0.2.1"
+  "stricto>=0.2.1",
 ]
 
 [project.urls]
