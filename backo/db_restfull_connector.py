@@ -2,18 +2,19 @@
 Module providing a generic REST API based database connector.
 """
 
+# pylint: disable=logging-fstring-interpolation
+
 from abc import abstractmethod
 from typing import Callable
 import requests
+from stricto import Kparse
 
 from .db_connector import DBConnector
-from .error import DBError, NotFoundError, RestAPIError
+from .error import NotFoundError, RestAPIError
 from .log import log_system, LogLevel
 
 log = log_system.get_or_create_logger("db-restfull-connector", LogLevel.DEBUG)
 
-
-from stricto import Kparse
 
 KPARSE_MODEL = {
     "host": {"type": str | None, "default": "localhost"},
@@ -287,4 +288,3 @@ class DBRestfullConnector(DBConnector):
         **kwargs,
     ) -> list:
         """See :func:`DBConnector.select`."""
-        pass

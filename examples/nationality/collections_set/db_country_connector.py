@@ -1,9 +1,18 @@
 """
-Module providing the Yml DB like
+Module using DBRestfullConnector to connect to restcountries.com API and retrieve country data.
+
+Note: we assume that the signature of some inherited methods differ from the mother class
 """
 
-# pylint: disable=logging-fstring-interpolation
-from backo import DBRestfullConnector, log_system, LogLevel, NotFoundError, DBError, RestAPIError
+# pylint: disable=logging-fstring-interpolation,arguments-differ
+from backo import (
+    DBRestfullConnector,
+    log_system,
+    LogLevel,
+    NotFoundError,
+    DBError,
+    RestAPIError,
+)
 
 log = log_system.get_or_create_logger("wget", LogLevel.DEBUG)
 
@@ -58,7 +67,7 @@ class MyDBRestfullConnector(
 
     def get_by_id(self, _id: str) -> dict:
         """See :func:`DBConnector.get_by_id`"""
-        try: 
+        try:
             return super().get_by_id(
                 _id,
                 endpoint="alpha",
@@ -72,7 +81,7 @@ class MyDBRestfullConnector(
             if status_code == 400:
                 raise NotFoundError('_id "{0}" not found', _id) from e
             raise e
-        
+
     def select(
         self,
         select_filter,
