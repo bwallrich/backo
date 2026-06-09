@@ -45,10 +45,3 @@ omit = [
     # omit stricto
     "*/stricto/*"
     ]
-
-[dependency-groups]
-dev = [
-    "black>=26.5.1",
-    "pyhamcrest>=2.1.0",
-    "pylint>=4.0.5",
-]
