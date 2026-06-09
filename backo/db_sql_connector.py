@@ -21,7 +21,7 @@ KPARSE_MODEL = {
     "path": {"type": str, "default": "/tmp"},
     "dbname": {"type": str, "default": "default"},
     "collection": {"type": str, "default": ""},
-    "meta": {"type": dict}
+    "meta": {"type": dict},
 }
 
 log = log_system.get_or_create_logger("test")
@@ -47,7 +47,9 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         self._dbname = options.get("dbname")
         self._collection_name = options.get("collection")
         self._meta = options.get("meta")
-        self._scheme = self._meta[self._collection_name]["sub_scheme"] # Shortcut to data
+        self._scheme = self._meta[self._collection_name][
+            "sub_scheme"
+        ]  # Shortcut to data
 
         DBConnector.__init__(self, **kwargs)
 
@@ -66,6 +68,34 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
     def _to_sql_type(self, str_type):
         return {"String": "TEXT", "Bool": "INTEGER", "Ref": "TEXT"}[str_type]
 
+    def _is_many_many_relationship(self, col_data):
+        """
+        Check whether given col is a many-many relationship
+        """
+        col_type = col_data["types"][0]
+        if col_type != "RefsList":
+            return False
+
+        rev_coll = col_data["collection"]
+        rev_col = col_data["reverse"][2:]  # Tricky for now
+        return "RefsList" in self._meta[rev_coll]["sub_scheme"][rev_col]["types"]
+
+    def _many_many_table_data(self, col_name, col_data):
+        """
+        Generate name for intermediate table of many-many relationship
+        """
+        rev_coll = col_data["collection"]
+        rev_col_name = col_data["reverse"][2:]  # Tricky for now
+        a = f"{self._collection_name}_{col_name}_{rev_coll}"
+        b = f"{rev_coll}_{rev_col_name}_{self._collection_name}"
+        return (
+            a if a < b else b,
+            self._collection_name,
+            rev_coll,
+            col_name,
+            rev_col_name,
+        )
+
     def create_table(self):
         """
         Table creation from schema
@@ -77,13 +107,13 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             if not col_name.startswith("_") and not col_type == "RefsList":
                 str_cols.append(f"{col_name} {self._to_sql_type(col_type)}")
 
-
         # Add one-many relationship
         for col_name, col_data in self._scheme.items():
             col_type = col_data["types"][0]
             if col_type == "Ref":
-                str_cols.append(f"FOREIGN KEY ({col_name}) REFERENCES {col_data["collection"]}(_id)")
-                print(str_cols)
+                str_cols.append(
+                    f"FOREIGN KEY ({col_name}) REFERENCES {col_data["collection"]}(_id)"
+                )
 
         str_request = f"""
         CREATE TABLE IF NOT EXISTS {self._collection_name} (
@@ -92,13 +122,29 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         );
         """
 
-        print(str_request)
-
         def create_table_execute():
+            log.debug(f"Execute: {str_request}")
             self._cursor.execute(str_request)
             self._con.commit()
 
         self._sqlite_try(create_table_execute)
+
+        # Generate intermediate tables (many-many relationships)
+        for col_name, col_data in self._scheme.items():
+            if self._is_many_many_relationship(col_data):
+                table_name, coll0, coll1, col0, col1 = self._many_many_table_data(
+                    col_name, col_data
+                )
+                str_request = f"""
+                CREATE TABLE IF NOT EXISTS {table_name} (
+                    {col0} TEXT ,
+                    {col1} TEXT ,
+                    FOREIGN KEY ({col0}) REFERENCES {coll1}(_id) ,
+                    FOREIGN KEY ({col1}) REFERENCES {coll0}(_id)
+                );
+                """
+                print(str_request)
+                self._sqlite_try(create_table_execute)
 
     def drop(self) -> None:
         """See :func:`DBConnector.drop`"""
@@ -177,7 +223,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
                 col_types = col_data["types"]
                 if "RefsList" not in col_types and col_name != "_meta":
                     t.append((col_name, self._format_val(o[col_name])))
-            
+
             str_col_names = ",".join(field_name for field_name, _ in t)
             str_values = ",".join(field_value for _, field_value in t)
 

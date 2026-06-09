@@ -33,6 +33,7 @@ class TestMongo(unittest.TestCase):
                 "surname": String(),
                 "male": Bool(default=True),
                 "animals": RefsList(coll="animals", field="$.user"),
+                "is_loved_by": RefsList(coll="animals", field="$.love"),
             }
         )
 
@@ -41,23 +42,25 @@ class TestMongo(unittest.TestCase):
                 "surname": String(),
                 "type": String(),
                 "user": Ref(coll="users", field="$.animals", required=True),
+                "love": RefsList(coll="users", field="$.is_loved_by"),
             }
         )
 
         self._meta = {}
-        self._meta["Users"] = user_item.get_schema()
-        self._meta["Animals"] = animal_item.get_schema()
-        self._user_meta = user_item.get_schema()
-        self._animal_meta = animal_item.get_schema()
+        self._meta["users"] = user_item.get_schema()
+        self._meta["animals"] = animal_item.get_schema()
 
-        print(json.dumps(self._user_meta, indent=4))
-        print(json.dumps(self._animal_meta, indent=4))
+        print(json.dumps(self._meta, indent=4))
 
         # --- DB for user
-        self.db_users = DBSQLConnector(collection="Users", path="sqlite_test_db", meta=self._meta)
+        self.db_users = DBSQLConnector(
+            collection="users", path="sqlite_test_db", meta=self._meta
+        )
 
         # --- DB for sites
-        self.db_animals = DBSQLConnector(collection="Animals", path="sqlite_test_db", meta=self._meta)
+        self.db_animals = DBSQLConnector(
+            collection="animals", path="sqlite_test_db", meta=self._meta
+        )
 
         self._backoffice.register_collection(
             Collection(
@@ -91,19 +94,16 @@ class TestMongo(unittest.TestCase):
         try to connect
         """
 
-
-
-
         self.db_users.create_table()
         self.db_animals.create_table()
         self.db_users.drop()
         self.db_animals.drop()
 
         u0 = self._backoffice.users.create({"name": "bebert", "surname": "bebert"})
-        u1 = self._backoffice.users.create({"name": "ted", "surname": "teddy"})
-        u2 = self._backoffice.users.create(
-            {"name": "benji", "surname": "benjie", "male": False}
-        )
+        # u1 = self._backoffice.users.create({"name": "ted", "surname": "teddy"})
+        # u2 = self._backoffice.users.create(
+        #     {"name": "benji", "surname": "benjie", "male": False}
+        # )
 
         # u0_ = backoffice.users.new()
         # u0_.load(u0._id)
@@ -115,11 +115,15 @@ class TestMongo(unittest.TestCase):
         # u2_.load(u2._id)
         # print(u2_)
 
-        a0 = self._backoffice.animals.create({"surname": "cookie", "type": "dog", "user": u0._id})
-        a1 = self._backoffice.animals.create({"surname": "pioo", "type": "bird", "user": u0._id})
+        a0 = self._backoffice.animals.create(
+            {"surname": "cookie", "type": "dog", "user": u0._id}
+        )
+        a1 = self._backoffice.animals.create(
+            {"surname": "pioo", "type": "bird", "user": u0._id}
+        )
 
-        
         print(a0.select("$.user.name"))
+        print(a1.select("$.user.name"))
 
         # x_ = backoffice.users.new()
         # x_.load("plop")
