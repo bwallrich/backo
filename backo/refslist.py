@@ -203,10 +203,12 @@ class RefsList(List):
             # fill the field
             other = me._coll_ref.new_item()
             reverse_field = other.select(me._reverse)
-            # Must check == None rather
-            if reverse_field == None:  # pylint: disable=singleton-comparison
+
+            if not isinstance(
+                reverse_field, (ref.Ref, RefsList)
+            ):  # pylint: disable=singleton-comparison
                 log.error(
-                    f'{root._collection.name}/{me.path_name()}: Collection "{me._collection}" has no field "{me._reverse}"'
+                    f'{root._collection.name}/{me.path_name()}: Collection "{me._collection}", "{me._reverse}" is not a Ref or a RefsList'
                 )
                 return
 
