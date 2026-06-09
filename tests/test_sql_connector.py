@@ -100,10 +100,10 @@ class TestMongo(unittest.TestCase):
         self.db_animals.drop()
 
         u0 = self._backoffice.users.create({"name": "bebert", "surname": "bebert"})
-        # u1 = self._backoffice.users.create({"name": "ted", "surname": "teddy"})
-        # u2 = self._backoffice.users.create(
-        #     {"name": "benji", "surname": "benjie", "male": False}
-        # )
+        u1 = self._backoffice.users.create({"name": "ted", "surname": "teddy"})
+        u2 = self._backoffice.users.create(
+            {"name": "benji", "surname": "benjie", "male": False}
+        )
 
         # u0_ = backoffice.users.new()
         # u0_.load(u0._id)
@@ -116,10 +116,15 @@ class TestMongo(unittest.TestCase):
         # print(u2_)
 
         a0 = self._backoffice.animals.create(
-            {"surname": "cookie", "type": "dog", "user": u0._id}
+            {
+                "surname": "cookie",
+                "type": "dog",
+                "user": u0._id,
+                "love": [u0._id, u1._id, u2._id],
+            }
         )
         a1 = self._backoffice.animals.create(
-            {"surname": "pioo", "type": "bird", "user": u0._id}
+            {"surname": "pioo", "type": "bird", "user": u0._id, "love": [u0._id]}
         )
 
         print(a0.select("$.user.name"))

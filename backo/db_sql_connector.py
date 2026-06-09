@@ -77,10 +77,12 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             return False
 
         rev_coll = col_data["collection"]
-        rev_col = col_data["reverse"][2:]  # Tricky for now
+        rev_col = col_data["reverse"][
+            2:
+        ]  # Tricky for now need to select actual field $.my.path.to
         return "RefsList" in self._meta[rev_coll]["sub_scheme"][rev_col]["types"]
 
-    def _many_many_table_data(self, col_name, col_data):
+    def _many_many_table_structure(self, col_name, col_data):
         """
         Generate name for intermediate table of many-many relationship
         """
@@ -88,12 +90,17 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         rev_col_name = col_data["reverse"][2:]  # Tricky for now
         a = f"{self._collection_name}_{col_name}_{rev_coll}"
         b = f"{rev_coll}_{rev_col_name}_{self._collection_name}"
+        table_name = a if a < b else b
+        src_col = rev_col_name if a < b else col_name
+        dst_col = col_name if a < b else rev_col_name
+        src_coll = self._collection_name if a < b else rev_coll
+        dst_coll = rev_coll if a < b else self._collection_name
         return (
-            a if a < b else b,
-            self._collection_name,
-            rev_coll,
-            col_name,
-            rev_col_name,
+            table_name,
+            src_coll,
+            dst_coll,
+            src_col,
+            dst_col,
         )
 
     def create_table(self):
@@ -132,18 +139,19 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         # Generate intermediate tables (many-many relationships)
         for col_name, col_data in self._scheme.items():
             if self._is_many_many_relationship(col_data):
-                table_name, coll0, coll1, col0, col1 = self._many_many_table_data(
-                    col_name, col_data
+                table_name, src_coll, dst_coll, src_col, dst_col = (
+                    self._many_many_table_structure(col_name, col_data)
                 )
                 str_request = f"""
                 CREATE TABLE IF NOT EXISTS {table_name} (
-                    {col0} TEXT ,
-                    {col1} TEXT ,
-                    FOREIGN KEY ({col0}) REFERENCES {coll1}(_id) ,
-                    FOREIGN KEY ({col1}) REFERENCES {coll0}(_id)
+                    {src_col} TEXT ,
+                    {dst_col} TEXT ,
+                    FOREIGN KEY ({src_col}) REFERENCES {src_coll}(_id) ,
+                    FOREIGN KEY ({dst_col}) REFERENCES {dst_coll}(_id) ,
+                    PRIMARY KEY ({src_col}, {dst_col})
                 );
                 """
-                print(str_request)
+                log.debug(f"Execute: {str_request}")
                 self._sqlite_try(create_table_execute)
 
     def drop(self) -> None:
@@ -220,19 +228,33 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
             t = []
             for col_name, col_data in self._scheme.items():
-                col_types = col_data["types"]
-                if "RefsList" not in col_types and col_name != "_meta":
+                # Exclude RefsList and _meta columns for insert
+                if "RefsList" not in col_data["types"] and col_name != "_meta":
                     t.append((col_name, self._format_val(o[col_name])))
 
             str_col_names = ",".join(field_name for field_name, _ in t)
             str_values = ",".join(field_value for _, field_value in t)
 
             str_request = f"INSERT INTO {self._collection_name} ({str_col_names}) VALUES ({str_values})"
-            log.debug(f"Execute: {str_request}")
-            # Insert
-            self._cursor.execute(str_request)
-            self._con.commit()
 
+            # Insert
+            log.debug(f"Execute: {str_request}")
+            self._cursor.execute(str_request)
+            # self._con.commit()
+
+            # Insert many-many relationships in intermediate table
+            for col_name, col_data in self._scheme.items():
+                if self._is_many_many_relationship(col_data):
+                    table_name, _, _, src_col, dst_col = (
+                        self._many_many_table_structure(col_name, col_data)
+                    )
+                    for dst_id in o[col_name]:
+                        str_request = f"INSERT INTO {table_name} ({src_col}, {dst_col}) VALUES ('{_id}', '{dst_id}')"
+                        log.debug(f"Execute: {str_request}")
+                        self._cursor.execute(str_request)
+
+            # Commit all requests
+            self._con.commit()
             log.debug(f"✓ Created {self._collection_name} {_id}")
 
             return _id
