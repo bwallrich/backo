@@ -162,14 +162,27 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             str_request = f"DELETE FROM {self._collection_name}"
             log.debug(f"Execute: {str_request}")
             self._cursor.execute(str_request)
+            # self._con.commit()
+
+            # Delete many-many relationships in intermediate table
+            for col_name, col_data in self._scheme.items():
+                if self._is_many_many_relationship(col_data):
+                    table_name, _, _, _, _ = self._many_many_table_structure(
+                        col_name, col_data
+                    )
+
+                    str_request = f"DELETE FROM {table_name}"
+                    log.debug(f"Execute: {str_request}")
+                    self._cursor.execute(str_request)
+
             self._con.commit()
 
             # Check how many rows were deleted
             deleted_rows = self._cursor.rowcount
-            print(f"✓ Deleted {deleted_rows} row(s)")
+            log.debug(f"✓ Deleted {deleted_rows} row(s)")
 
             if deleted_rows == 0:
-                print("⚠ Warning: No rows matched the condition")
+                log.warning("No rows matched the condition")
 
         self._sqlite_try(delete_all)
 
