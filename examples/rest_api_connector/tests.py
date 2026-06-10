@@ -2,6 +2,7 @@
 backoffice tests : The main application test
 """
 
+# pylint: disable=logging-fstring-interpolation
 import unittest
 import json
 import sys
@@ -143,5 +144,5 @@ class TestBackoffice(unittest.TestCase):
         response = self.client.get("/vms")
         self.assertEqual(response.status_code, 404)
 
-        response = self.client.get(f"/api/v1/it/vms/vm01")
+        response = self.client.get("/api/v1/it/vms/vm01")
         self.assertEqual(response.status_code, 404)

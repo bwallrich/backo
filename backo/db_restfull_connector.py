@@ -38,21 +38,24 @@ KPARSE_MODEL_ENDPOINT = {
 
 
 class DBRestfullConnector(DBConnector):
-    """Abstract connector for read-oriented REST API backends.
+    """DBConnector for REST API backends.
 
-    This connector stores common REST endpoint configuration and provides
-    default behavior for write operations that are usually unavailable on
-    public APIs.
+    This connector allows complete interaction with other REST APIs.
 
     :param ``**kwargs``:
         - *host=* ``str`` -- The API host
         - *port=* ``int`` -- The API port
         - *tls=* ``bool`` -- Whether to use TLS (HTTPS) for API requests
-        - *validate_cert=* ``bool`` -- Whether to validate TLS certificates (if TLS is
+        - *validate_cert=* ``bool`` -- Whether to validate TLS certificates (if TLS is True)
         - *prefix=* ``str`` -- Path prefix used for all endpoints
+        - *username=* ``str`` -- Username for basic authentication (optional)
+        - *password=* ``str`` -- Password for basic authentication (optional)
+        - *auth_token=* ``str`` -- Bearer token for authentication (optional)
+        - *restriction=* ``Callable`` -- Restriction filter function (not implemented)
     """
 
     def __init__(self, **kwargs):
+        """constructor"""
         options = Kparse(kwargs, KPARSE_MODEL)
 
         self._host = options.get("host")
@@ -164,9 +167,52 @@ class DBRestfullConnector(DBConnector):
 
     @abstractmethod
     def drop(self, **kwargs):
-        pass
+        """Drop the collection / table / resource (TO implement in subclasses)
+
+        :param kwargs: Endpoint options
+        :type kwargs: dict
+        :param kwargs.endpoint: endpoint name relative to ``self._uri``
+        :type kwargs.endpoint: str | None
+        :param kwargs.method: HTTP method option from endpoint model (ignored by create,
+            which always uses ``POST``)
+        :type kwargs.method: str | None
+        :param kwargs.url_parameters: path parameters appended to endpoint
+        :type kwargs.url_parameters: list | None
+        :param kwargs.query_options: query string options appended after ``?``
+        :type kwargs.query_options: dict | None
+        :param kwargs.data: payload option from endpoint model (ignored by create,
+            which uses ``o`` as request payload)
+        :type kwargs.data: dict | list | None
+        :return: True if the object was successfully deleted
+        :rtype: bool
+        :raise Error: Raise an error RestAPIError, NotFoundError or any db error
+
+        """
 
     def create(self, o: dict, **kwargs) -> str:  # pylint: disable=unused-argument
+        """Create the object by issuing a POST request to the REST API and return the _id
+
+        :param o: The object given (json format)
+        :type o: dict
+        :param kwargs: Endpoint options
+        :type kwargs: dict
+        :param kwargs.endpoint: endpoint name relative to ``self._uri``
+        :type kwargs.endpoint: str | None
+        :param kwargs.method: HTTP method option from endpoint model (ignored by create,
+            which always uses ``POST``)
+        :type kwargs.method: str | None
+        :param kwargs.url_parameters: path parameters appended to endpoint
+        :type kwargs.url_parameters: list | None
+        :param kwargs.query_options: query string options appended after ``?``
+        :type kwargs.query_options: dict | None
+        :param kwargs.data: payload option from endpoint model (ignored by create,
+            which uses ``o`` as request payload)
+        :type kwargs.data: dict | list | None
+        :return: the object _id
+        :rtype: str
+        :raise Error: Raise an error RestAPIError, NotFoundError or any db error
+
+        """
         options = Kparse(kwargs, KPARSE_MODEL_ENDPOINT)
 
         endpoint = options.get("endpoint")
@@ -227,6 +273,29 @@ class DBRestfullConnector(DBConnector):
         )
 
     def save(self, _id: str, o: dict, **kwargs):  # pylint: disable=unused-argument
+        """Save / update the object by issuing a PUT request to the REST API and return the _id
+
+        :param o: The object given (json format)
+        :type o: dict
+        :param kwargs: Endpoint options
+        :type kwargs: dict
+        :param kwargs.endpoint: endpoint name relative to ``self._uri``
+        :type kwargs.endpoint: str | None
+        :param kwargs.method: HTTP method option from endpoint model (ignored by create,
+            which always uses ``POST``)
+        :type kwargs.method: str | None
+        :param kwargs.url_parameters: path parameters appended to endpoint
+        :type kwargs.url_parameters: list | None
+        :param kwargs.query_options: query string options appended after ``?``
+        :type kwargs.query_options: dict | None
+        :param kwargs.data: payload option from endpoint model (ignored by save,
+            which uses ``o`` as request payload)
+        :type kwargs.data: dict | list | None
+        :return: True if the object was successfully saved/updated
+        :rtype: bool
+        :raise Error: Raise an error RestAPIError, NotFoundError or any db error
+
+        """
         options = Kparse(kwargs, KPARSE_MODEL_ENDPOINT)
 
         endpoint = options.get("endpoint")
@@ -281,6 +350,29 @@ class DBRestfullConnector(DBConnector):
         return True
 
     def delete_by_id(self, _id: str, **kwargs) -> bool:
+        """Delete the object by issuing a DELETE request to the REST API
+
+        :param _id: The object _id to delete
+        :type _id: str
+        :param kwargs: Endpoint options
+        :type kwargs: dict
+        :param kwargs.endpoint: endpoint name relative to ``self._uri``
+        :type kwargs.endpoint: str | None
+        :param kwargs.method: HTTP method option from endpoint model (ignored by create,
+            which always uses ``POST``)
+        :type kwargs.method: str | None
+        :param kwargs.url_parameters: path parameters appended to endpoint
+        :type kwargs.url_parameters: list | None
+        :param kwargs.query_options: query string options appended after ``?``
+        :type kwargs.query_options: dict | None
+        :param kwargs.data: payload option from endpoint model (ignored by save,
+            which uses ``o`` as request payload)
+        :type kwargs.data: dict | list | None
+        :return: True if the object was successfully deleted
+        :rtype: bool
+        :raise Error: Raise an error RestAPIError, NotFoundError or any db error
+
+        """
         options = Kparse(kwargs, KPARSE_MODEL_ENDPOINT)
 
         endpoint = options.get("endpoint")
@@ -334,6 +426,29 @@ class DBRestfullConnector(DBConnector):
         return True
 
     def get_by_id(self, _id: str, **kwargs) -> dict:
+        """Get the objectby its _id by issuing a GET request to the REST API
+
+        :param _id: The object _id to get
+        :type _id: str
+        :param kwargs: Endpoint options
+        :type kwargs: dict
+        :param kwargs.endpoint: endpoint name relative to ``self._uri``
+        :type kwargs.endpoint: str | None
+        :param kwargs.method: HTTP method option from endpoint model (ignored by create,
+            which always uses ``POST``)
+        :type kwargs.method: str | None
+        :param kwargs.url_parameters: path parameters appended to endpoint
+        :type kwargs.url_parameters: list | None
+        :param kwargs.query_options: query string options appended after ``?``
+        :type kwargs.query_options: dict | None
+        :param kwargs.data: payload option from endpoint model (ignored by save,
+            which uses ``o`` as request payload)
+        :type kwargs.data: dict | list | None
+        :return: the object corresponding to the _id
+        :rtype: dict
+        :raise Error: Raise an error RestAPIError, NotFoundError or any db error
+
+        """
         options = Kparse(kwargs, KPARSE_MODEL_ENDPOINT)
 
         endpoint = options.get("endpoint")
@@ -393,4 +508,34 @@ class DBRestfullConnector(DBConnector):
         sort_object: dict = {},
         **kwargs,
     ) -> list:
-        """See :func:`DBConnector.select`."""
+        """
+        Select from filter in the DB and return a list of dicts, with pagination (TO implement in subclasses)
+
+        :param select_filter: The filter for selection (depends on DB types)
+        :param projection: The list of elements we want for each object
+        :type projection: dict
+        :param page_size: number of elements per page
+        :type page_size: int
+        :param num_of_element_to_skip: number of element to skip from beginning
+        :type num_of_element_to_skip: int
+        :param sort_object: Soon
+        :type sort_object: dict
+        :param kwargs: Endpoint options
+        :type kwargs: dict
+        :param kwargs.endpoint: endpoint name relative to ``self._uri``
+        :type kwargs.endpoint: str | None
+        :param kwargs.method: HTTP method option from endpoint model (ignored by create,
+            which always uses ``POST``)
+        :type kwargs.method: str | None
+        :param kwargs.url_parameters: path parameters appended to endpoint
+        :type kwargs.url_parameters: list | None
+        :param kwargs.query_options: query string options appended after ``?``
+        :type kwargs.query_options: dict | None
+        :param kwargs.data: payload option from endpoint model (ignored by save,
+            which uses ``o`` as request payload)
+        :type kwargs.data: dict | list | None
+        :return: list of objects matching the selection filter
+        :rtype: list
+        :raise Error: Raise an error DBError or any db error
+
+        """
