@@ -135,3 +135,13 @@ class TestBackoffice(unittest.TestCase):
         results = json.loads(response.data)
         self.assertEqual(results["total"], 0)
         self.assertEqual(len(results["result"]), results["total"])
+
+    def test_05_not_found(self):
+        """
+        try to get a non-existent endpoint or vm
+        """
+        response = self.client.get("/vms")
+        self.assertEqual(response.status_code, 404)
+
+        response = self.client.get(f"/api/v1/it/vms/vm01")
+        self.assertEqual(response.status_code, 404)

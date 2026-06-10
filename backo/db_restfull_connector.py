@@ -226,7 +226,6 @@ class DBRestfullConnector(DBConnector):
             status_code,
         )
 
-    @abstractmethod
     def save(self, _id: str, o: dict, **kwargs):  # pylint: disable=unused-argument
         options = Kparse(kwargs, KPARSE_MODEL_ENDPOINT)
 
