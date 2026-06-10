@@ -51,6 +51,10 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             "sub_scheme"
         ]  # Shortcut to data
 
+        # Add shortcut to fields (extracted from scheme)
+        # Add shortcut to one-many (extracted from scheme)
+        # Add shortcut to many-many (extracted from scheme)
+
         DBConnector.__init__(self, **kwargs)
 
         if not os.path.exists(self._path):
@@ -82,34 +86,15 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         ]  # Tricky for now need to select actual field $.my.path.to
         return "RefsList" in self._meta[rev_coll]["sub_scheme"][rev_col]["types"]
 
-    # def _many_many_table_structure(self, col_name, col_data):
-    #     """
-    #     Generate name for intermediate table of many-many relationship
-    #     """
-    #     rev_coll = col_data["collection"]
-    #     rev_col_name = col_data["reverse"][2:]  # Tricky for now
-    #     a = f"{self._collection_name}_{col_name}_{rev_coll}"
-    #     b = f"{rev_coll}_{rev_col_name}_{self._collection_name}"
-    #     table_name = a if a < b else b
-    #     src_col = rev_col_name if a < b else col_name
-    #     dst_col = col_name if a < b else rev_col_name
-    #     src_coll = self._collection_name if a < b else rev_coll
-    #     dst_coll = rev_coll if a < b else self._collection_name
-    #     return (
-    #         table_name,
-    #         src_coll,
-    #         dst_coll,
-    #         src_col,
-    #         dst_col,
-    #     )
-
-    def _for_each_many_many(self, callback):
+    def _get_many_many_cols(self):
+        """
+        Loop over all columns of collection item and call the
+        callback function for columns that are many-many relationship
+        then stack results into a generator
+        """
         for col_name, col_data in self._scheme.items():
             if self._is_many_many_relationship(col_data):
-                table_structure = (
-                    self._many_many_table_structure(col_name, col_data)
-                )
-                yield callback(*table_structure)
+                yield self._many_many_table_structure(col_name, col_data)
 
     def _many_many_table_structure(self, col_name, col_data):
         """
@@ -120,7 +105,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         target_coll = col_data["collection"]
 
         # If it's a fixed prefix, consider using .lstrip() or .removeprefix() instead of slicing
-        target_col_name = col_data["reverse"][2:] 
+        target_col_name = col_data["reverse"][2:]
         source_col_name = col_name
 
         # 2. Determine a deterministic order so TableA->TableB and TableB->TableA resolve identically
@@ -133,18 +118,23 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
         # 3. Construct the table name cleanly
         table_name = f"{first_side[0]}_{first_side[1]}_{second_side[0]}"
-        
-        return (
-            table_name,
-            first_side[0],  # source_coll (lexicographically first collection)
-            second_side[0], # target_coll (lexicographically second collection)
-            second_side[1],  # src_col
-            first_side[1], # dst_col
-        )
 
-    def _create_join_table_request(self, table_structure):
+        return {
+            "col_name": col_name,
+            "data": col_data,
+            "rev_col_name": target_col_name,
+            "join_table": {
+                "name": table_name,
+                "source_coll": first_side[0],
+                "target_coll": second_side[0],
+                "source_col": second_side[1],
+                "target_col": first_side[1],
+            },
+        }
+
+    def _build_join_table_request(self, col_data):
         """
-        Generate the SQL query to create an intermediate join table for a 
+        Generate the SQL query to create an intermediate join table for a
         many-to-many relationship.
 
         Args:
@@ -154,15 +144,15 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         Returns:
             str: A raw SQL 'CREATE TABLE' query string.
         """
-        # Unpack the deterministic table and column metadata
-        table_name, source_coll, target_coll, source_col_name, target_col_name = table_structure
+        # Get data of intermediate table
+        table_data = col_data["join_table"]
         return f"""
-        CREATE TABLE IF NOT EXISTS {table_name} (
-            {source_col_name} TEXT ,
-            {target_col_name} TEXT ,
-            FOREIGN KEY ({source_col_name}) REFERENCES {source_coll}(_id) ,
-            FOREIGN KEY ({target_col_name}) REFERENCES {target_coll}(_id) ,
-            PRIMARY KEY ({source_col_name}, {target_col_name})
+        CREATE TABLE IF NOT EXISTS {table_data['name']} (
+            {table_data['source_col']} TEXT ,
+            {table_data['target_col']} TEXT ,
+            FOREIGN KEY ({table_data['source_col']}) REFERENCES {table_data['source_coll']}(_id) ,
+            FOREIGN KEY ({table_data['target_col']}) REFERENCES {table_data['target_coll']}(_id) ,
+            PRIMARY KEY ({table_data['source_col']}, {table_data['target_col']})
         );
         """
 
@@ -200,48 +190,38 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         self._sqlite_try(create_table_execute)
 
         # Generate intermediate tables (many-many relationships)
-        for col_name, col_data in self._scheme.items():
-            if self._is_many_many_relationship(col_data):
-                table_structure = (
-                    self._many_many_table_structure(col_name, col_data)
-                )
+        str_requests = [
+            self._build_join_table_request(col_data)
+            for col_data in self._get_many_many_cols()
+        ]
 
-                str_request = self._create_join_table_request(table_structure)
-                log.debug(f"Execute: {str_request}")
-                self._sqlite_try(create_table_execute)
+        for str_request in str_requests:
+            log.debug(f"Execute: {str_request}")
+            self._sqlite_try(create_table_execute)
 
     def drop(self) -> None:
         """See :func:`DBConnector.drop`"""
 
+        # Function to create SQL request string
+        def build_delete_request(table_name):
+            return f"DELETE FROM {table_name}"
+
+        # For each many-many field, build a delete request on join table
+        str_requests = [
+            build_delete_request(col_data["join_table"]["name"])
+            for col_data in self._get_many_many_cols()
+        ]
+        # Add request for deleting all elements in table of current collection without condition
+        str_requests.append(build_delete_request(self._collection_name))
+
+        # Execute and commit delete requests
         def delete_all():
-            # Delete without condition
-            # str_request = f"DELETE FROM {self._collection_name}"
-            # log.debug(f"Execute: {str_request}")
-            # self._cursor.execute(str_request)
-
-            # Delete many-many relationships in intermediate table
-            # for col_name, col_data in self._scheme.items():
-            #     if self._is_many_many_relationship(col_data):
-            #         table_name, _, _, _, _ = self._many_many_table_structure(
-            #             col_name, col_data
-            #         )
-
-            #         str_request = f"DELETE FROM {table_name}"
-            #         log.debug(f"Execute: {str_request}")
-            #         self._cursor.execute(str_request)
-
-            def _build_delete_request(table_name, *_):
-                return f"DELETE FROM {table_name}"
-
-            # For each many-many field, build a delete request on join table
-            str_requests = list(self._for_each_many_many(_build_delete_request))
-            # Add request for deleting all elements in table of current collection without condition
-            str_requests.append(_build_delete_request(self._collection_name))
-
+            # Execute all delete requests
             for str_request in str_requests:
                 log.debug(f"Execute: {str_request}")
                 self._cursor.execute(str_request)
-            
+
+            # Commit !
             self._con.commit()
 
             # Check how many rows were deleted
@@ -251,6 +231,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             if deleted_rows == 0:
                 log.warning("No rows matched the condition")
 
+        # Effectively try to execute SQL requests
         self._sqlite_try(delete_all)
 
     def save(self, _id: str, o: dict) -> None:
@@ -268,6 +249,8 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
     def _map_val(self, val, target_types):
         if "Bool" in target_types:
             return bool(val)
+        if "Int" in target_types:
+            return int(val)
 
         return val
 
@@ -299,6 +282,8 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
     def create(self, o: dict) -> str:
         """See :func:`DBConnector.create`"""
+        # Generate new id and set to object
+        # Note: doesn't support integer & auto increment id for now
         _id = self.generate_id(o)
         o["_id"] = _id
 
@@ -320,16 +305,14 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             # Insert
             log.debug(f"Execute: {str_request}")
             self._cursor.execute(str_request)
-            # self._con.commit()
 
             # Insert many-many relationships in intermediate table
             for col_name, col_data in self._scheme.items():
                 if self._is_many_many_relationship(col_data):
-                    table_name, _, _, src_col, dst_col = (
-                        self._many_many_table_structure(col_name, col_data)
-                    )
+                    col_data = self._many_many_table_structure(col_name, col_data)
                     for dst_id in o[col_name]:
-                        str_request = f"INSERT INTO {table_name} ({src_col}, {dst_col}) VALUES ('{_id}', '{dst_id}')"
+                        table_data = col_data["join_table"]
+                        str_request = f"INSERT INTO {table_data['name']} ({col_data['col_name']}, {col_data['rev_col_name']}) VALUES ('{dst_id}', '{_id}')"
                         log.debug(f"Execute: {str_request}")
                         self._cursor.execute(str_request)
 
@@ -345,7 +328,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         """
         Map a row result from SQL to an object
         """
-        # Create object 
+        # Create object
         # id is always the first column of the row
         o = {"_id": row[0]}
 
@@ -375,14 +358,23 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
                     self._collection_name,
                 )
 
-            # Retrieve RefsList ids
-            # select love from animals_love_users alu inner join animals a on a._id = alu.is_loved_by where a._id = 5397748549235068761
+            # Map row result to object
+            o = self._map_row(row)
 
+            # Retrieve RefsList ids
+            for col_data in self._get_many_many_cols():
+                col_types = col_data["data"]["types"]
+                table_data = col_data["join_table"]
+                str_request = f"SELECT join_table.{col_data['col_name']} FROM {table_data['name']} join_table INNER JOIN {self._collection_name} cur ON cur._id = join_table.{col_data['rev_col_name']} WHERE cur._id = '{_id}'"
+                self._cursor.execute(str_request)
+                o[col_data["col_name"]] = [
+                    self._map_val(row[0], col_types) for row in self._cursor.fetchall()
+                ]
+                print(str_request)
 
             log.debug(f"✓ GetById {self._collection_name} {_id}")
 
-            # Map row result to object and return
-            return self._map_row(row)
+            return o
 
         return self._sqlite_try(select)
 

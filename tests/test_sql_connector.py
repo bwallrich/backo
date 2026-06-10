@@ -13,6 +13,13 @@ from backo import Backoffice, current_user
 
 from backo import String, Bool, Ref, RefsList  # , Error as StrictoError
 
+from backo import log_system, LogLevel
+
+### --- For development ---
+log_system.add_handler(log_system.set_streamhandler())
+log = log_system.get_or_create_logger("testing")
+log_system.setLevel(LogLevel.DEBUG)
+
 
 class TestMongo(unittest.TestCase):
     """
@@ -127,8 +134,80 @@ class TestMongo(unittest.TestCase):
             {"surname": "pioo", "type": "bird", "user": u0._id, "love": [u0._id]}
         )
 
+        u3 = self._backoffice.users.create(
+            {"name": "jean", "surname": "valjean", "is_loved_by": [a1._id]}
+        )
+
+        print("RELOAD !!!!")
+        # a1.reload()
+        b = self._backoffice.animals.new()
+        b.load(a1._id)
+
         print(a0.select("$.user.name"))
         print(a1.select("$.user.name"))
 
+        print(f"{a0['surname']} loves ")
+        print(a0.select("$.love.name"))
+
+        print(f"{b['surname']} loves ")
+        print(b.select("$.love.name"))
+        print(f"{u3['surname']} is loved by ")
+        print(f"{u3.select("$.is_loved_by.surname")}")
+
         # x_ = backoffice.users.new()
         # x_.load("plop")
+
+    def test_many_to_many(self):
+        """
+        Test many to many relationship
+        """
+        self.db_users.create_table()
+        self.db_animals.create_table()
+        self.db_users.drop()
+        self.db_animals.drop()
+
+        bebert = self._backoffice.users.create({"name": "bebert", "surname": "bebert"})
+        jean = self._backoffice.users.create({"name": "jean", "surname": "valjean"})
+        # ted = self._backoffice.users.create({"name": "ted", "surname": "teddy"})
+
+        log.debug("# Create cookie")
+
+        cookie = self._backoffice.animals.create(
+            {
+                "surname": "cookie",
+                "type": "dog",
+                "user": bebert._id,
+                "love": [bebert._id, jean._id],
+            }
+        )
+
+        # log.debug("# Create pioupiou")
+
+        # pioupiou = self._backoffice.animals.create(
+        #     {
+        #         "surname": "pioupiou",
+        #         "type": "bird",
+        #         "user": ted._id,
+        #         "love": [ted._id, jean._id],
+        #     }
+        # )
+
+        log.debug("# Create benji")
+
+        benji = self._backoffice.users.create(
+            {
+                "name": "benji",
+                "surname": "benjie",
+                "male": False,
+                "is_loved_by": [cookie._id],
+            }
+        )
+
+        self.assertEqual(len(cookie.love), 2)
+
+        log.debug("# Reload cookie")
+
+        cookie.reload()
+
+        self.assertEqual(len(cookie.love), 3)
+        self.assertEqual(len(benji.is_loved_by), 1)
