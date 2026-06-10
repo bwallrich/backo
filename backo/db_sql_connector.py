@@ -46,7 +46,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         self._path = options.get("path")
         self._dbname = options.get("dbname")
         self._collection_name = options.get("collection")
-        self._meta = options.get("meta")
+        self._meta = self._flatten_meta(options.get("meta"))
         self._scheme = self._meta[self._collection_name][
             "sub_scheme"
         ]  # Shortcut to data
@@ -65,6 +65,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
         try:
             self._con = sqlite3.connect(f"{self._path}/{self._dbname}.db")
+            self._con.row_factory = sqlite3.Row
             self._cursor = self._con.cursor()
         except Exception as e:
             raise DBError('SQLLite connection error at "{0}"', self._path) from e
@@ -76,7 +77,6 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
                 types = col_data["types"]
 
                 if "Dict" in types:
-                    print(f"FOUND DICT: {col_name}" )
                     _rec_flatten_meta(col_data, flat_meta)
                 else:
                     if "sub_scheme" not in flat_meta:
@@ -88,13 +88,12 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         flat_meta = {}
         for coll_name, coll_meta in meta.items():    
             flat_meta[coll_name] = {}
-            print(f"PARSE {coll_name}")
             _rec_flatten_meta(coll_meta, flat_meta[coll_name])
 
         return flat_meta
 
     def _to_sql_type(self, str_type):
-        return {"String": "TEXT", "Bool": "INTEGER", "Ref": "TEXT"}[str_type]
+        return {"String": "TEXT", "Bool": "INTEGER", "Int": "INTEGER", "Datetime": "INTEGER", "Ref": "TEXT"}[str_type]
 
     def _is_many_many_relationship(self, col_data):
         """
@@ -220,7 +219,6 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         ]
 
         for str_request in str_requests:
-            log.debug(f"Execute: {str_request}")
             self._sqlite_try(create_table_execute)
 
     def drop(self) -> None:
@@ -271,6 +269,8 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         return val
 
     def _map_val(self, val, target_types):
+        print(val)
+        print(target_types)
         if "Bool" in target_types:
             return bool(val)
         if "Int" in target_types:
@@ -318,7 +318,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             t = []
             for col_name, col_data in self._scheme.items():
                 # Exclude RefsList and _meta columns for insert
-                if "RefsList" not in col_data["types"] and col_name != "_meta":
+                if "RefsList" not in col_data["types"] and col_name != "_meta" and col_name in o:
                     t.append((col_name, self._format_val(o[col_name])))
 
             str_col_names = ",".join(field_name for field_name, _ in t)
@@ -353,14 +353,12 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         """
         Map a row result from SQL to an object
         """
-        # Create object
-        # id is always the first column of the row
-        o = {"_id": row[0]}
-
-        for i, (col_name, col_data) in enumerate(self._scheme.items()):
+        o = {}
+        for col_name, col_data in self._scheme.items():
             col_types = col_data["types"]
-            if "RefsList" not in col_types and not col_name.startswith("_"):
-                o[col_name] = self._map_val(row[i + 1], col_types)
+
+            if col_name in row and "RefsList" not in col_types:
+                o[col_name] = self._map_val(row[col_name], col_types)
 
         return o
 
