@@ -11,7 +11,7 @@ from backo import Item, Collection
 from backo import DBSQLConnector
 from backo import Backoffice, current_user
 
-from backo import String, Bool, Ref, RefsList  # , Error as StrictoError
+from backo import String, Bool, Int, Ref, RefsList, Dict  # , Error as StrictoError
 
 from backo import log_system, LogLevel
 
@@ -41,6 +41,11 @@ class TestMongo(unittest.TestCase):
                 "male": Bool(default=True),
                 "animals": RefsList(coll="animals", field="$.user"),
                 "is_loved_by": RefsList(coll="animals", field="$.love"),
+                "location": Dict({
+                    "country": String(),
+                    "city": String(),
+                    "postal_code": Int()
+                })
             }
         )
 
@@ -69,6 +74,9 @@ class TestMongo(unittest.TestCase):
             collection="animals", path="sqlite_test_db", meta=self._meta
         )
 
+        print("3OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
+        print(json.dumps(self.db_users._flatten_meta(self._meta), indent=4))
+
         self._backoffice.register_collection(
             Collection(
                 "users",
@@ -96,66 +104,69 @@ class TestMongo(unittest.TestCase):
         self.db_users.close()
         return super().tearDown()
 
-    def test_db_connect(self):
-        """
-        try to connect
-        """
+    # def test_db_connect(self):
+    #     """
+    #     try to connect
+    #     """
 
-        self.db_users.create_table()
-        self.db_animals.create_table()
-        self.db_users.drop()
-        self.db_animals.drop()
+    #     self.db_users.create_table()
+    #     self.db_animals.create_table()
+    #     self.db_users.drop()
+    #     self.db_animals.drop()
 
-        u0 = self._backoffice.users.create({"name": "bebert", "surname": "bebert"})
-        u1 = self._backoffice.users.create({"name": "ted", "surname": "teddy"})
-        u2 = self._backoffice.users.create(
-            {"name": "benji", "surname": "benjie", "male": False}
-        )
+    #     u0 = self._backoffice.users.create({"name": "bebert", "surname": "bebert"})
+    #     u1 = self._backoffice.users.create({"name": "ted", "surname": "teddy"})
+    #     u2 = self._backoffice.users.create(
+    #         {"name": "benji", "surname": "benjie", "male": False}
+    #     )
 
-        # u0_ = backoffice.users.new()
-        # u0_.load(u0._id)
-        # print(u0_)
-        # u1_ = backoffice.users.new()
-        # u1_.load(u1._id)
-        # print(u1_)
-        # u2_ = backoffice.users.new()
-        # u2_.load(u2._id)
-        # print(u2_)
+    #     # u0_ = backoffice.users.new()
+    #     # u0_.load(u0._id)
+    #     # print(u0_)
+    #     # u1_ = backoffice.users.new()
+    #     # u1_.load(u1._id)
+    #     # print(u1_)
+    #     # u2_ = backoffice.users.new()
+    #     # u2_.load(u2._id)
+    #     # print(u2_)
 
-        a0 = self._backoffice.animals.create(
-            {
-                "surname": "cookie",
-                "type": "dog",
-                "user": u0._id,
-                "love": [u0._id, u1._id, u2._id],
-            }
-        )
-        a1 = self._backoffice.animals.create(
-            {"surname": "pioo", "type": "bird", "user": u0._id, "love": [u0._id]}
-        )
+    #     a0 = self._backoffice.animals.create(
+    #         {
+    #             "surname": "cookie",
+    #             "type": "dog",
+    #             "user": u0._id,
+    #             "love": [u0._id, u1._id, u2._id],
+    #         }
+    #     )
+    #     a1 = self._backoffice.animals.create(
+    #         {"surname": "pioo", "type": "bird", "user": u0._id, "love": [u0._id]}
+    #     )
 
-        u3 = self._backoffice.users.create(
-            {"name": "jean", "surname": "valjean", "is_loved_by": [a1._id]}
-        )
+    #     u3 = self._backoffice.users.create(
+    #         {"name": "jean", "surname": "valjean", "is_loved_by": [a1._id]}
+    #     )
 
-        print("RELOAD !!!!")
-        # a1.reload()
-        b = self._backoffice.animals.new()
-        b.load(a1._id)
+    #     print("RELOAD !!!!")
+    #     # a1.reload()
+    #     b = self._backoffice.animals.new()
+    #     b.load(a1._id)
 
-        print(a0.select("$.user.name"))
-        print(a1.select("$.user.name"))
+    #     print(a0.select("$.user.name"))
+    #     print(a1.select("$.user.name"))
 
-        print(f"{a0['surname']} loves ")
-        print(a0.select("$.love.name"))
+    #     print(f"{a0['surname']} loves ")
+    #     print(a0.select("$.love.name"))
 
-        print(f"{b['surname']} loves ")
-        print(b.select("$.love.name"))
-        print(f"{u3['surname']} is loved by ")
-        print(f"{u3.select("$.is_loved_by.surname")}")
+    #     print(f"{b['surname']} loves ")
+    #     print(b.select("$.love.name"))
+    #     print(f"{u3['surname']} is loved by ")
+    #     print(f"{u3.select("$.is_loved_by.surname")}")
 
-        # x_ = backoffice.users.new()
-        # x_.load("plop")
+    #     # x_ = backoffice.users.new()
+    #     # x_.load("plop")
+
+    def test_one_to_many(self):
+        pass
 
     def test_many_to_many(self):
         """

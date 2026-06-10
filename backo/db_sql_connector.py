@@ -69,6 +69,30 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         except Exception as e:
             raise DBError('SQLLite connection error at "{0}"', self._path) from e
 
+    def _flatten_meta(self, meta):
+
+        def _rec_flatten_meta(meta, flat_meta):
+            for col_name, col_data in meta["sub_scheme"].items():
+                types = col_data["types"]
+
+                if "Dict" in types:
+                    print(f"FOUND DICT: {col_name}" )
+                    _rec_flatten_meta(col_data, flat_meta)
+                else:
+                    if "sub_scheme" not in flat_meta:
+                        flat_meta["sub_scheme"] = {}
+                    flat_meta["sub_scheme"][col_name] = col_data
+            
+            return flat_meta
+
+        flat_meta = {}
+        for coll_name, coll_meta in meta.items():    
+            flat_meta[coll_name] = {}
+            print(f"PARSE {coll_name}")
+            _rec_flatten_meta(coll_meta, flat_meta[coll_name])
+
+        return flat_meta
+
     def _to_sql_type(self, str_type):
         return {"String": "TEXT", "Bool": "INTEGER", "Ref": "TEXT"}[str_type]
 
@@ -312,6 +336,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
                     col_data = self._many_many_table_structure(col_name, col_data)
                     for dst_id in o[col_name]:
                         table_data = col_data["join_table"]
+                        # Note that here we can insert multiple rows in single operation (more effective)
                         str_request = f"INSERT INTO {table_data['name']} ({col_data['col_name']}, {col_data['rev_col_name']}) VALUES ('{dst_id}', '{_id}')"
                         log.debug(f"Execute: {str_request}")
                         self._cursor.execute(str_request)
@@ -366,11 +391,11 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
                 col_types = col_data["data"]["types"]
                 table_data = col_data["join_table"]
                 str_request = f"SELECT join_table.{col_data['col_name']} FROM {table_data['name']} join_table INNER JOIN {self._collection_name} cur ON cur._id = join_table.{col_data['rev_col_name']} WHERE cur._id = '{_id}'"
+                log.debug(f"Execute: {str_request}")
                 self._cursor.execute(str_request)
                 o[col_data["col_name"]] = [
                     self._map_val(row[0], col_types) for row in self._cursor.fetchall()
                 ]
-                print(str_request)
 
             log.debug(f"✓ GetById {self._collection_name} {_id}")
 
