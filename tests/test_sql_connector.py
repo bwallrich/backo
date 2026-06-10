@@ -74,7 +74,6 @@ class TestMongo(unittest.TestCase):
             collection="animals", path="sqlite_test_db", meta=self._meta
         )
 
-        print("3OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
         print(json.dumps(self.db_users._flatten_meta(self._meta), indent=4))
 
         self._backoffice.register_collection(
@@ -167,6 +166,14 @@ class TestMongo(unittest.TestCase):
 
     def test_one_to_many(self):
         pass
+
+    def test_nested(self):
+        self.db_users.create_table()
+        self.db_animals.create_table()
+        self.db_users.drop()
+        self.db_animals.drop()
+        bebert = self._backoffice.users.create({"name": "bebert", "surname": "bebert", "location": {"city": "pistache city", "country": "Pistachio"}})
+
 
     def test_many_to_many(self):
         """

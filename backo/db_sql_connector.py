@@ -11,6 +11,7 @@ import sqlite3
 sys.path.insert(1, "../../stricto")
 
 from stricto import Kparse
+from .api_toolbox import append_path_to_filter
 
 from .db_connector import DBConnector
 from .error import NotFoundError
@@ -70,6 +71,33 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         except Exception as e:
             raise DBError('SQLLite connection error at "{0}"', self._path) from e
 
+    def get_at_path(self, path, d: dict):
+        clean_path = path[2:]
+        chunks = clean_path.split('.')
+        v = d
+        for c in chunks:
+            if c in v:
+                v = v[c]
+            else:
+                return None
+        
+        return v
+
+    def set_at_path(self, path, d: dict, value):
+        clean_path = path[2:]
+        chunks = clean_path.split('.')
+        v = d
+        
+        # Navigate to the parent of the target key
+        for c in chunks[:-1]:
+            if c not in v:
+                v[c] = {}
+            v = v[c]
+        
+        # Set the value at the final key
+        if chunks:
+            v[chunks[-1]] = value
+
     def _flatten_meta(self, meta):
 
         def _rec_flatten_meta(meta, flat_meta):
@@ -81,7 +109,9 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
                 else:
                     if "sub_scheme" not in flat_meta:
                         flat_meta["sub_scheme"] = {}
-                    flat_meta["sub_scheme"][col_name] = col_data
+                    # flat_meta["sub_scheme"][col_name] = col_data
+                    flat_meta["sub_scheme"][col_data["path"]] = col_data
+                    flat_meta["sub_scheme"][col_data["path"]]["name"] = col_name
             
             return flat_meta
 
@@ -95,6 +125,14 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
     def _to_sql_type(self, str_type):
         return {"String": "TEXT", "Bool": "INTEGER", "Int": "INTEGER", "Datetime": "INTEGER", "Ref": "TEXT"}[str_type]
 
+    def _json_path_to_sql_path(self, path):
+        # return path[2:].replace(".", "_")
+        # return path.replace("$", "\$").replace(".", "\.")
+        return path
+
+    def  _sql_path_to_json_path(self, path):
+        pass
+
     def _is_many_many_relationship(self, col_data):
         """
         Check whether given col is a many-many relationship
@@ -104,9 +142,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             return False
 
         rev_coll = col_data["collection"]
-        rev_col = col_data["reverse"][
-            2:
-        ]  # Tricky for now need to select actual field $.my.path.to
+        rev_col = col_data["reverse"]
         return "RefsList" in self._meta[rev_coll]["sub_scheme"][rev_col]["types"]
 
     def _get_many_many_cols(self):
@@ -119,7 +155,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             if self._is_many_many_relationship(col_data):
                 yield self._many_many_table_structure(col_name, col_data)
 
-    def _many_many_table_structure(self, col_name, col_data):
+    def _many_many_table_structure(self, col_path, col_data):
         """
         Generate name and column mapping for an intermediate many-to-many join table.
         """
@@ -128,8 +164,8 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         target_coll = col_data["collection"]
 
         # If it's a fixed prefix, consider using .lstrip() or .removeprefix() instead of slicing
-        target_col_name = col_data["reverse"][2:]
-        source_col_name = col_name
+        target_col_name = col_data["reverse"]
+        source_col_name = col_path
 
         # 2. Determine a deterministic order so TableA->TableB and TableB->TableA resolve identically
         # We pack the related entities into standardized pairs
@@ -140,10 +176,11 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         first_side, second_side = sorted([sources, targets], key=lambda x: x[0])
 
         # 3. Construct the table name cleanly
-        table_name = f"{first_side[0]}_{first_side[1]}_{second_side[0]}"
+        col = first_side[1].replace("$.", "").replace(".", "_")
+        table_name = f"{first_side[0]}_{col}_{second_side[0]}"
 
         return {
-            "col_name": col_name,
+            "col_name": col_path,
             "data": col_data,
             "rev_col_name": target_col_name,
             "join_table": {
@@ -171,11 +208,11 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         table_data = col_data["join_table"]
         return f"""
         CREATE TABLE IF NOT EXISTS {table_data['name']} (
-            {table_data['source_col']} TEXT ,
-            {table_data['target_col']} TEXT ,
-            FOREIGN KEY ({table_data['source_col']}) REFERENCES {table_data['source_coll']}(_id) ,
-            FOREIGN KEY ({table_data['target_col']}) REFERENCES {table_data['target_coll']}(_id) ,
-            PRIMARY KEY ({table_data['source_col']}, {table_data['target_col']})
+            '{table_data['source_col']}' TEXT ,
+            '{table_data['target_col']}' TEXT ,
+            FOREIGN KEY ('{table_data['source_col']}') REFERENCES {table_data['source_coll']}(_id) ,
+            FOREIGN KEY ('{table_data['target_col']}') REFERENCES {table_data['target_coll']}(_id) ,
+            PRIMARY KEY ('{table_data['source_col']}', '{table_data['target_col']}')
         );
         """
 
@@ -187,15 +224,16 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
         for col_name, col_data in self._scheme.items():
             col_type = col_data["types"][0]
-            if not col_name.startswith("_") and not col_type == "RefsList":
-                str_cols.append(f"{col_name} {self._to_sql_type(col_type)}")
+            if not col_type == "RefsList":
+                str_cols.append(f"'{col_data["path"]}' {self._to_sql_type(col_type)}")
 
         # Add one-many relationship
         for col_name, col_data in self._scheme.items():
             col_type = col_data["types"][0]
             if col_type == "Ref":
                 str_cols.append(
-                    f"FOREIGN KEY ({col_name}) REFERENCES {col_data["collection"]}(_id)"
+                    # f"FOREIGN KEY ({col_name}) REFERENCES {col_data["collection"]}(_id)"
+                    f"FOREIGN KEY ('{col_data["path"]}') REFERENCES {col_data["collection"]}(_id)"
                 )
 
         str_request = f"""
@@ -315,14 +353,17 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
         def insert():
 
-            t = []
+            col_value_pairs = []
             for col_name, col_data in self._scheme.items():
-                # Exclude RefsList and _meta columns for insert
-                if "RefsList" not in col_data["types"] and col_name != "_meta" and col_name in o:
-                    t.append((col_name, self._format_val(o[col_name])))
+                path = col_data["path"]
+                val = self.get_at_path(path, o)
+                print(f"GET {col_name}, path {path}: {val}")
+                # Exclude RefsList for insert
+                if val is not None and "RefsList" not in col_data["types"]:
+                    col_value_pairs.append((path, self._format_val(val)))
 
-            str_col_names = ",".join(field_name for field_name, _ in t)
-            str_values = ",".join(field_value for _, field_value in t)
+            str_col_names = ",".join(f"'{field_name}'" for field_name, _ in col_value_pairs)
+            str_values = ",".join(field_value for _, field_value in col_value_pairs)
 
             str_request = f"INSERT INTO {self._collection_name} ({str_col_names}) VALUES ({str_values})"
 
@@ -331,15 +372,18 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             self._cursor.execute(str_request)
 
             # Insert many-many relationships in intermediate table
-            for col_name, col_data in self._scheme.items():
+            for col_path, col_data in self._scheme.items():
                 if self._is_many_many_relationship(col_data):
-                    col_data = self._many_many_table_structure(col_name, col_data)
-                    for dst_id in o[col_name]:
-                        table_data = col_data["join_table"]
-                        # Note that here we can insert multiple rows in single operation (more effective)
-                        str_request = f"INSERT INTO {table_data['name']} ({col_data['col_name']}, {col_data['rev_col_name']}) VALUES ('{dst_id}', '{_id}')"
-                        log.debug(f"Execute: {str_request}")
-                        self._cursor.execute(str_request)
+                    print(f"COL IS MANY MANY ? : {col_path}")
+                    col_data = self._many_many_table_structure(col_path, col_data)
+                    val = self.get_at_path(col_path, o)
+                    if val is not None:
+                        for dst_id in val:
+                            table_data = col_data["join_table"]
+                            # Note that here we can insert multiple rows in single operation (more effective)
+                            str_request = f"INSERT INTO {table_data['name']} ('{col_path}', '{col_data['rev_col_name']}') VALUES ('{dst_id}', '{_id}')"
+                            log.debug(f"Execute: {str_request}")
+                            self._cursor.execute(str_request)
 
             # Commit all requests
             self._con.commit()
@@ -368,7 +412,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
         def select():
             # Create and execute request
-            str_request = f"SELECT * FROM {self._collection_name} WHERE _id='{_id}'"
+            str_request = f"SELECT * FROM {self._collection_name} WHERE \"$._id\"='{_id}'"
             log.debug(f"Execute: {str_request}")
             self._cursor.execute(str_request)
             row = self._cursor.fetchone()
@@ -388,12 +432,30 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             for col_data in self._get_many_many_cols():
                 col_types = col_data["data"]["types"]
                 table_data = col_data["join_table"]
-                str_request = f"SELECT join_table.{col_data['col_name']} FROM {table_data['name']} join_table INNER JOIN {self._collection_name} cur ON cur._id = join_table.{col_data['rev_col_name']} WHERE cur._id = '{_id}'"
+                str_request = f"SELECT join_table.\"{col_data['col_name']}\" FROM {table_data['name']} join_table INNER JOIN {self._collection_name} cur ON cur.\"$._id\" = join_table.\"{col_data['rev_col_name']}\" WHERE cur.\"$._id\" = '{_id}'"
                 log.debug(f"Execute: {str_request}")
                 self._cursor.execute(str_request)
-                o[col_data["col_name"]] = [
-                    self._map_val(row[0], col_types) for row in self._cursor.fetchall()
-                ]
+                
+                col_path = col_data["col_name"]
+                # x = self.get_at_path(col_path, o)
+                # if "is_loved_by" in o:
+                #     print("IS LOVEEE: " + o["is_loved_by"])
+
+
+                self.set_at_path(col_path, o, [
+                    self._map_val(row[col_path], col_types) for row in self._cursor.fetchall()
+                ])
+
+                # append_path_to_filter(o, col_path[2:], [
+                #     self._map_val(row[col_path], col_types) for row in self._cursor.fetchall()
+                # ])
+
+                # o[col_data["col_name"]] = [
+                #     self._map_val(row[0], col_types) for row in self._cursor.fetchall()
+                # ]
+
+
+
 
             log.debug(f"✓ GetById {self._collection_name} {_id}")
 
