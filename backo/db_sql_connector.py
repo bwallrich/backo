@@ -11,7 +11,6 @@ import sqlite3
 sys.path.insert(1, "../../stricto")
 
 from stricto import Kparse
-from .api_toolbox import append_path_to_filter
 
 from .db_connector import DBConnector
 from .error import NotFoundError
@@ -73,27 +72,27 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
     def get_at_path(self, path, d: dict):
         clean_path = path[2:]
-        chunks = clean_path.split('.')
+        chunks = clean_path.split(".")
         v = d
         for c in chunks:
             if c in v:
                 v = v[c]
             else:
                 return None
-        
+
         return v
 
     def set_at_path(self, path, d: dict, value):
         clean_path = path[2:]
-        chunks = clean_path.split('.')
+        chunks = clean_path.split(".")
         v = d
-        
+
         # Navigate to the parent of the target key
         for c in chunks[:-1]:
             if c not in v:
                 v[c] = {}
             v = v[c]
-        
+
         # Set the value at the final key
         if chunks:
             v[chunks[-1]] = value
@@ -112,25 +111,31 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
                     # flat_meta["sub_scheme"][col_name] = col_data
                     flat_meta["sub_scheme"][col_data["path"]] = col_data
                     flat_meta["sub_scheme"][col_data["path"]]["name"] = col_name
-            
+
             return flat_meta
 
         flat_meta = {}
-        for coll_name, coll_meta in meta.items():    
+        for coll_name, coll_meta in meta.items():
             flat_meta[coll_name] = {}
             _rec_flatten_meta(coll_meta, flat_meta[coll_name])
 
         return flat_meta
 
     def _to_sql_type(self, str_type):
-        return {"String": "TEXT", "Bool": "INTEGER", "Int": "INTEGER", "Datetime": "INTEGER", "Ref": "TEXT"}[str_type]
+        return {
+            "String": "TEXT",
+            "Bool": "INTEGER",
+            "Int": "INTEGER",
+            "Datetime": "INTEGER",
+            "Ref": "TEXT",
+        }[str_type]
 
     def _json_path_to_sql_path(self, path):
         # return path[2:].replace(".", "_")
         # return path.replace("$", "\$").replace(".", "\.")
         return path
 
-    def  _sql_path_to_json_path(self, path):
+    def _sql_path_to_json_path(self, path):
         pass
 
     def _is_many_many_relationship(self, col_data):
@@ -362,7 +367,9 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
                 if val is not None and "RefsList" not in col_data["types"]:
                     col_value_pairs.append((path, self._format_val(val)))
 
-            str_col_names = ",".join(f"'{field_name}'" for field_name, _ in col_value_pairs)
+            str_col_names = ",".join(
+                f"'{field_name}'" for field_name, _ in col_value_pairs
+            )
             str_values = ",".join(field_value for _, field_value in col_value_pairs)
 
             str_request = f"INSERT INTO {self._collection_name} ({str_col_names}) VALUES ({str_values})"
@@ -412,7 +419,9 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
         def select():
             # Create and execute request
-            str_request = f"SELECT * FROM {self._collection_name} WHERE \"$._id\"='{_id}'"
+            str_request = (
+                f"SELECT * FROM {self._collection_name} WHERE \"$._id\"='{_id}'"
+            )
             log.debug(f"Execute: {str_request}")
             self._cursor.execute(str_request)
             row = self._cursor.fetchone()
@@ -435,16 +444,20 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
                 str_request = f"SELECT join_table.\"{col_data['col_name']}\" FROM {table_data['name']} join_table INNER JOIN {self._collection_name} cur ON cur.\"$._id\" = join_table.\"{col_data['rev_col_name']}\" WHERE cur.\"$._id\" = '{_id}'"
                 log.debug(f"Execute: {str_request}")
                 self._cursor.execute(str_request)
-                
+
                 col_path = col_data["col_name"]
                 # x = self.get_at_path(col_path, o)
                 # if "is_loved_by" in o:
                 #     print("IS LOVEEE: " + o["is_loved_by"])
 
-
-                self.set_at_path(col_path, o, [
-                    self._map_val(row[col_path], col_types) for row in self._cursor.fetchall()
-                ])
+                self.set_at_path(
+                    col_path,
+                    o,
+                    [
+                        self._map_val(row[col_path], col_types)
+                        for row in self._cursor.fetchall()
+                    ],
+                )
 
                 # append_path_to_filter(o, col_path[2:], [
                 #     self._map_val(row[col_path], col_types) for row in self._cursor.fetchall()
@@ -453,9 +466,6 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
                 # o[col_data["col_name"]] = [
                 #     self._map_val(row[0], col_types) for row in self._cursor.fetchall()
                 # ]
-
-
-
 
             log.debug(f"✓ GetById {self._collection_name} {_id}")
 

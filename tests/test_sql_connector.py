@@ -41,11 +41,9 @@ class TestMongo(unittest.TestCase):
                 "male": Bool(default=True),
                 "animals": RefsList(coll="animals", field="$.user"),
                 "is_loved_by": RefsList(coll="animals", field="$.love"),
-                "location": Dict({
-                    "country": String(),
-                    "city": String(),
-                    "postal_code": Int()
-                })
+                "location": Dict(
+                    {"country": String(), "city": String(), "postal_code": Int()}
+                ),
             }
         )
 
@@ -172,8 +170,13 @@ class TestMongo(unittest.TestCase):
         self.db_animals.create_table()
         self.db_users.drop()
         self.db_animals.drop()
-        bebert = self._backoffice.users.create({"name": "bebert", "surname": "bebert", "location": {"city": "pistache city", "country": "Pistachio"}})
-
+        bebert = self._backoffice.users.create(
+            {
+                "name": "bebert",
+                "surname": "bebert",
+                "location": {"city": "pistache city", "country": "Pistachio"},
+            }
+        )
 
     def test_many_to_many(self):
         """
