@@ -2,7 +2,8 @@
 backoffice : The main application
 """
 
-# pylint: disable=logging-fstring-interpolation,duplicate-code
+# linter is lost with different modules with the same name
+# pylint: disable=logging-fstring-interpolation,duplicate-code,no-name-in-module
 
 import sys
 import argparse
@@ -14,6 +15,8 @@ import yaml
 from flask import Flask
 from flask_cors import CORS
 
+sys.path.insert(1, "../../../stricto")
+sys.path.insert(1, "../../../backo")
 import constants
 from backo import Backoffice
 
