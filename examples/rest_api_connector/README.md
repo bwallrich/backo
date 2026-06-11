@@ -32,6 +32,21 @@ erDiagram
 
 The remote REST API is reachavalabler at `http://localhost:12345/api/v1/hypervisor/vms` and implements a full CRUD interface using `backo`.
 
+## Specific Dependencies
+
+In addition to `backo` and its standard dependencies, this example requires:
+
+- `coloredlogs`
+- `pymongo`
+- `flask_cors`
+
+Install them in your environment:
+
+```bash
+pip install coloredlogs pymongo flask-cors
+or
+pip install -r requirements.txt
+```
 
 
 ## Files
