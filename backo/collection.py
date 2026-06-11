@@ -487,10 +487,10 @@ class Collection:
             collection_blueprint.add_url_rule("", "select", methods=["GET"])
             collection_blueprint.view_functions[f"{self.name}.select"] = self.filtering
             self._openapi.add_get_all(
-                self.name,
                 f"/{self.name}",
-                (200, "Successful response."),
-                [(400, "Bad Request"), (500, "Something went wrong.")],
+                self.name,
+                (200, "Successful response"),
+                [(400, "Bad Request"), (500, "Something went wrong")],
             )
 
         # POST / Create data
@@ -499,6 +499,13 @@ class Collection:
             collection_blueprint.add_url_rule("", "create", methods=["POST"])
             collection_blueprint.view_functions[f"{self.name}.create"] = (
                 self.http_create
+            )
+            self._openapi.add_post_item(
+                f"/{self.name}",
+                self.name,
+                self.model.get_schema(),
+                (201, "Item created"),
+                [(400, "Bad request"), (500, "Something went wrong")],
             )
 
         # CHECK / Check values
