@@ -486,6 +486,12 @@ class Collection:
             log.info(f"Add route GET {self.name}/")
             collection_blueprint.add_url_rule("", "select", methods=["GET"])
             collection_blueprint.view_functions[f"{self.name}.select"] = self.filtering
+            self._openapi.add_get_all(
+                self.name,
+                f"/{self.name}",
+                (200, "Successful response."),
+                [(400, "Bad Request"), (500, "Something went wrong.")],
+            )
 
         # POST / Create data
         if self._permissions.is_strictly_allowed_to("create") is not False:
