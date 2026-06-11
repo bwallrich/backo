@@ -37,7 +37,7 @@ jobs:
     - name: Start REST API example server
       working-directory: examples/rest_api_connector/rest-api
       run: |
-        nohup python rest_api.py > "$RUNNER_TEMP/rest_api_connector.log" 2>&1 &
+        nohup python rest_api.py &
         echo $! > "$RUNNER_TEMP/rest_api_connector.pid"
 
     - name: Wait for REST API example server

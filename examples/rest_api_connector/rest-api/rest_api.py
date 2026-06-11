@@ -11,6 +11,9 @@ from flask_cors import CORS
 import yaml
 import coloredlogs
 
+sys.path.insert(1, "../../../../stricto")
+sys.path.insert(1, "../../../../backo")
+
 import constants
 from backo import Backoffice
 
