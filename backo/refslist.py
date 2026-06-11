@@ -171,14 +171,12 @@ class RefsList(List):
         :return: the schema
         :rtype: dict
         """
-        a = super().self.get_schema()
+        a = super().get_schema()
         a["collection"] = self._collection
         a["reverse"] = self._reverse
         return a
 
-    def check_syntax(
-        self, event_name: str, root, me, **kwargs
-    ):  # pylint: disable=unused-argument
+    def check_syntax(self, event_name: str, root, me, **kwargs):  # pylint: disable=unused-argument
         """
         Check if everything is correct log some warnings
         """
@@ -204,9 +202,7 @@ class RefsList(List):
             other = me._coll_ref.new_item()
             reverse_field = other.select(me._reverse)
 
-            if not isinstance(
-                reverse_field, (ref.Ref, RefsList)
-            ):  # pylint: disable=singleton-comparison
+            if not isinstance(reverse_field, (ref.Ref, RefsList)):  # pylint: disable=singleton-comparison
                 log.error(
                     f'{root._collection.name}/{me.path_name()}: Collection "{me._collection}", "{me._reverse}" is not a Ref or a RefsList'
                 )
@@ -246,9 +242,7 @@ class RefsList(List):
             )
         return self._coll_ref.select(match_filter)
 
-    def on_delete_must_by_empty(
-        self, event_name: str, root: Dict, me: Self, **kwargs
-    ):  # pylint: disable=unused-argument
+    def on_delete_must_by_empty(self, event_name: str, root: Dict, me: Self, **kwargs):  # pylint: disable=unused-argument
         """
         The object will be deleted only if this list is empty
         otherwist error
@@ -297,9 +291,7 @@ class RefsList(List):
                     'Collection (not filled) "{0}" not empty', self._collection
                 )
 
-    def on_delete_with_reverse(
-        self, event_name, root, me, **kwargs
-    ):  # pylint: disable=unused-argument
+    def on_delete_with_reverse(self, event_name, root, me, **kwargs):  # pylint: disable=unused-argument
         """
         The ref object object will be deleted too
         otherwist error
@@ -354,9 +346,7 @@ class RefsList(List):
             for other in other_list:
                 other.delete(**kwargs)
 
-    def on_delete_clean_reverse(
-        self, event_name: str, root: Dict, me: Self, **kwargs
-    ):  # pylint: disable=unused-argument
+    def on_delete_clean_reverse(self, event_name: str, root: Dict, me: Self, **kwargs):  # pylint: disable=unused-argument
         """
         The reflecting object is cleaned too
 
@@ -524,9 +514,7 @@ class RefsList(List):
             if other_modified_flag:
                 other.save(**kwargs)
 
-    def on_created(
-        self, event_name, root, me, **kwargs
-    ):  # pylint: disable=unused-argument
+    def on_created(self, event_name, root, me, **kwargs):  # pylint: disable=unused-argument
         """
         A creation object with a RefList
         Fill other if
@@ -558,9 +546,7 @@ class RefsList(List):
         if me:
             self._change_others_ref_to(root, me, me, root._id, **kwargs)
 
-    def on_modify_clean_reverse(
-        self, event_name, root, me, **kwargs
-    ):  # pylint: disable=unused-argument
+    def on_modify_clean_reverse(self, event_name, root, me, **kwargs):  # pylint: disable=unused-argument
         """
         The reflecting object is set to the new one
 
