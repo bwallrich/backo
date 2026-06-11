@@ -4,6 +4,7 @@ The Backoffice module
 
 # pylint: disable=logging-fstring-interpolation
 
+from importlib.util import spec_from_file_location
 import json
 import sys
 from typing import Callable
@@ -208,6 +209,11 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
         )
         flask_app.view_functions[f"_meta_{self.name}"] = self._meta_http
 
+        flask_app.add_url_rule(
+            f"{my_path}/openapi", f"_openapi_{self.name}", methods=["GET"]
+        )
+        flask_app.view_functions[f"_openapi_{self.name}"] = self._export_openapi
+
     def get_meta(self):
         """
         Get all meta information for all collections, view, actions
@@ -226,6 +232,37 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
         """GET meta information :func:`get_meta` via https"""
         log.debug(f"get meta information for {self.name}")
         return (json.dumps(self.get_meta()), 200)
+
+    def get_openapi(self) -> dict:
+        """
+        Get the OpenAPI specification for this backoffice
+
+        :meta private:
+        """
+
+        return {
+            "openapi": "3.1.0",
+            "info": {
+                "title": f"{self.name}",
+                "description": f"{self.name} backoffice powered by Backo",
+            },
+            "paths": {
+                path: spec
+                for collection in self.collections.values()
+                for path, spec in collection.get_openapi_routes().items()
+            },
+            "components": {
+                "schemas": {
+                    schema: spec
+                    for collection in self.collections.values()
+                    for schema, spec in collection.get_openapi_schemas().items()
+                }
+            },
+        }
+
+    @error_to_http_handler
+    def _export_openapi(self):
+        return (json.dumps(self.get_openapi()), 200)
 
     def check_syntax(self) -> None:
         """

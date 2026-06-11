@@ -3,6 +3,7 @@ The Collection module
 """
 
 # pylint: disable=logging-fstring-interpolation, too-many-public-methods
+from backo.openapi import OpenAPISpec
 import json
 import re
 import sys
@@ -166,6 +167,10 @@ class Collection:
         can_read = self._permissions.get("read", True)
         self.register_selection("_all", Selection(None, can_read=can_read))
 
+        # Setup the OpenAPI builder
+        self._openapi = OpenAPISpec()
+        self._openapi.add_schema(self.name, self.model.get_schema())
+
     def get_meta(self) -> dict:
         """Return the meta data for this collection and actions"""
 
@@ -181,14 +186,19 @@ class Collection:
             m["name"] = sel_name
             selections.append(m)
 
-        d = {
+        return {
             "name": self.name,
             "item": self.model.get_schema(),
             "rights": self._permissions.get_as_dict_of_strings(),
             "actions": actions,
             "selections": selections,
         }
-        return d
+
+    def get_openapi_routes(self) -> dict:
+        return self._openapi.get_routes()
+
+    def get_openapi_schemas(self) -> dict:
+        return self._openapi.get_schemas()
 
     def set(self, datas: dict | list) -> Item | list:
         """Set an object or a list of object
