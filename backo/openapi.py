@@ -2,6 +2,8 @@
 Utility class to convert backo Collection to OpenAPI specification.
 """
 
+from backo.action import Action
+
 from typing import Any
 
 
@@ -150,68 +152,8 @@ class OpenAPISpec:
         spec["summary"] = f"Add an item in {item_name} collection."
         spec["operationId"] = f"add_{item_name}"
 
-        required: list[str] = []
-        file_required: list[str] = []
-        properties: dict[str, Any] = {}
-        file_properties: dict[str, Any] = {}
-        base_properties: dict[str, Any] = {}
-        for prop_name, scheme in item_schema["sub_scheme"].items():
-            if prop_name == "_id":
-                continue
-
-            if scheme["required"]:
-                required.append(prop_name)
-
-            property = {}
-            property["title"] = prop_name
-
-            property["type"] = _convert_type(scheme["types"])
-            if property["type"] == "file":
-                property["type"] = "string"
-                property["contentEncoding"] = "base64"
-                if scheme["required"]:
-                    file_required.append(prop_name)
-
-                file_properties[prop_name] = {
-                    "title": prop_name,
-                    "type": "string",
-                    "format": "binary",
-                }
-            elif property["type"] == "date-time":
-                property["type"] = "string"
-                property["format"] = "date-time"
-            else:
-                base_properties[prop_name] = property
-
-            if prop_name != "_meta":
-                properties[prop_name] = property
-
-        multipart_properties: dict[str, Any] = {
-            "_json": {
-                "type": "object",
-                "required": required,
-                "properties": base_properties,
-            },
-        }
-        multipart_properties |= file_properties
-
-        spec["requestBody"] = {"content": {}}
-        spec["requestBody"]["content"] = {
-            "application/json": {
-                "schema": {
-                    "type": "object",
-                    "required": required,
-                    "properties": properties,
-                }
-            },
-            "multipart/form-data": {
-                "schema": {
-                    "type": "object",
-                    "required": ["_json"] + file_required,
-                    "properties": multipart_properties,
-                },
-                "encoding": {"_json": {"contentType": "application/json"}},
-            },
+        spec["requestBody"] = {
+            "content": _extract_requestbody_content(item_schema["sub_scheme"])
         }
 
         spec["responses"] = {}
@@ -243,68 +185,8 @@ class OpenAPISpec:
         spec["summary"] = f"Check if item can be put in {item_name} collection."
         spec["operationId"] = f"check_{item_name}"
 
-        required: list[str] = []
-        file_required: list[str] = []
-        properties: dict[str, Any] = {}
-        file_properties: dict[str, Any] = {}
-        base_properties: dict[str, Any] = {}
-        for prop_name, scheme in item_schema["sub_scheme"].items():
-            if prop_name == "_id":
-                continue
-
-            if scheme["required"]:
-                required.append(prop_name)
-
-            property = {}
-            property["title"] = prop_name
-
-            property["type"] = _convert_type(scheme["types"])
-            if property["type"] == "file":
-                property["type"] = "string"
-                property["contentEncoding"] = "base64"
-                if scheme["required"]:
-                    file_required.append(prop_name)
-
-                file_properties[prop_name] = {
-                    "title": prop_name,
-                    "type": "string",
-                    "format": "binary",
-                }
-            elif property["type"] == "date-time":
-                property["type"] = "string"
-                property["format"] = "date-time"
-            else:
-                base_properties[prop_name] = property
-
-            if prop_name != "_meta":
-                properties[prop_name] = property
-
-        multipart_properties: dict[str, Any] = {
-            "_json": {
-                "type": "object",
-                "required": required,
-                "properties": base_properties,
-            },
-        }
-        multipart_properties |= file_properties
-
-        spec["requestBody"] = {"content": {}}
-        spec["requestBody"]["content"] = {
-            "application/json": {
-                "schema": {
-                    "type": "object",
-                    "required": required,
-                    "properties": properties,
-                }
-            },
-            "multipart/form-data": {
-                "schema": {
-                    "type": "object",
-                    "required": ["_json"] + file_required,
-                    "properties": multipart_properties,
-                },
-                "encoding": {"_json": {"contentType": "application/json"}},
-            },
+        spec["requestBody"] = {
+            "content": _extract_requestbody_content(item_schema["sub_scheme"])
         }
 
         spec["responses"] = {}
@@ -433,74 +315,8 @@ class OpenAPISpec:
             },
         ]
 
-        required: list[str] = []
-        file_required: list[str] = []
-        properties: dict[str, Any] = {}
-        file_properties: dict[str, Any] = {}
-        base_properties: dict[str, Any] = {}
-        for prop_name, scheme in item_schema["sub_scheme"].items():
-            if prop_name == "_id":
-                continue
-
-            if (
-                scheme["rights"]["modify"] is not None
-                and not scheme["rights"]["modify"]
-            ):
-                continue
-
-            if scheme["required"]:
-                required.append(prop_name)
-
-            property = {}
-            property["title"] = prop_name
-
-            property["type"] = _convert_type(scheme["types"])
-            if property["type"] == "file":
-                property["type"] = "string"
-                property["contentEncoding"] = "base64"
-                if scheme["required"]:
-                    file_required.append(prop_name)
-
-                file_properties[prop_name] = {
-                    "title": prop_name,
-                    "type": "string",
-                    "format": "binary",
-                }
-            elif property["type"] == "date-time":
-                property["type"] = "string"
-                property["format"] = "date-time"
-            else:
-                base_properties[prop_name] = property
-
-            if prop_name != "_meta":
-                properties[prop_name] = property
-
-        multipart_properties: dict[str, Any] = {
-            "_json": {
-                "type": "object",
-                "required": required,
-                "properties": base_properties,
-            },
-        }
-        multipart_properties |= file_properties
-
-        spec["requestBody"] = {"content": {}}
-        spec["requestBody"]["content"] = {
-            "application/json": {
-                "schema": {
-                    "type": "object",
-                    "required": required,
-                    "properties": properties,
-                }
-            },
-            "multipart/form-data": {
-                "schema": {
-                    "type": "object",
-                    "required": ["_json"] + file_required,
-                    "properties": multipart_properties,
-                },
-                "encoding": {"_json": {"contentType": "application/json"}},
-            },
+        spec["requestBody"] = {
+            "content": _extract_requestbody_content(item_schema["sub_scheme"])
         }
 
         spec["responses"] = {}
@@ -615,6 +431,51 @@ class OpenAPISpec:
 
         self.__add_spec(route, "patch", spec)
 
+    def add_actions(
+        self,
+        base_route: str,
+        item_name: str,
+        actions: dict[str, Action],
+        ok: tuple[int, str],
+        errors: list[tuple[int, str]],
+    ):
+        for name, action in actions.items():
+            print(f"REGISTER {name}")
+            spec: dict[str, Any] = {}
+            spec["summary"] = (
+                f"Trigger the action {name} on item identified by {{id}} in {item_name} collection."
+            )
+            spec["operationId"] = f"action_{name}_on_{item_name}"
+            spec["parameters"] = [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "required": True,
+                    "schema": {"type": "string"},
+                    "description": "Id of the item on which trigger the action",
+                },
+            ]
+
+            spec["requestBody"] = {
+                "content": _extract_requestbody_content(
+                    action.get_schema()["sub_scheme"]
+                )
+            }
+
+            spec["responses"] = {}
+            spec["responses"][str(ok[0])] = {
+                "description": ok[1],
+                "content": {},
+            }
+
+            for error_code, error_msg in errors:
+                spec["responses"][str(error_code)] = {
+                    "description": error_msg,
+                    "content": {"text/plain": {}},
+                }
+
+            self.__add_spec(base_route + f"/{name}/{{id}}", "post", spec)
+
     def __add_spec(self, route: str, method: str, spec: dict) -> None:
         if route not in self.__routes:
             self.__routes[route] = {}
@@ -655,3 +516,71 @@ class OpenAPISpec:
 
     def get_schemas(self) -> dict:
         return self.__schemas
+
+
+def _extract_requestbody_content(sub_scheme: dict[str, Any]):
+    required: list[str] = []
+    file_required: list[str] = []
+    properties: dict[str, Any] = {}
+    file_properties: dict[str, Any] = {}
+    base_properties: dict[str, Any] = {}
+    for prop_name, scheme in sub_scheme.items():
+        if prop_name == "_id":
+            continue
+
+        if scheme["rights"]["modify"] is not None and not scheme["rights"]["modify"]:
+            continue
+
+        if scheme["required"]:
+            required.append(prop_name)
+
+        property = {}
+        property["title"] = prop_name
+
+        property["type"] = _convert_type(scheme["types"])
+        if property["type"] == "file":
+            property["type"] = "string"
+            property["contentEncoding"] = "base64"
+            if scheme["required"]:
+                file_required.append(prop_name)
+
+            file_properties[prop_name] = {
+                "title": prop_name,
+                "type": "string",
+                "format": "binary",
+            }
+        elif property["type"] == "date-time":
+            property["type"] = "string"
+            property["format"] = "date-time"
+        else:
+            base_properties[prop_name] = property
+
+        if prop_name != "_meta":
+            properties[prop_name] = property
+
+    multipart_properties: dict[str, Any] = {
+        "_json": {
+            "type": "object",
+            "required": required,
+            "properties": base_properties,
+        },
+    }
+    multipart_properties |= file_properties
+
+    return {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "required": required,
+                "properties": properties,
+            }
+        },
+        "multipart/form-data": {
+            "schema": {
+                "type": "object",
+                "required": ["_json"] + file_required,
+                "properties": multipart_properties,
+            },
+            "encoding": {"_json": {"contentType": "application/json"}},
+        },
+    }

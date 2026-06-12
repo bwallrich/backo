@@ -526,7 +526,7 @@ class Collection:
 
         # META /> Check values
         if self._permissions.is_strictly_allowed_to("modify") is not False:
-            log.info(f"Add route GET {self.name}/_meta")
+            log.info(f"Add route POST {self.name}/_meta")
             collection_blueprint.add_url_rule(
                 "/_meta",
                 "meta",
@@ -648,6 +648,18 @@ class Collection:
                 methods=["POST"],
             )
             collection_blueprint.view_functions[f"{self.name}.go"] = self._action_go
+
+            self._openapi.add_actions(
+                f"/{self.name}/_actions",
+                self.name,
+                self._actions,
+                (200, "Action properly executed"),
+                [
+                    (400, "Bad request"),
+                    (404, "Not found"),
+                    (500, "Something went wrong"),
+                ],
+            )
 
         # Selections
         if self._permissions.is_strictly_allowed_to("read") is not False:
