@@ -279,6 +279,7 @@ class TestSQLiteConnector(unittest.TestCase):
         self.assertIn(pioupiou._id, bebert.animals)
         self.assertIn(cookie._id, bebert.animals)
 
+
     def test_many_to_many(self):
         """
         Test many to many relationship

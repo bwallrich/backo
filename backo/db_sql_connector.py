@@ -171,29 +171,6 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         """See :func:`DBConnector.save`"""
         log.debug(f"save {_id} ")
 
-    def _sqlite_try(self, callback):
-        """
-        Just a function to factorize
-        the catching of sqlite exceptions
-        """
-        try:
-            return callback()
-        except sqlite3.OperationalError as e:
-            self._con.rollback()
-            raise DBError(
-                f'✗ Operational Error: {e} while "{self._collection_name}.create()"'
-            ) from e
-        except sqlite3.IntegrityError as e:
-            self._con.rollback()
-            raise DBError(
-                f'✗ Integrity Error: {e} while "{self._collection_name}.create()"'
-            ) from e
-        except sqlite3.Error as e:
-            self._con.rollback()
-            raise DBError(
-                f'✗ Database Error: {e} while "{self._collection_name}.create()"'
-            ) from e
-
     def create(self, o: dict) -> str:
         """See :func:`DBConnector.create`"""
         # Generate new id and set to object
@@ -506,6 +483,29 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         }
 
     # --- SQL utils functions ---
+
+    def _sqlite_try(self, callback):
+        """
+        Just a function to factorize
+        the catching of sqlite exceptions
+        """
+        try:
+            return callback()
+        except sqlite3.OperationalError as e:
+            self._con.rollback()
+            raise DBError(
+                f'✗ Operational Error: {e} while "{self._collection_name}.create()"'
+            ) from e
+        except sqlite3.IntegrityError as e:
+            self._con.rollback()
+            raise DBError(
+                f'✗ Integrity Error: {e} while "{self._collection_name}.create()"'
+            ) from e
+        except sqlite3.Error as e:
+            self._con.rollback()
+            raise DBError(
+                f'✗ Database Error: {e} while "{self._collection_name}.create()"'
+            ) from e
 
     def _build_join_table_request(self, col_data):
         """
