@@ -5,13 +5,21 @@ test for CRUD()
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code
 
 import unittest
-import json
+# import json
 
 from backo import Item, Collection
 from backo import DBSQLConnector
 from backo import Backoffice, current_user
 
-from backo import String, Bool, Int, Ref, RefsList, Dict  # , Error as StrictoError
+from backo import (
+    String,
+    Bool,
+    Int,
+    Float,
+    Ref,
+    RefsList,
+    Dict,
+)  # , Error as StrictoError
 
 from backo import log_system, LogLevel
 
@@ -21,9 +29,9 @@ log = log_system.get_or_create_logger("testing")
 log_system.setLevel(LogLevel.DEBUG)
 
 
-class TestMongo(unittest.TestCase):
+class TestSQLiteConnector(unittest.TestCase):
     """
-    DB SQL crud
+    DB SQLite crud
     """
 
     def __init__(self, *args, **kwargs):
@@ -42,7 +50,14 @@ class TestMongo(unittest.TestCase):
                 "animals": RefsList(coll="animals", field="$.user"),
                 "is_loved_by": RefsList(coll="animals", field="$.love"),
                 "location": Dict(
-                    {"country": String(), "city": String(), "postal_code": Int()}
+                    {
+                        "country": String(),
+                        "city": String(),
+                        "city_info": Dict(
+                            {"postal_code": Int(), "gps_coord_x": Float()}
+                        ),
+                        "postal_code": Int(),
+                    }
                 ),
             }
         )
@@ -56,23 +71,39 @@ class TestMongo(unittest.TestCase):
             }
         )
 
+        types_item = Item({"s": String(), "i": Int(), "b": Bool(), "f": Float()})
+
         self._meta = {}
         self._meta["users"] = user_item.get_schema()
         self._meta["animals"] = animal_item.get_schema()
+        self._meta["types"] = types_item.get_schema()
 
-        print(json.dumps(self._meta, indent=4))
+        # print(json.dumps(self._meta, indent=4))
 
         # --- DB for user
         self.db_users = DBSQLConnector(
             collection="users", path="sqlite_test_db", meta=self._meta
         )
 
-        # --- DB for sites
+        # --- DB for animals
         self.db_animals = DBSQLConnector(
             collection="animals", path="sqlite_test_db", meta=self._meta
         )
 
-        print(json.dumps(self.db_users._flatten_meta(self._meta), indent=4))
+        # --- DB for types
+        self.db_types = DBSQLConnector(
+            collection="types", path="sqlite_test_db", meta=self._meta
+        )
+
+        # print(json.dumps(self.db_users._flatten_meta(self._meta), indent=4))
+
+        self._backoffice.register_collection(
+            Collection(
+                "types",
+                types_item,
+                self.db_types,
+            )
+        )
 
         self._backoffice.register_collection(
             Collection(
@@ -101,75 +132,61 @@ class TestMongo(unittest.TestCase):
         self.db_users.close()
         return super().tearDown()
 
-    # def test_db_connect(self):
-    #     """
-    #     try to connect
-    #     """
 
-    #     self.db_users.create_table()
-    #     self.db_animals.create_table()
-    #     self.db_users.drop()
-    #     self.db_animals.drop()
+    def test_none_values(self):
+        """
+        Test CRUD on None values
+        """
+        self.db_types.create_table()
+        self.db_types.drop()
 
-    #     u0 = self._backoffice.users.create({"name": "bebert", "surname": "bebert"})
-    #     u1 = self._backoffice.users.create({"name": "ted", "surname": "teddy"})
-    #     u2 = self._backoffice.users.create(
-    #         {"name": "benji", "surname": "benjie", "male": False}
-    #     )
+        log.debug("Test None values")
 
-    #     # u0_ = backoffice.users.new()
-    #     # u0_.load(u0._id)
-    #     # print(u0_)
-    #     # u1_ = backoffice.users.new()
-    #     # u1_.load(u1._id)
-    #     # print(u1_)
-    #     # u2_ = backoffice.users.new()
-    #     # u2_.load(u2._id)
-    #     # print(u2_)
+        types = self._backoffice.types.create({"s": "hello"})
 
-    #     a0 = self._backoffice.animals.create(
-    #         {
-    #             "surname": "cookie",
-    #             "type": "dog",
-    #             "user": u0._id,
-    #             "love": [u0._id, u1._id, u2._id],
-    #         }
-    #     )
-    #     a1 = self._backoffice.animals.create(
-    #         {"surname": "pioo", "type": "bird", "user": u0._id, "love": [u0._id]}
-    #     )
+        loaded_types = self._backoffice.types.new()
+        loaded_types.load(types._id)
 
-    #     u3 = self._backoffice.users.create(
-    #         {"name": "jean", "surname": "valjean", "is_loved_by": [a1._id]}
-    #     )
+        self.assertEqual(types.s, loaded_types.s)
+        self.assertEqual(loaded_types.i, None)
+        self.assertEqual(loaded_types.b, None)
+        self.assertEqual(loaded_types.f, None)
 
-    #     print("RELOAD !!!!")
-    #     # a1.reload()
-    #     b = self._backoffice.animals.new()
-    #     b.load(a1._id)
+    def test_types(self):
+        """
+        Test CRUD on different stricto types
+        """
+        self.db_types.create_table()
+        self.db_types.drop()
 
-    #     print(a0.select("$.user.name"))
-    #     print(a1.select("$.user.name"))
+        log.debug("Test support of object creation with different types")
 
-    #     print(f"{a0['surname']} loves ")
-    #     print(a0.select("$.love.name"))
+        types = self._backoffice.types.create(
+            {"s": "hello", "i": 42, "b": True, "f": 42.42}
+        )
 
-    #     print(f"{b['surname']} loves ")
-    #     print(b.select("$.love.name"))
-    #     print(f"{u3['surname']} is loved by ")
-    #     print(f"{u3.select("$.is_loved_by.surname")}")
+        types2 = self._backoffice.types.new()
+        types2.load(types._id)
 
-    #     # x_ = backoffice.users.new()
-    #     # x_.load("plop")
-
-    def test_one_to_many(self):
-        pass
+        self.assertEqual(types.s, types2.s)
+        self.assertEqual(types.i, types2.i)
+        self.assertEqual(types.b, types2.b)
+        self.assertEqual(types.f, types2.f)
 
     def test_nested(self):
+        """
+        Test CRUD on nested fields
+        """
         self.db_users.create_table()
         self.db_animals.create_table()
+        self.db_types.create_table()
+
         self.db_users.drop()
         self.db_animals.drop()
+        self.db_types.drop()
+
+        log.debug("Test nested - one level")
+
         bebert = self._backoffice.users.create(
             {
                 "name": "bebert",
@@ -178,14 +195,43 @@ class TestMongo(unittest.TestCase):
             }
         )
 
+        bebert2 = self._backoffice.users.new()
+        bebert2.load(bebert._id)
+
+        self.assertEqual(bebert.location.city, bebert2.location.city)
+        self.assertEqual(bebert.location.country, bebert2.location.country)
+
+        log.debug("Test nested - n levels")
+
+        joe = self._backoffice.users.create(
+            {
+                "name": "joe",
+                "surname": "joe l'embrouille",
+                "location": {"city_info": {"postal_code": 54, "gps_coord_x": 23.54345}},
+            }
+        )
+        joe2 = self._backoffice.users.new()
+        joe2.load(joe._id)
+
+        self.assertEqual(joe.location.city_info.postal_code, 54)
+        self.assertEqual(joe.location.city_info.gps_coord_x, 23.54345)
+
+    def test_one_to_many(self):
+        """
+        Test one to many relationship
+        """
+
     def test_many_to_many(self):
         """
         Test many to many relationship
         """
         self.db_users.create_table()
         self.db_animals.create_table()
+        self.db_types.create_table()
+
         self.db_users.drop()
         self.db_animals.drop()
+        self.db_types.drop()
 
         bebert = self._backoffice.users.create({"name": "bebert", "surname": "bebert"})
         jean = self._backoffice.users.create({"name": "jean", "surname": "valjean"})
@@ -201,17 +247,6 @@ class TestMongo(unittest.TestCase):
                 "love": [bebert._id, jean._id],
             }
         )
-
-        # log.debug("# Create pioupiou")
-
-        # pioupiou = self._backoffice.animals.create(
-        #     {
-        #         "surname": "pioupiou",
-        #         "type": "bird",
-        #         "user": ted._id,
-        #         "love": [ted._id, jean._id],
-        #     }
-        # )
 
         log.debug("# Create benji")
 
