@@ -51,6 +51,7 @@ class TestSQLiteConnector(unittest.TestCase):
                 "male": Bool(default=True),
                 "animals": RefsList(coll="animals", field="$.user"),
                 "is_loved_by": RefsList(coll="animals", field="$.love"),
+                # "totem": Ref(coll="animals", field="$.user"),
                 "location": Dict(
                     {
                         "country": String(),
@@ -70,6 +71,7 @@ class TestSQLiteConnector(unittest.TestCase):
                 "type": String(),
                 "user": Ref(coll="users", field="$.animals", required=True),
                 "love": RefsList(coll="users", field="$.is_loved_by"),
+                # "totem_of": Ref(coll="humans", field="$.totem"),
             }
         )
 
@@ -240,6 +242,43 @@ class TestSQLiteConnector(unittest.TestCase):
         Test one to many relationship
         """
 
+        log.debug("# Clean up drop tables")
+
+        self.db_users.drop_table()
+        self.db_animals.drop_table()
+        self.db_types.drop_table()
+
+        log.debug("# Create tables")
+
+        self.db_users.create_table()
+        self.db_animals.create_table()
+        self.db_types.create_table()
+
+        bebert = self._backoffice.users.create({"name": "bebert", "surname": "bebert"})
+
+        cookie = self._backoffice.animals.create(
+            {
+                "surname": "cookie",
+                "type": "dog",
+                "user": bebert._id,
+                "love": [bebert._id],
+            }
+        )
+
+        pioupiou = self._backoffice.animals.create(
+            {
+                "surname": "pioupiou",
+                "type": "bird",
+                "user": bebert._id,
+                "love": [bebert._id],
+            }
+        )
+
+        log.debug("# Reload bebert")
+        bebert.reload()
+        self.assertIn(pioupiou._id, bebert.animals)
+        self.assertIn(cookie._id, bebert.animals)
+
     def test_many_to_many(self):
         """
         Test many to many relationship
@@ -286,3 +325,6 @@ class TestSQLiteConnector(unittest.TestCase):
 
         self.assertEqual(len(cookie.love), 3)
         self.assertEqual(len(benji.is_loved_by), 1)
+
+    def test_nested_many_death_test(self):
+        """Test of nested of nested of relation ship of the death metal !"""

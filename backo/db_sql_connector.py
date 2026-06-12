@@ -68,9 +68,32 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         except Exception as e:
             raise DBError('SQLLite connection error at "{0}"', self._path) from e
 
+    def drop_table(self):
+        """
+        Drop tables for current collection
+        """
+
+        # Stack queries
+        str_requests = [f"DROP TABLE IF EXISTS {self._collection_name}"]
+        str_requests += [
+            f"DROP TABLE IF EXISTS {col_data["join_table"]["name"]}"
+            for col_data in self._get_many_to_many_cols_data()
+        ]
+
+        def drop_table_execute():
+            # Execute all stacked queries
+            for str_request in str_requests:
+                log.debug(f"Execute: {str_request}")
+                self._cursor.execute(str_request)
+
+            self._con.commit()
+            log.debug(f"✓ Dropped tables of {self._collection_name}")
+
+        return self._sqlite_try(drop_table_execute)
+
     def create_table(self):
         """
-        Create table from the collection schema
+        Create tables for current collection
         """
 
         # 1. Build create table query
@@ -246,9 +269,9 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
         def select():
             # Execute main record query
-            str_request = f'SELECT * FROM {self._collection_name} WHERE "$._id"=?'
-            log.debug(f"Execute: {str_request}")
-            self._cursor.execute(str_request, (_id,))
+            query = f'SELECT * FROM {self._collection_name} WHERE "$._id"=?'
+            log.debug(f"Execute: {query}")
+            self._cursor.execute(query, (_id,))
             row = self._cursor.fetchone()
 
             # No results!
@@ -262,17 +285,23 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             # Map row result to object
             o = self._map_row(row)
 
-            # Stack all RefsList queries before executing
-            refs_queries = []
+            # Stack all many-to-many queries before executing
+            queries = []
             for col_data in self._get_many_to_many_cols_data():
-                str_request, params = self._build_refs_list_query(col_data, _id)
-                refs_queries.append((str_request, params, col_data))
+                query, params = self._build_many_to_many_query(col_data, _id)
+                queries.append((query, params, col_data))
 
-            # Execute all stacked RefsList queries
+            # Stack all many-to-one queries before executing
+            for col_data in self._get_many_to_one_cols_data():
+                query, params = self._build_many_to_one_query(col_data, _id)
+                queries.append((query, params, col_data))
+
+            # Execute all stacked many-to-many queries
             refs_results = []
-            for str_request, params, col_data in refs_queries:
-                log.debug(f"Execute: {str_request}")
-                self._cursor.execute(str_request, params)
+            for query, params, col_data in queries:
+                log.debug(self._collection_name)
+                log.debug(f"Execute: {query} with params {params}")
+                self._cursor.execute(query, params)
                 rows = self._cursor.fetchall()
                 refs_results.append((col_data, rows))
 
@@ -376,13 +405,23 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         """
         Check whether given col is a many-many relationship
         """
-        col_type = col_data["types"][0]
-        if col_type != "RefsList":
+        if "RefsList" not in col_data["types"]:
             return False
 
         rev_coll = col_data["collection"]
         rev_col = col_data["reverse"]
         return "RefsList" in self._meta[rev_coll]["sub_scheme"][rev_col]["types"]
+
+    def _is_many_to_one(self, col_data):
+        """
+        Check whether given col is a many-one relationship
+        """
+        if "RefsList" not in col_data["types"]:
+            return False
+
+        rev_coll = col_data["collection"]
+        rev_col = col_data["reverse"]
+        return "Ref" in self._meta[rev_coll]["sub_scheme"][rev_col]["types"]
 
     def _get_scalar_cols(self):
         """
@@ -412,6 +451,21 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             self._many_to_many_data(col_name, col_data)
             for col_name, col_data in self._scheme.items()
             if self._is_many_to_many(col_data)
+        ]
+
+    def _get_many_to_one_cols_data(self):
+        """
+        Filter & get only RefsList - Ref cols
+        """
+        return [
+            {
+                "col_name": col_name,
+                "data": col_data,
+                "rev_col_name": col_data["reverse"],
+                "join_table": {"name": col_data["collection"]},
+            }
+            for col_name, col_data in self._scheme.items()
+            if self._is_many_to_one(col_data)
         ]
 
     def _many_to_many_data(self, col_name, col_data):
@@ -470,8 +524,8 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         );
         """
 
-    def _build_refs_list_query(self, col_data: dict, _id: str):
-        """Build and return prepared query + params for fetching RefsList data"""
+    def _build_many_to_many_query(self, col_data: dict, _id: str):
+        """Build and return prepared query + params for fetching many to many data"""
         table_name = col_data["join_table"]["name"]
         col_name = col_data["col_name"]
         rev_col_name = col_data["rev_col_name"]
@@ -482,6 +536,21 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             INNER JOIN {self._collection_name} cur
             ON cur."$._id" = join_table."{rev_col_name}"
             WHERE cur."$._id" = ?
+        """
+        return query, (_id,)
+
+    def _build_many_to_one_query(self, col_data: dict, _id: str):
+        """Build and return prepared query + params for fetching many to one data"""
+        table_name = col_data["join_table"]["name"]
+        col_name = col_data["col_name"]
+        rev_col_name = col_data["rev_col_name"]
+
+        query = f"""
+            SELECT rev.\"$._id\" AS \"{col_name}\"
+            FROM {table_name} rev
+            INNER JOIN {self._collection_name} cur
+            ON rev.\"{rev_col_name}\" = cur.\"$._id\"
+            WHERE cur.\"$._id\" = ?
         """
         return query, (_id,)
 
