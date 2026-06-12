@@ -53,10 +53,6 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
             "sub_scheme"
         ]  # Shortcut to data
 
-        # Add shortcut to fields (extracted from scheme)
-        # Add shortcut to one-many (extracted from scheme)
-        # Add shortcut to many-many (extracted from scheme)
-
         DBConnector.__init__(self, **kwargs)
 
         if not os.path.exists(self._path):
@@ -72,66 +68,22 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         except Exception as e:
             raise DBError('SQLLite connection error at "{0}"', self._path) from e
 
-    def _flatten_meta(self, meta):
-        """
-        Flatten metadata to get all nested fields at the same level,
-        key becomes the field path instead of field name
-        """
-
-        def _rec_flatten_meta(meta, flat_meta):
-            for col_name, col_data in meta["sub_scheme"].items():
-                types = col_data["types"]
-
-                if "Dict" in types:
-                    _rec_flatten_meta(col_data, flat_meta)
-                else:
-                    if "sub_scheme" not in flat_meta:
-                        flat_meta["sub_scheme"] = {}
-                    # flat_meta["sub_scheme"][col_name] = col_data
-                    flat_meta["sub_scheme"][col_data["path"]] = col_data
-                    flat_meta["sub_scheme"][col_data["path"]]["name"] = col_name
-
-            return flat_meta
-
-        flat_meta = {}
-        for coll_name, coll_meta in meta.items():
-            flat_meta[coll_name] = {}
-            _rec_flatten_meta(coll_meta, flat_meta[coll_name])
-
-        return flat_meta
-
-    def _to_sql_type(self, str_type: str) -> str:
-        """
-        Convert stricto type (string) to SQL type
-        Note: Non exhaustive !
-        """
-        return {
-            "String": "TEXT",
-            "Bool": "INTEGER",
-            "Int": "INTEGER",
-            "Float": "REAL",
-            "Datetime": "INTEGER",
-            "Ref": "TEXT",
-        }[str_type]
-
     def create_table(self):
         """
         Create table from the collection schema
         """
-        str_cols = []
 
-        for col_name, col_data in self._scheme.items():
-            col_type = col_data["types"][0]
-            if not col_type == "RefsList":
-                str_cols.append(f"'{col_name}' {self._to_sql_type(col_type)}")
-
+        # 1. Build create table query
+        # Add scalar cols
+        str_cols = [
+            f"'{col_name}' {self._to_sql_type(col_data["types"][0])}"
+            for col_name, col_data in self._get_scalar_cols()
+        ]
         # Add one-many relationship
-        for col_name, col_data in self._scheme.items():
-            col_type = col_data["types"][0]
-            if col_type == "Ref":
-                str_cols.append(
-                    f"FOREIGN KEY ('{col_name}') REFERENCES {col_data["collection"]}(_id)"
-                )
+        str_cols += [
+            f"FOREIGN KEY ('{col_name}') REFERENCES {col_data["collection"]}(_id)"
+            for col_name, col_data in self._get_one_to_many_cols_data()
+        ]
 
         str_request = f"""
         CREATE TABLE IF NOT EXISTS {self._collection_name} (
@@ -236,7 +188,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
                 (col_path, self.get_at_path(col_path, o))
                 for col_path, col_data in self._scheme.items()
                 if (val := self.get_at_path(col_path, o)) is not None
-                and not self._is_ref(col_data)
+                and not self._is_ref_list(col_data)
             ]
             col_names = [col_path for col_path, _ in scalar_cols]
             col_values = [val for _, val in scalar_cols]
@@ -417,7 +369,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
     # --- Columns & meta utils functions ---
 
-    def _is_ref(self, col_data):
+    def _is_ref_list(self, col_data):
         return "RefsList" in col_data["types"]
 
     def _is_many_to_many(self, col_data):
@@ -432,9 +384,29 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         rev_col = col_data["reverse"]
         return "RefsList" in self._meta[rev_coll]["sub_scheme"][rev_col]["types"]
 
+    def _get_scalar_cols(self):
+        """
+        Filter & get only Ref / RefsList cols
+        """
+        return [
+            (col_name, col_data)
+            for col_name, col_data in self._scheme.items()
+            if not self._is_ref_list(col_data)
+        ]
+
+    def _get_one_to_many_cols_data(self):
+        """
+        Filter & get only Ref cols
+        """
+        return [
+            (col_name, col_data)
+            for col_name, col_data in self._scheme.items()
+            if "Ref" in col_data["types"]
+        ]
+
     def _get_many_to_many_cols_data(self):
         """
-        Extract some interesting data from col that are many-to-many relationships
+        Filter & get only RefsList - RefsList cols
         """
         return [
             self._many_to_many_data(col_name, col_data)
@@ -541,6 +513,20 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
         return o
 
+    def _to_sql_type(self, str_type: str) -> str:
+        """
+        Convert stricto type (string) to SQL type
+        Note: Non exhaustive !
+        """
+        return {
+            "String": "TEXT",
+            "Bool": "INTEGER",
+            "Int": "INTEGER",
+            "Float": "REAL",
+            "Datetime": "INTEGER",
+            "Ref": "TEXT",
+        }[str_type]
+
     # --- Dict utils functions ---
     # Note: some utils functions, just for test, not production ready !
     # Should not be in this class...
@@ -579,3 +565,31 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         # Set the value at the final key
         if chunks:
             v[chunks[-1]] = value
+
+    def _flatten_meta(self, meta):
+        """
+        Flatten metadata to get all nested fields at the same level,
+        key becomes the field path instead of field name
+        """
+
+        def _rec_flatten_meta(meta, flat_meta):
+            for col_name, col_data in meta["sub_scheme"].items():
+                types = col_data["types"]
+
+                if "Dict" in types:
+                    _rec_flatten_meta(col_data, flat_meta)
+                else:
+                    if "sub_scheme" not in flat_meta:
+                        flat_meta["sub_scheme"] = {}
+                    # flat_meta["sub_scheme"][col_name] = col_data
+                    flat_meta["sub_scheme"][col_data["path"]] = col_data
+                    flat_meta["sub_scheme"][col_data["path"]]["name"] = col_name
+
+            return flat_meta
+
+        flat_meta = {}
+        for coll_name, coll_meta in meta.items():
+            flat_meta[coll_name] = {}
+            _rec_flatten_meta(coll_meta, flat_meta[coll_name])
+
+        return flat_meta
