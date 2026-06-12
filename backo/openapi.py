@@ -100,13 +100,13 @@ def _extract_requestbody_content(sub_scheme: dict[str, Any]):
         if scheme["required"]:
             required.append(prop_name)
 
-        property = {}
-        property["title"] = prop_name
+        prop = {}
+        prop["title"] = prop_name
 
-        property["type"] = _convert_type(scheme["types"])
-        if property["type"] == "file":
-            property["type"] = "string"
-            property["contentEncoding"] = "base64"
+        prop["type"] = _convert_type(scheme["types"])
+        if prop["type"] == "file":
+            prop["type"] = "string"
+            prop["contentEncoding"] = "base64"
             if scheme["required"]:
                 file_required.append(prop_name)
 
@@ -115,14 +115,14 @@ def _extract_requestbody_content(sub_scheme: dict[str, Any]):
                 "type": "string",
                 "format": "binary",
             }
-        elif property["type"] == "date-time":
-            property["type"] = "string"
-            property["format"] = "date-time"
+        elif prop["type"] == "date-time":
+            prop["type"] = "string"
+            prop["format"] = "date-time"
         else:
-            base_properties[prop_name] = property
+            base_properties[prop_name] = prop
 
         if prop_name != "_meta":
-            properties[prop_name] = property
+            properties[prop_name] = prop
 
     multipart_properties: dict[str, Any] = {
         "_json": {
@@ -153,6 +153,10 @@ def _extract_requestbody_content(sub_scheme: dict[str, Any]):
 
 
 class OpenAPISpec:
+    """
+    Utility function to generate the OpenAPI specification of a backoffice
+    """
+
     def __init__(self):
         self.__routes: dict[str, dict] = {}
         self.__schemas: dict[str, dict] = {}
@@ -164,6 +168,9 @@ class OpenAPISpec:
         ok: tuple[int, str],
         errors: list[tuple[int, str]],
     ) -> None:
+        """
+        Set OpenAPI specification for GET /items
+        """
         spec: dict[str, Any] = {}
         spec["summary"] = (
             f"List all existing item in {item_name} collection, with eventual filtering."
@@ -215,6 +222,9 @@ class OpenAPISpec:
         ok: tuple[int, str],
         errors: list[tuple[int, str]],
     ) -> None:
+        """
+        Set OpenAPI specification for POST /items
+        """
         spec: dict[str, Any] = {}
         spec["summary"] = f"Add an item in {item_name} collection."
         spec["operationId"] = f"add_{item_name}"
@@ -248,6 +258,9 @@ class OpenAPISpec:
         item_schema: dict[str, Any],
         code: tuple[int, str],
     ) -> None:
+        """
+        Set OpenAPI specification for POST /items/_check
+        """
         spec: dict[str, Any] = {}
         spec["summary"] = f"Check if item can be put in {item_name} collection."
         spec["operationId"] = f"check_{item_name}"
@@ -279,6 +292,9 @@ class OpenAPISpec:
         ok: tuple[int, str],
         errors: list[tuple[int, str]],
     ):
+        """
+        Set OpenAPI specification for GET /items/<string:id>
+        """
         spec: dict[str, Any] = {}
         spec["summary"] = (
             f"Get the item identified by {{id}} in {item_name} collection."
@@ -367,6 +383,9 @@ class OpenAPISpec:
         ok: tuple[int, str],
         errors: list[tuple[int, str]],
     ):
+        """
+        Set OpenAPI specification for PUT /items/<string:id>
+        """
         spec: dict[str, Any] = {}
         spec["summary"] = (
             f"Modify the item identified by {{id}} in {item_name} collection."
@@ -411,6 +430,9 @@ class OpenAPISpec:
         ok: tuple[int, str],
         errors: list[tuple[int, str]],
     ):
+        """
+        Set OpenAPI specification for DEL /items/<string:id>
+        """
         spec: dict[str, Any] = {}
         spec["summary"] = (
             f"Delete the item identified by {{id}} in {item_name} collection."
@@ -448,6 +470,9 @@ class OpenAPISpec:
         ok: tuple[int, str],
         errors: list[tuple[int, str]],
     ):
+        """
+        Set OpenAPI specification for PATCH /items/<string:id>
+        """
         spec: dict[str, Any] = {}
         spec["summary"] = (
             f"Patch the item identified by {{id}} in {item_name} collection."
@@ -506,6 +531,9 @@ class OpenAPISpec:
         ok: tuple[int, str],
         errors: list[tuple[int, str]],
     ):
+        """
+        Set OpenAPI specification for POST /items/_actions/<string:action>/<string:id>
+        """
         for name, action in actions.items():
             print(f"REGISTER {name}")
             spec: dict[str, Any] = {}
@@ -550,29 +578,35 @@ class OpenAPISpec:
         self.__routes[route][method] = spec
 
     def get_routes(self) -> dict:
+        """
+        Return OpenAPI paths dictionary
+        """
         return self.__routes
 
     def add_schema(self, name: str, item_schema: dict) -> None:
+        """
+        Add OpenAPI schemas
+        """
         required: list[str] = []
         properties: dict[str, Any] = {}
         for prop_name, scheme in item_schema["sub_scheme"].items():
-            property = {"title": prop_name}
+            prop = {"title": prop_name}
             if scheme["required"]:
                 required.append(prop_name)
 
-            property["type"] = _convert_type(scheme["types"])
+            prop["type"] = _convert_type(scheme["types"])
             # missing "items" . "type" for array
-            if property["type"] == "object":
+            if prop["type"] == "object":
                 self.add_schema(f"{name}_{prop_name}", scheme)
-                property["$ref"] = f"#/components/schemas/{name}_{prop_name}"
-            elif property["type"] == "file":
-                property["type"] = "string"
-                property["contentEncoding"] = "base64"
-            elif property["type"] == "date-time":
-                property["type"] = "string"
-                property["format"] = "date-time"
+                prop["$ref"] = f"#/components/schemas/{name}_{prop_name}"
+            elif prop["type"] == "file":
+                prop["type"] = "string"
+                prop["contentEncoding"] = "base64"
+            elif prop["type"] == "date-time":
+                prop["type"] = "string"
+                prop["format"] = "date-time"
 
-            properties[prop_name] = property
+            properties[prop_name] = prop
 
         self.__schemas[name] = {
             "title": name,
@@ -582,4 +616,7 @@ class OpenAPISpec:
         }
 
     def get_schemas(self) -> dict:
+        """
+        Return OpenAPI schemas dictionary
+        """
         return self.__schemas
