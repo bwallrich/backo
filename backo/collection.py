@@ -3,48 +3,48 @@ The Collection module
 """
 
 # pylint: disable=logging-fstring-interpolation, too-many-public-methods
-from backo.openapi import OpenAPISpec
+import copy
 import json
+import pprint
 import re
 import sys
-import copy
-import pprint
-from typing import Self, Callable
-from deepdiff import DeepDiff
+from typing import Callable, Self
 
-from flask import request, Blueprint
+from deepdiff import DeepDiff
+from flask import Blueprint, request
+
+from backo.openapi import OpenAPISpec
 
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
 from stricto import (
-    Permissions,
-    StrictoEncoder,
-    FreeDict,
     Dict,
-    String,
-    STypeError,
+    FreeDict,
+    Kparse,
+    Permissions,
     SAttributeError,
-    SSyntaxError,
     SConstraintError,
     SError,
     SRightError,
-    Kparse,
+    SSyntaxError,
+    StrictoEncoder,
+    String,
+    STypeError,
     validation_parameters,
 )
 
-
-from .item import Item
 from .action import Action
-from .selection import Selection
+from .api_toolbox import append_path_to_filter, multidict_to_filter, request_to_object
 from .db_connector import DBConnector
 from .error import PathNotFoundError
-from .log import log_system, LogLevel
-from .request_decorators import error_to_http_handler, check_content_type
-from .api_toolbox import multidict_to_filter, append_path_to_filter, request_to_object
-from .patch import Patch
-from .migration_report import MigrationReport
 from .file.file import File
+from .item import Item
+from .log import LogLevel, log_system
+from .migration_report import MigrationReport
+from .patch import Patch
+from .request_decorators import check_content_type, error_to_http_handler
+from .selection import Selection
 
 log = log_system.get_or_create_logger("collection", LogLevel.INFO)
 log_migration = log_system.get_or_create_logger("migration")

@@ -2,10 +2,9 @@
 Utility class to convert backo Collection to OpenAPI specification.
 """
 
-from backo.action import Action
-
 from typing import Any
 
+from backo.action import Action
 
 JSON_PATCH_SCHEMA: dict[str, Any] = {
     "type": "array",

@@ -4,24 +4,25 @@ The Backoffice module
 
 # pylint: disable=logging-fstring-interpolation
 
-from backo.openapi import JSON_PATCH_SCHEMA
 import json
 import sys
-from typing import Callable, Any
+from typing import Any, Callable
+
 from flask import Flask
+
+from backo.openapi import JSON_PATCH_SCHEMA
 
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
-from stricto import SSyntaxError, validation_parameters, Kparse
+from stricto import Kparse, SSyntaxError, validation_parameters
 
-from .item import Item
-from .request_decorators import error_to_http_handler
-from .transaction import Transaction, OperatorType
 from .collection import Collection
+from .item import Item
+from .log import LogLevel, log_system
 from .migration_report import MigrationReport
-from .log import log_system, LogLevel
-
+from .request_decorators import error_to_http_handler
+from .transaction import OperatorType, Transaction
 
 log = log_system.get_or_create_logger("backoffice", LogLevel.INFO)
 
