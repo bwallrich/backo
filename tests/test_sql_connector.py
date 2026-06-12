@@ -5,11 +5,13 @@ test for CRUD()
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, duplicate-code
 
 import unittest
+
 # import json
 
 from backo import Item, Collection
 from backo import DBSQLConnector
 from backo import Backoffice, current_user
+from backo import NotFoundError
 
 from backo import (
     String,
@@ -132,7 +134,6 @@ class TestSQLiteConnector(unittest.TestCase):
         self.db_users.close()
         return super().tearDown()
 
-
     def test_none_values(self):
         """
         Test CRUD on None values
@@ -215,6 +216,24 @@ class TestSQLiteConnector(unittest.TestCase):
 
         self.assertEqual(joe.location.city_info.postal_code, 54)
         self.assertEqual(joe.location.city_info.gps_coord_x, 23.54345)
+
+    def test_delete_by_id(self):
+        """
+        Test delete by id
+        """
+        self.db_users.create_table()
+        self.db_animals.create_table()
+        self.db_types.create_table()
+
+        self.db_users.drop()
+        self.db_animals.drop()
+        self.db_types.drop()
+
+        bebert = self._backoffice.users.create({"name": "bebert", "surname": "bebert"})
+        bebert.delete()
+        bebert2 = self._backoffice.users.new()
+
+        self.assertRaises(NotFoundError, lambda: bebert2.load(bebert._id))
 
     def test_one_to_many(self):
         """
