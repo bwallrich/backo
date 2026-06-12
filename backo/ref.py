@@ -133,7 +133,8 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         :return: the schema
         :rtype: dict
         """
-        a = super().self.get_schema()
+        #a = super().self.get_schema()
+        a = super().get_schema()
         a["collection"] = self._collection
         a["reverse"] = self._reverse
         return a
