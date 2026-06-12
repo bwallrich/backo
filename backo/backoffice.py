@@ -4,10 +4,10 @@ The Backoffice module
 
 # pylint: disable=logging-fstring-interpolation
 
-from importlib.util import spec_from_file_location
+from backo.openapi import JSON_PATCH_SCHEMA
 import json
 import sys
-from typing import Callable
+from typing import Callable, Any
 from flask import Flask
 
 # used for developpement
@@ -240,7 +240,7 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
         :meta private:
         """
 
-        return {
+        spec: dict[str, Any] = {
             "openapi": "3.1.0",
             "info": {
                 "title": f"{self.name}",
@@ -259,6 +259,8 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
                 }
             },
         }
+        spec["components"]["schemas"]["json-patch"] = JSON_PATCH_SCHEMA
+        return spec
 
     @error_to_http_handler
     def _export_openapi(self):

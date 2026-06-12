@@ -517,6 +517,12 @@ class Collection:
                 methods=["POST"],
             )
             collection_blueprint.view_functions[f"{self.name}.check"] = self.http_check
+            self._openapi.add_check_item(
+                f"/{self.name}/_check",
+                self.name,
+                self.model.get_schema(),
+                (200, "Check result"),
+            )
 
         # META /> Check values
         if self._permissions.is_strictly_allowed_to("modify") is not False:
@@ -527,6 +533,7 @@ class Collection:
                 methods=["POST"],
             )
             collection_blueprint.view_functions[f"{self.name}.meta"] = self.http_meta
+            # TODO openapi
 
         if self._permissions.is_strictly_allowed_to("read") is not False:
             # GET /<_id>
@@ -553,6 +560,18 @@ class Collection:
                 self.http_get_path_by_id
             )
 
+            self._openapi.add_get_item(
+                f"/{self.name}/{{id}}",
+                self.name,
+                self.model.get_schema(),
+                (200, "Item returned"),
+                [
+                    (400, "Bad request"),
+                    (404, "Not found"),
+                    (500, "Something went wrong"),
+                ],
+            )
+
         # PUT /<_id> Modify Data
         if self._permissions.is_strictly_allowed_to("modify") is not False:
             log.info(f"Add route PUT {self.name}/<string:_id>")
@@ -562,6 +581,17 @@ class Collection:
                 methods=["PUT"],
             )
             collection_blueprint.view_functions[f"{self.name}.put"] = self.http_modify
+            self._openapi.add_put_item(
+                f"/{self.name}/{{id}}",
+                self.name,
+                self.model.get_schema(),
+                (200, "Item modified"),
+                [
+                    (400, "Bad request"),
+                    (404, "Not found"),
+                    (500, "Something went wrong"),
+                ],
+            )
 
         # PATCH /<_id> Modify Data
         if self._permissions.is_strictly_allowed_to("modify") is not False:
@@ -574,6 +604,16 @@ class Collection:
             collection_blueprint.view_functions[f"{self.name}.patch_one"] = (
                 self.http_patch_one
             )
+            self._openapi.add_patch_item(
+                f"/{self.name}/{{id}}",
+                self.name,
+                (200, "Item modified"),
+                [
+                    (400, "Bad request"),
+                    (404, "Not found"),
+                    (500, "Something went wrong"),
+                ],
+            )
 
         # DELETE /<_id> Delete Data
         if self._permissions.is_strictly_allowed_to("delete") is not False:
@@ -585,6 +625,16 @@ class Collection:
             )
             collection_blueprint.view_functions[f"{self.name}.delete"] = (
                 self.http_delete
+            )
+            self._openapi.add_del_item(
+                f"/{self.name}/{{id}}",
+                self.name,
+                (200, "Item modified"),
+                [
+                    (400, "Bad request"),
+                    (404, "Not found"),
+                    (500, "Something went wrong"),
+                ],
             )
 
         # Actions
