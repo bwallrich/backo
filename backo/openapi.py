@@ -82,7 +82,75 @@ def _convert_type(types: list[str]) -> str:
         return "date-time"
     elif "Dict" in types:
         return "object"
-    raise ValueError(f"Could not convert {types} to OpenAPI type.")
+    return "string"  # default to string
+
+
+def _extract_requestbody_content(sub_scheme: dict[str, Any]):
+    required: list[str] = []
+    file_required: list[str] = []
+    properties: dict[str, Any] = {}
+    file_properties: dict[str, Any] = {}
+    base_properties: dict[str, Any] = {}
+    for prop_name, scheme in sub_scheme.items():
+        if prop_name == "_id":
+            continue
+
+        if scheme["rights"]["modify"] is not None and not scheme["rights"]["modify"]:
+            continue
+
+        if scheme["required"]:
+            required.append(prop_name)
+
+        property = {}
+        property["title"] = prop_name
+
+        property["type"] = _convert_type(scheme["types"])
+        if property["type"] == "file":
+            property["type"] = "string"
+            property["contentEncoding"] = "base64"
+            if scheme["required"]:
+                file_required.append(prop_name)
+
+            file_properties[prop_name] = {
+                "title": prop_name,
+                "type": "string",
+                "format": "binary",
+            }
+        elif property["type"] == "date-time":
+            property["type"] = "string"
+            property["format"] = "date-time"
+        else:
+            base_properties[prop_name] = property
+
+        if prop_name != "_meta":
+            properties[prop_name] = property
+
+    multipart_properties: dict[str, Any] = {
+        "_json": {
+            "type": "object",
+            "required": required,
+            "properties": base_properties,
+        },
+    }
+    multipart_properties |= file_properties
+
+    return {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "required": required,
+                "properties": properties,
+            }
+        },
+        "multipart/form-data": {
+            "schema": {
+                "type": "object",
+                "required": ["_json"] + file_required,
+                "properties": multipart_properties,
+            },
+            "encoding": {"_json": {"contentType": "application/json"}},
+        },
+    }
 
 
 class OpenAPISpec:
@@ -516,71 +584,3 @@ class OpenAPISpec:
 
     def get_schemas(self) -> dict:
         return self.__schemas
-
-
-def _extract_requestbody_content(sub_scheme: dict[str, Any]):
-    required: list[str] = []
-    file_required: list[str] = []
-    properties: dict[str, Any] = {}
-    file_properties: dict[str, Any] = {}
-    base_properties: dict[str, Any] = {}
-    for prop_name, scheme in sub_scheme.items():
-        if prop_name == "_id":
-            continue
-
-        if scheme["rights"]["modify"] is not None and not scheme["rights"]["modify"]:
-            continue
-
-        if scheme["required"]:
-            required.append(prop_name)
-
-        property = {}
-        property["title"] = prop_name
-
-        property["type"] = _convert_type(scheme["types"])
-        if property["type"] == "file":
-            property["type"] = "string"
-            property["contentEncoding"] = "base64"
-            if scheme["required"]:
-                file_required.append(prop_name)
-
-            file_properties[prop_name] = {
-                "title": prop_name,
-                "type": "string",
-                "format": "binary",
-            }
-        elif property["type"] == "date-time":
-            property["type"] = "string"
-            property["format"] = "date-time"
-        else:
-            base_properties[prop_name] = property
-
-        if prop_name != "_meta":
-            properties[prop_name] = property
-
-    multipart_properties: dict[str, Any] = {
-        "_json": {
-            "type": "object",
-            "required": required,
-            "properties": base_properties,
-        },
-    }
-    multipart_properties |= file_properties
-
-    return {
-        "application/json": {
-            "schema": {
-                "type": "object",
-                "required": required,
-                "properties": properties,
-            }
-        },
-        "multipart/form-data": {
-            "schema": {
-                "type": "object",
-                "required": ["_json"] + file_required,
-                "properties": multipart_properties,
-            },
-            "encoding": {"_json": {"contentType": "application/json"}},
-        },
-    }
