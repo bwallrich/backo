@@ -10,7 +10,7 @@ from typing import Any, Callable
 
 from flask import Flask
 
-from backo.openapi import JSON_PATCH_SCHEMA
+from backo.openapi import BACKO_META_SCHEMA, JSON_PATCH_SCHEMA
 
 # used for developpement
 sys.path.insert(1, "../../stricto")
@@ -261,6 +261,7 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
             },
         }
         spec["components"]["schemas"]["json-patch"] = JSON_PATCH_SCHEMA
+        spec["components"]["schemas"]["backo-meta"] = BACKO_META_SCHEMA
         return spec
 
     @error_to_http_handler

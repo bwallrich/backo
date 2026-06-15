@@ -61,6 +61,30 @@ JSON_PATCH_SCHEMA: dict[str, Any] = {
 }
 
 
+BACKO_META_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "types": {"type": "array", "items": {"type": "string"}},
+        "type_short": {"type": "string"},
+        "description": {"type": "string"},
+        "required": {"type": "boolean"},
+        "in": {"type": "string"},
+        "contraints": {"type": "array", "items": {"type": "string"}},
+        "default": {"type": "string"},
+        "transform": {"type": "string"},
+        "exists": {"type": "boolean"},
+        "rights": {
+            "type": "object",
+            "properties": {
+                "read": {"type": "boolean"},
+                "modify": {"type": "boolean"},
+            },
+        },
+        "sub_scheme": {"type": "object"},
+    },
+}
+
+
 def _convert_type(types: list[str]) -> str:
     """
     Convert stricto type to Openapi type
@@ -299,13 +323,16 @@ class OpenAPISpec:
         Set OpenAPI specification for POST /items/_meta
         """
         spec: dict[str, Any] = {}
-        spec["summary"] = f"Update {item_name} metadata"
-        spec["description"] = f"Modify the metadata of {item_name} collection."
+        spec["summary"] = f"Get {item_name} metadata"
+        spec["description"] = f"Inspect the metadata of {item_name} collection."
         spec["operationId"] = f"meta_{item_name}"
         spec["requestBody"] = {
-            "content": _extract_requestbody_content(
-                item_schema["sub_scheme"]["_meta"]["sub_scheme"]
-            )
+            "content": {
+                "application/json": {
+                    # the required are not really required here, can't use the schema
+                    "schema": {"$ref": f"#/components/schemas/{item_name}"}
+                }
+            }
         }
 
         spec["responses"] = {}
@@ -313,7 +340,7 @@ class OpenAPISpec:
             "description": ok[1],
             "content": {
                 "application/json": {
-                    "schema": {"$ref": f"#/components/schemas/{item_name}__meta"}
+                    "schema": {"$ref": "#/components/schemas/backo-meta"}
                 }
             },
         }
