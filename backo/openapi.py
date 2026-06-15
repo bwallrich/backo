@@ -284,6 +284,43 @@ class OpenAPISpec:
 
         self.__add_spec(route, "post", spec)
 
+    def add_meta_item(
+        self,
+        route: str,
+        item_name: str,
+        item_schema: dict[str, Any],
+        ok: tuple[int, str],
+        errors: list[tuple[int, str]],
+    ):
+        """
+        Set OpenAPI specification for POST /items/_meta
+        """
+        spec: dict[str, Any] = {}
+        spec["summary"] = f"Modify the metadata of {item_name} collection."
+        spec["operationId"] = f"meta_{item_name}"
+        spec["requestBody"] = {
+            "content": _extract_requestbody_content(
+                item_schema["sub_scheme"]["_meta"]["sub_scheme"]
+            )
+        }
+
+        spec["responses"] = {}
+        spec["responses"][str(ok[0])] = {
+            "description": ok[1],
+            "content": {
+                "application/json": {
+                    "schema": {"$ref": f"#/components/schemas/{item_name}__meta"}
+                }
+            },
+        }
+        for error_code, error_msg in errors:
+            spec["responses"][str(error_code)] = {
+                "description": error_msg,
+                "content": {"text/plain": {}},
+            }
+
+        self.__add_spec(route, "post", spec)
+
     def add_get_item(
         self,
         route: str,

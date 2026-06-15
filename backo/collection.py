@@ -533,7 +533,17 @@ class Collection:
                 methods=["POST"],
             )
             collection_blueprint.view_functions[f"{self.name}.meta"] = self.http_meta
-            # TODO openapi
+            self._openapi.add_meta_item(
+                f"/{self.name}/_meta",
+                self.name,
+                self.model.get_schema(),
+                (200, "Meta result"),
+                [
+                    (400, "Bad request"),
+                    (404, "Not found"),
+                    (500, "Something went wrong"),
+                ],
+            )
 
         if self._permissions.is_strictly_allowed_to("read") is not False:
             # GET /<_id>
