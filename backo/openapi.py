@@ -4,7 +4,8 @@ Utility class to convert backo Collection to OpenAPI specification.
 
 from typing import Any
 
-from backo.action import Action
+from .action import Action
+from .selection import Selection
 
 JSON_PATCH_SCHEMA: dict[str, Any] = {
     "type": "array",
@@ -89,23 +90,24 @@ def _convert_type(types: list[str]) -> str:
     """
     Convert stricto type to Openapi type
     """
+    openapi_type = "string"  # default type is string if not found
     if "String" in types:
-        return "string"
+        openapi_type = "string"
     elif "Int" in types:
-        return "integer"
+        openapi_type = "integer"
     elif "Float" in types:
-        return "number"
+        openapi_type = "number"
     elif "Bool" in types:
-        return "boolean"
+        openapi_type = "boolean"
     elif "List" in types:
-        return "array"
+        openapi_type = "array"
     elif "File" in types:
-        return "file"
+        openapi_type = "file"
     elif "Datetime" in types:
-        return "date-time"
+        openapi_type = "date-time"
     elif "Dict" in types:
-        return "object"
-    return "string"  # default to string
+        openapi_type = "object"
+    return openapi_type
 
 
 def _extract_requestbody_content(sub_scheme: dict[str, Any]):
@@ -328,12 +330,17 @@ class OpenAPISpec:
         spec["operationId"] = f"meta_{item_name}"
         spec["requestBody"] = {
             "content": {
-                "application/json": {
-                    # the required are not really required here, can't use the schema
-                    "schema": {"$ref": f"#/components/schemas/{item_name}"}
-                }
+                "application/json": {"schema": {"type": "object", "properties": {}}}
             }
         }
+
+        for prop_name, prop_scheme in item_schema["sub_scheme"].items():
+            spec["requestBody"]["content"]["application/json"]["schema"]["properties"][
+                prop_name
+            ] = {
+                "type": _convert_type(prop_scheme["types"]),
+                "description": prop_scheme["description"],
+            }
 
         spec["responses"] = {}
         spec["responses"][str(ok[0])] = {
@@ -643,6 +650,70 @@ class OpenAPISpec:
                 }
 
             self.__add_spec(base_route + f"/{name}/{{id}}", "post", spec)
+
+    def add_selections(
+        self,
+        base_route: str,
+        item_name: str,
+        selections: dict[str, Selection],
+        ok: tuple[int, str],
+        errors: list[tuple[int, str]],
+    ):
+        """
+        Set OpenAPI specification for POST /items/_selections/<string:selection>/<string:id>
+        """
+        for name, selection in selections.items():
+            spec: dict[str, Any] = {}
+            spec["summary"] = f"Selection {name} on {item_name}"
+            spec["description"] = (
+                f"Get items defined by selection {name} from {item_name} collection, with eventual filtering."
+            )
+            spec["operationId"] = f"selection_get_{name}_{item_name}"
+            spec["parameters"] = [
+                {
+                    "name": "qstring",
+                    "in": "query",
+                    "required": False,
+                    "schema": {"type": "string"},
+                    "description": "Query string",
+                }
+            ]
+            spec["responses"] = {}
+            spec["responses"][str(ok[0])] = {
+                "description": ok[1],
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "result": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": f"#/components/schemas/{item_name}"
+                                    },
+                                },
+                                "total": {"type": "integer"},
+                                "_skip": {"type": "integer"},
+                                "_page": {"type": "integer"},
+                            },
+                        }
+                    }
+                },
+            }
+
+            for error_code, error_msg in errors:
+                spec["responses"][str(error_code)] = {
+                    "description": error_msg,
+                    "content": {"text/plain": {}},
+                }
+
+            self.__add_spec(base_route + f"/{name}", "get", spec)
+
+            spec = dict(spec)
+            spec["operationId"] = f"selection_post_{name}_{item_name}"
+            spec["requestBody"] = {"content": {}}
+
+            self.__add_spec(base_route + f"/{name}", "post", spec)
 
     def __add_spec(self, route: str, method: str, spec: dict) -> None:
         if route not in self.__routes:

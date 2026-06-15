@@ -10,8 +10,6 @@ from typing import Any, Callable
 
 from flask import Flask
 
-from backo.openapi import BACKO_META_SCHEMA, JSON_PATCH_SCHEMA
-
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
@@ -21,6 +19,7 @@ from .collection import Collection
 from .item import Item
 from .log import LogLevel, log_system
 from .migration_report import MigrationReport
+from .openapi import BACKO_META_SCHEMA, JSON_PATCH_SCHEMA
 from .request_decorators import error_to_http_handler
 from .transaction import OperatorType, Transaction
 

@@ -691,6 +691,17 @@ class Collection:
             collection_blueprint.view_functions[f"{self.name}.do_post_selection"] = (
                 self.do_post_selection
             )
+            self._openapi.add_selections(
+                f"/{self.name}/_selections",
+                self.name,
+                self._selections,
+                (200, "Selection properly executed"),
+                [
+                    (400, "Bad request"),
+                    (404, "Not found"),
+                    (500, "Something went wrong"),
+                ],
+            )
 
         return collection_blueprint
 
