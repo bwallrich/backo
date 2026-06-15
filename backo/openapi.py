@@ -172,7 +172,8 @@ class OpenAPISpec:
         Set OpenAPI specification for GET /items
         """
         spec: dict[str, Any] = {}
-        spec["summary"] = (
+        spec["summary"] = f"List {item_name}"
+        spec["description"] = (
             f"List all existing item in {item_name} collection, with eventual filtering."
         )
         spec["operationId"] = f"list_{item_name}"
@@ -226,7 +227,8 @@ class OpenAPISpec:
         Set OpenAPI specification for POST /items
         """
         spec: dict[str, Any] = {}
-        spec["summary"] = f"Add an item in {item_name} collection."
+        spec["summary"] = f"Create {item_name}"
+        spec["description"] = f"Add an item in {item_name} collection."
         spec["operationId"] = f"add_{item_name}"
 
         spec["requestBody"] = {
@@ -262,7 +264,8 @@ class OpenAPISpec:
         Set OpenAPI specification for POST /items/_check
         """
         spec: dict[str, Any] = {}
-        spec["summary"] = f"Check if item can be put in {item_name} collection."
+        spec["summary"] = f"Check {item_name}"
+        spec["description"] = f"Check if item can be put in {item_name} collection."
         spec["operationId"] = f"check_{item_name}"
 
         spec["requestBody"] = {
@@ -296,7 +299,8 @@ class OpenAPISpec:
         Set OpenAPI specification for POST /items/_meta
         """
         spec: dict[str, Any] = {}
-        spec["summary"] = f"Modify the metadata of {item_name} collection."
+        spec["summary"] = f"Update {item_name} metadata"
+        spec["description"] = f"Modify the metadata of {item_name} collection."
         spec["operationId"] = f"meta_{item_name}"
         spec["requestBody"] = {
             "content": _extract_requestbody_content(
@@ -333,7 +337,8 @@ class OpenAPISpec:
         Set OpenAPI specification for GET /items/<string:id>
         """
         spec: dict[str, Any] = {}
-        spec["summary"] = (
+        spec["summary"] = f"Get {item_name}"
+        spec["description"] = (
             f"Get the item identified by {{id}} in {item_name} collection."
         )
         spec["operationId"] = f"get_{item_name}"
@@ -372,7 +377,8 @@ class OpenAPISpec:
         self.__add_spec(route, "get", spec)
 
         spec: dict[str, Any] = {}
-        spec["summary"] = (
+        spec["summary"] = f"Get {item_name} file"
+        spec["description"] = (
             f"Get the file {{path}} of item identified by {{id}} in {item_name} collection."
         )
         spec["operationId"] = f"get_{item_name}_path"
@@ -424,7 +430,8 @@ class OpenAPISpec:
         Set OpenAPI specification for PUT /items/<string:id>
         """
         spec: dict[str, Any] = {}
-        spec["summary"] = (
+        spec["summary"] = f"Update {item_name}"
+        spec["description"] = (
             f"Modify the item identified by {{id}} in {item_name} collection."
         )
         spec["operationId"] = f"put_{item_name}"
@@ -471,7 +478,8 @@ class OpenAPISpec:
         Set OpenAPI specification for DEL /items/<string:id>
         """
         spec: dict[str, Any] = {}
-        spec["summary"] = (
+        spec["summary"] = f"Delete {item_name}"
+        spec["description"] = (
             f"Delete the item identified by {{id}} in {item_name} collection."
         )
         spec["operationId"] = f"del_{item_name}"
@@ -511,7 +519,8 @@ class OpenAPISpec:
         Set OpenAPI specification for PATCH /items/<string:id>
         """
         spec: dict[str, Any] = {}
-        spec["summary"] = (
+        spec["summary"] = f"Patch {item_name}"
+        spec["description"] = (
             f"Patch the item identified by {{id}} in {item_name} collection."
         )
         spec["operationId"] = f"patch_{item_name}"
@@ -572,9 +581,9 @@ class OpenAPISpec:
         Set OpenAPI specification for POST /items/_actions/<string:action>/<string:id>
         """
         for name, action in actions.items():
-            print(f"REGISTER {name}")
             spec: dict[str, Any] = {}
-            spec["summary"] = (
+            spec["summary"] = f"Trigger {name} on {item_name}"
+            spec["description"] = (
                 f"Trigger the action {name} on item identified by {{id}} in {item_name} collection."
             )
             spec["operationId"] = f"action_{name}_on_{item_name}"
