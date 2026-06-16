@@ -63,7 +63,9 @@ class DBSQLiteConnector(DBConnector):  # pylint: disable=too-many-instance-attri
 
         try:
             self._con = sqlite3.connect(f"{self._path}/{self._dbname}.db")
-            self._con.row_factory = sqlite3.Row # Enable to get a column indexed by name
+            self._con.row_factory = (
+                sqlite3.Row
+            )  # Enable to get a column indexed by name
             self._cursor = self._con.cursor()
         except Exception as e:
             raise DBError('SQLLite connection error at "{0}"', self._path) from e
@@ -585,7 +587,7 @@ class DBSQLiteConnector(DBConnector):  # pylint: disable=too-many-instance-attri
         # Get cols that are not RefLists
         for col_name, col_data in self._scheme.items():
             col_types = col_data["types"]
-            row_dict = dict(row) # Need to convert to dict (for indexation)
+            row_dict = dict(row)  # Need to convert to dict (for indexation)
             if col_name in row_dict and "RefsList" not in col_types:
                 val = row[col_name]
                 if val:
