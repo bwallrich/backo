@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from .request import DatabaseSearchRequest, DatabaseCreateRequest
+from .request import DatabaseSearchRequest, DatabaseCreateRequest, DatabaseDeleteRequest
 from typing import Any
 
 
@@ -14,6 +14,10 @@ class IdMapper(ABC):
 
     @abstractmethod
     def create_request(self, item_value) -> DatabaseCreateRequest:
+        pass
+
+    @abstractmethod
+    def delete_request(self, _id) -> DatabaseDeleteRequest:
         pass
 
 
@@ -34,6 +38,10 @@ def _search_request(attribute, base_request):
 
 def _create_request(attribute, base_request, value):
     return attribute.create_request(base_request, value)
+
+
+def _delete_request(attribute, base_request):
+    return attribute.delete_request(base_request)
 
 
 class DatabaseItem:
@@ -191,6 +199,26 @@ class DatabaseItem:
             self.attributes,
             item_value,
             _create_request,
+        )
+        return base_request, attributes_requests
+
+    def delete_request(self, _id):
+        """Builds a set of delete requests that will be able to delete all the
+        attributes of the item represented by `_id` (and the item itself).
+
+        :param _id: Backo ID of the item to delete
+        """
+
+        # Builds request required by the `id_mapper` to delete the item
+        # corresponding to _id
+        base_request = self.id_mapper.delete_request(_id)
+
+        #  Builds additional requests required to delete all `attributes` of the
+        #  `DatabaseItem`. Each attribute is allowed to either modify the
+        #  `base_request`, build a new request or do nothing.
+        attributes_requests = {}
+        self._request_dict(
+            base_request, attributes_requests, self.attributes, _delete_request
         )
         return base_request, attributes_requests
 

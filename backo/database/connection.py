@@ -10,3 +10,7 @@ class DatabaseConnection(ABC):
     @abstractmethod
     def execute_create(self, query):
         pass
+
+    @abstractmethod
+    def execute_delete(self, query):
+        pass

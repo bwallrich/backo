@@ -89,11 +89,19 @@ class DatabaseEngine:
         return item
 
     def create(self, item_value):
-        base_request, attributes_requests = self.database_item.create_request(item_value)
+        base_request, attributes_requests = self.database_item.create_request(
+            item_value
+        )
 
         base_response, attributes_responses = self._execute_requests(
-            base_request, attributes_requests,
-            self.database_connection.execute_create
+            base_request, attributes_requests, self.database_connection.execute_create
         )
 
         return self.database_item.created_id(base_response)
+
+    def delete(self, _id):
+        base_request, attribute_requests = self.database_item.delete_request(_id)
+
+        base_response, attributes_responses = self._execute_requests(
+            base_request, attribute_requests, self.database_connection.execute_delete
+        )

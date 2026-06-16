@@ -19,7 +19,7 @@ from hamcrest import (
 
 from backo.database.engine import DatabaseEngine
 from backo.error import NotFoundError
-from backo.database.request import DatabaseSearchRequest, DatabaseCreateRequest
+from backo.database.request import DatabaseSearchRequest, DatabaseCreateRequest, DatabaseDeleteRequest
 
 
 @patch("backo.database.item.DatabaseItem", autospec=True)
@@ -140,7 +140,7 @@ class TestDatabaseEngine(unittest.TestCase):
     def test_search_not_found(self, connection, database_item):
         """Tests LdapSearchEngine.search method for an non existing item.
 
-        Must return a NotFoundError.
+        Must raise a NotFoundError.
         """
 
         engine = DatabaseEngine(connection.return_value, database_item.return_value)
@@ -228,3 +228,52 @@ class TestDatabaseEngine(unittest.TestCase):
 
         assert_that( item_id, equal_to("unique_id_of_the_new_item"))
 
+    def test_delete(self, connection, database_item):
+        """Tests LdapSearchEngine.delete method for an existing item.
+        """
+
+        engine = DatabaseEngine(connection.return_value, database_item.return_value)
+
+        mock_responses = [MagicMock() for _ in range(9)]  # Database specific type
+        mock_queries = [
+            MagicMock(spec=DatabaseDeleteRequest, response=mock_responses[i])
+            for i in range(9)
+        ]
+
+        database_item.return_value.delete_request.return_value = (
+            mock_queries[0],
+            {
+                "mock": mock_queries[1],
+                "nested": {"item": mock_queries[2]},
+                "list": [mock_queries[3], mock_queries[4]],
+                "nested_list": [
+                    [mock_queries[5], mock_queries[6]],
+                    mock_queries[7],
+                    {"nested_in_list": mock_queries[8]},
+                ],
+            },
+        )
+
+        def mock_execute_delete(delete_request):
+            return delete_request.response
+
+        connection.return_value.execute_delete.side_effect = mock_execute_delete
+
+        # Real call to the method under test
+        engine.delete("mock_id")
+
+        assert_that(
+            database_item.return_value.delete_request.call_args_list,
+            contains_exactly(has_properties(args=contains_exactly("mock_id"))),
+        )
+
+        # Ensure search was called with appropriate parameters.
+        assert_that(
+            connection.return_value.execute_delete.call_args_list,
+            contains_inanyorder(
+                *[
+                    has_properties(args=contains_exactly(mock_request))
+                    for mock_request in mock_queries
+                ]
+            ),
+        )

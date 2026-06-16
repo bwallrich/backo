@@ -10,7 +10,7 @@ from hamcrest import (
 )
 
 from backo.database.item import DatabaseItem, IdMapper
-from backo.database.request import DatabaseSearchRequest, DatabaseCreateRequest
+from backo.database.request import DatabaseSearchRequest, DatabaseCreateRequest, DatabaseDeleteRequest
 
 
 class TestDatabaseItem(unittest.TestCase):
@@ -301,6 +301,119 @@ class TestDatabaseItem(unittest.TestCase):
                 ),
             ),
         )
+
+    def test_delete_request_simple_item(self):
+        id_mapper = MagicMock(spec=IdMapper)
+
+        attribute_requests = [MagicMock(spec=DatabaseDeleteRequest) for _ in range(3)]
+        attribute_mocks = [
+            MagicMock(spec=DatabaseItem, request=attribute_requests[i])
+            for i in range(3)
+        ]
+        for i in range(3):
+            attribute_mocks[i].delete_request.return_value = attribute_requests[i]
+
+        database_item = DatabaseItem(
+            id_mapper,
+            {
+                "login": attribute_mocks[0],
+                "name": attribute_mocks[1],
+                "contact": attribute_mocks[2],
+            },
+        )
+
+        delete_requests = database_item.delete_request("mock_id")
+
+        assert_that(
+            id_mapper.delete_request.call_args_list,
+            contains_exactly(has_properties(args=contains_exactly("mock_id"))),
+        )
+        for attribute in attribute_mocks:
+            assert_that(
+                attribute.delete_request.call_args_list,
+                contains_exactly(
+                    has_properties(
+                        args=contains_exactly(id_mapper.delete_request.return_value)
+                    )
+                ),
+            )
+
+        assert_that(
+            delete_requests,
+            contains_exactly(
+                id_mapper.delete_request.return_value,
+                has_entries(
+                    {
+                        "login": attribute_requests[0],
+                        "name": attribute_requests[1],
+                        "contact": attribute_requests[2],
+                    }
+                ),
+            ),
+        )
+
+    def test_delete_request_with_complex_nested_attributes(self):
+        id_mapper = MagicMock(spec=IdMapper)
+
+        attribute_requests = [MagicMock(spec=DatabaseSearchRequest) for _ in range(6)]
+        attribute_mocks = [
+            MagicMock(spec=DatabaseItem, request=attribute_requests[i])
+            for i in range(6)
+        ]
+        for i in range(6):
+            attribute_mocks[i].delete_request.return_value = attribute_requests[i]
+
+        database_item = DatabaseItem(
+            id_mapper,
+            {
+                "name": attribute_mocks[0],
+                "nested": {
+                    "data": [
+                        [attribute_mocks[1], attribute_mocks[2]],
+                        attribute_mocks[3],
+                        {"nested_data": attribute_mocks[4]},
+                    ],
+                    "time": attribute_mocks[5],
+                },
+            },
+        )
+
+        delete_requests = database_item.delete_request("mock_id")
+
+        assert_that(
+            id_mapper.delete_request.call_args_list,
+            contains_exactly(has_properties(args=contains_exactly("mock_id"))),
+        )
+        for attribute in attribute_mocks:
+            assert_that(
+                attribute.delete_request.call_args_list,
+                contains_exactly(
+                    has_properties(
+                        args=contains_exactly(id_mapper.delete_request.return_value)
+                    )
+                ),
+            )
+
+        assert_that(
+            delete_requests,
+            contains_exactly(
+                id_mapper.delete_request.return_value,
+                has_entries(
+                    {
+                        "name": attribute_requests[0],
+                        "nested": {
+                            "data": [
+                                [attribute_requests[1], attribute_requests[2]],
+                                attribute_requests[3],
+                                {"nested_data": attribute_requests[4]},
+                            ],
+                            "time": attribute_requests[5],
+                        },
+                    }
+                ),
+            ),
+        )
+
 
     def test_load_simple_item(self):
         """Tests LdapItem.load method for a simple item, without references.
