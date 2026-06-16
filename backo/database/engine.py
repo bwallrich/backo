@@ -29,30 +29,47 @@ class DatabaseEngine:
         self.database_connection = database_connection
         self.database_item = database_item
 
-    def _execute_list_requests(self, requests_list, responses):
+    def _execute_list_requests(self, requests_list, responses, request_method):
         for i in range(len(requests_list)):
             request = requests_list[i]
             if isinstance(request, dict):
                 response = {}
-                self._execute_nested_requests(request, response)
+                self._execute_nested_requests(request, response, request_method)
                 responses.append(response)
             elif isinstance(request, list):
                 response = []
-                self._execute_list_requests(request, response)
+                self._execute_list_requests(request, response, request_method)
                 responses.append(response)
             else:
-                responses.append(self.database_connection.execute_search(request))
+                responses.append(request_method(request))
 
-    def _execute_nested_requests(self, requests_dict, responses):
+    def _execute_nested_requests(self, requests_dict, responses, request_method):
         for key, value in requests_dict.items():
             if isinstance(value, dict):
                 responses[key] = {}
-                self._execute_nested_requests(value, responses[key])
+                self._execute_nested_requests(value, responses[key], request_method)
             elif isinstance(value, list):
                 responses[key] = []
-                self._execute_list_requests(value, responses[key])
+                self._execute_list_requests(value, responses[key], request_method)
             else:
-                responses[key] = self.database_connection.execute_search(value)
+                responses[key] = request_method(value)
+
+    def _execute_requests(self, base_request, attributes_requests, request_method):
+        base_response = request_method(base_request)
+        attribute_responses = None
+        if isinstance(attributes_requests, dict):
+            attribute_responses = {}
+            self._execute_nested_requests(
+                attributes_requests, attribute_responses, request_method
+            )
+        elif isinstance(attributes_requests, list):
+            attribute_responses = []
+            self._execute_list_requests(
+                attributes_requests, attribute_responses, request_method
+            )
+        else:
+            attribute_responses = request_method(attributes_requests)
+        return base_response, attribute_responses
 
     def search(self, _id):
         """Search the database for an item with the given `_id`.
@@ -64,19 +81,9 @@ class DatabaseEngine:
         """
         root_request, attribute_requests = self.database_item.search_request(_id)
 
-        root_response = self.database_connection.execute_search(root_request)
-        attribute_responses = None
-        if isinstance(attribute_requests, dict):
-            attribute_responses = {}
-            self._execute_nested_requests(attribute_requests, attribute_responses)
-        elif isinstance(attribute_requests, list):
-            attribute_responses = []
-            self._execute_list_requests(attribute_requests, attribute_responses)
-        else:
-            attribute_responses = self.database_connection.execute_search(
-                attribute_requests
-            )
-
-        item = self.database_item.load(root_response, attribute_responses)
+        base_response, attributes_responses = self._execute_requests(
+            root_request, attribute_requests, self.database_connection.execute_search
+        )
+        item = self.database_item.load(base_response, attributes_responses)
         item["_id"] = _id
         return item
