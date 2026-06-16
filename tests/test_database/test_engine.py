@@ -14,11 +14,12 @@ from hamcrest import (
     contains_inanyorder,
     calling,
     raises,
+    equal_to
 )
 
 from backo.database.engine import DatabaseEngine
 from backo.error import NotFoundError
-from backo.database.request import DatabaseSearchRequest
+from backo.database.request import DatabaseSearchRequest, DatabaseCreateRequest
 
 
 @patch("backo.database.item.DatabaseItem", autospec=True)
@@ -154,3 +155,76 @@ class TestDatabaseEngine(unittest.TestCase):
 
         # Real call to the method under test
         assert_that(calling(engine.search).with_args("mock_id"), raises(NotFoundError))
+
+    def test_create(self, connection, database_item):
+        """Tests LdapSearchEngine.create method.
+        """
+
+        engine = DatabaseEngine(connection.return_value, database_item.return_value)
+
+        database_item.return_value.created_id.return_value = "unique_id_of_the_new_item"
+
+        mock_responses = [MagicMock() for _ in range(9)]  # Database specific type
+        mock_queries = [
+            MagicMock(spec=DatabaseCreateRequest, response=mock_responses[i])
+            for i in range(9)
+        ]
+
+        database_item.return_value.create_request.return_value = (
+            mock_queries[0],
+            {
+                "mock": mock_queries[1],
+                "nested": {"item": mock_queries[2]},
+                "list": [mock_queries[3], mock_queries[4]],
+                "nested_list": [
+                    [mock_queries[5], mock_queries[6]],
+                    mock_queries[7],
+                    {"nested_in_list": mock_queries[8]},
+                ],
+            },
+        )
+
+        def mock_execute_create(create_request):
+            return create_request.response
+
+        connection.return_value.execute_create.side_effect = mock_execute_create
+
+        item_to_create = {"name": "new_item", "field": "some_value", "port": 1312}
+        # Real call to the method under test
+        item_id = engine.create(item_to_create)
+
+        assert_that(
+            database_item.return_value.create_request.call_args_list,
+            contains_exactly(has_properties(args=contains_exactly(
+                # The call argument is checked using has_entries because it
+                # would be OK to pass a copy of the item_to_create as argument
+                has_entries(
+                    item_to_create
+                    )
+                ))),
+        )
+
+        # Ensure create was called with appropriate parameters.
+        assert_that(
+            connection.return_value.execute_create.call_args_list,
+            contains_inanyorder(
+                *[
+                    has_properties(args=contains_exactly(mock_request))
+                    for mock_request in mock_queries
+                ]
+            ),
+        )
+
+        assert_that(
+            database_item.return_value.created_id.call_args_list,
+            contains_exactly(
+                has_properties(
+                    args=contains_exactly(
+                        mock_responses[0]
+                    )
+                )
+            ),
+        )
+
+        assert_that( item_id, equal_to("unique_id_of_the_new_item"))
+

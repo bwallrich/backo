@@ -87,3 +87,13 @@ class DatabaseEngine:
         item = self.database_item.load(base_response, attributes_responses)
         item["_id"] = _id
         return item
+
+    def create(self, item_value):
+        base_request, attributes_requests = self.database_item.create_request(item_value)
+
+        base_response, attributes_responses = self._execute_requests(
+            base_request, attributes_requests,
+            self.database_connection.execute_create
+        )
+
+        return self.database_item.created_id(base_response)

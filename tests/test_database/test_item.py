@@ -10,7 +10,7 @@ from hamcrest import (
 )
 
 from backo.database.item import DatabaseItem, IdMapper
-from backo.database.request import DatabaseSearchRequest
+from backo.database.request import DatabaseSearchRequest, DatabaseCreateRequest
 
 
 class TestDatabaseItem(unittest.TestCase):
@@ -19,7 +19,8 @@ class TestDatabaseItem(unittest.TestCase):
 
         attribute_requests = [MagicMock(spec=DatabaseSearchRequest) for _ in range(3)]
         attribute_mocks = [
-            MagicMock(spec=DatabaseItem, request=attribute_requests[i]) for i in range(3)
+            MagicMock(spec=DatabaseItem, request=attribute_requests[i])
+            for i in range(3)
         ]
         for i in range(3):
             attribute_mocks[i].search_request.return_value = attribute_requests[i]
@@ -68,7 +69,8 @@ class TestDatabaseItem(unittest.TestCase):
 
         attribute_requests = [MagicMock(spec=DatabaseSearchRequest) for _ in range(6)]
         attribute_mocks = [
-            MagicMock(spec=DatabaseItem, request=attribute_requests[i]) for i in range(6)
+            MagicMock(spec=DatabaseItem, request=attribute_requests[i])
+            for i in range(6)
         ]
         for i in range(6):
             attribute_mocks[i].search_request.return_value = attribute_requests[i]
@@ -108,6 +110,182 @@ class TestDatabaseItem(unittest.TestCase):
             search_requests,
             contains_exactly(
                 id_mapper.search_request.return_value,
+                has_entries(
+                    {
+                        "name": attribute_requests[0],
+                        "nested": {
+                            "data": [
+                                [attribute_requests[1], attribute_requests[2]],
+                                attribute_requests[3],
+                                {"nested_data": attribute_requests[4]},
+                            ],
+                            "time": attribute_requests[5],
+                        },
+                    }
+                ),
+            ),
+        )
+
+    def test_create_request_simple_item(self):
+        id_mapper = MagicMock(spec=IdMapper)
+
+        attribute_requests = [MagicMock(spec=DatabaseCreateRequest) for _ in range(3)]
+        attribute_mocks = [
+            MagicMock(spec=DatabaseItem, request=attribute_requests[i])
+            for i in range(3)
+        ]
+        for i in range(3):
+            attribute_mocks[i].create_request.return_value = attribute_requests[i]
+
+        database_item = DatabaseItem(
+            id_mapper,
+            {
+                "login": attribute_mocks[0],
+                "name": attribute_mocks[1],
+                "contact": attribute_mocks[2],
+            },
+        )
+
+        create_requests = database_item.create_request(
+            {"login": "new_login", "name": "new_name", "contact": "new_contact"}
+        )
+
+        assert_that(
+            id_mapper.create_request.call_args_list,
+            contains_exactly(
+                has_properties(
+                    args=contains_exactly(
+                        has_entries(
+                            {
+                                "login": "new_login",
+                                "name": "new_name",
+                                "contact": "new_contact",
+                            }
+                        )
+                    )
+                )
+            ),
+        )
+        for attribute, value in zip(
+            attribute_mocks, ["new_login", "new_name", "new_contact"]
+        ):
+            assert_that(
+                attribute.create_request.call_args_list,
+                contains_exactly(
+                    has_properties(
+                        args=contains_exactly(
+                            id_mapper.create_request.return_value, value
+                        )
+                    )
+                ),
+            )
+
+        assert_that(
+            create_requests,
+            contains_exactly(
+                id_mapper.create_request.return_value,
+                has_entries(
+                    {
+                        "login": attribute_requests[0],
+                        "name": attribute_requests[1],
+                        "contact": attribute_requests[2],
+                    }
+                ),
+            ),
+        )
+
+    def test_create_request_with_complex_nested_attributes(self):
+        id_mapper = MagicMock(spec=IdMapper)
+
+        attribute_requests = [MagicMock(spec=DatabaseSearchRequest) for _ in range(6)]
+        attribute_mocks = [
+            MagicMock(spec=DatabaseItem, request=attribute_requests[i])
+            for i in range(6)
+        ]
+        for i in range(6):
+            attribute_mocks[i].create_request.return_value = attribute_requests[i]
+
+        database_item = DatabaseItem(
+            id_mapper,
+            {
+                "name": attribute_mocks[0],
+                "nested": {
+                    "data": [
+                        [attribute_mocks[1], attribute_mocks[2]],
+                        attribute_mocks[3],
+                        {"nested_data": attribute_mocks[4]},
+                    ],
+                    "time": attribute_mocks[5],
+                },
+            },
+        )
+
+        create_requests = database_item.create_request(
+            {
+                "name": "new_name",
+                "nested": {
+                    "data": [
+                        [13, 12],
+                        "data_1",
+                        {"nested_data": "new_nested_value"},
+                    ],
+                    "time": "new_time",
+                },
+            }
+        )
+
+        assert_that(
+            id_mapper.create_request.call_args_list,
+            contains_exactly(
+                has_properties(
+                    args=contains_exactly(
+                        has_entries(
+                            {
+                                "name": "new_name",
+                                "nested": has_entries(
+                                    {
+                                        "data": contains_exactly(
+                                            contains_exactly(13, 12),
+                                            "data_1",
+                                            has_entries(
+                                                {"nested_data": "new_nested_value"}
+                                            ),
+                                        ),
+                                        "time": "new_time",
+                                    }
+                                ),
+                            }
+                        )
+                    )
+                )
+            ),
+        )
+        for attribute, value in zip(
+            attribute_mocks,
+            [
+                "new_name",
+                13,
+                12,
+                "data_1",
+                "new_nested_value",
+                "new_time",
+            ],
+        ):
+            assert_that(
+                attribute.create_request.call_args_list,
+                contains_exactly(
+                    has_properties(
+                        args=contains_exactly(
+                            id_mapper.create_request.return_value, value
+                        )
+                    )
+                ),
+            )
+
+        assert_that(
+            create_requests,
+            contains_exactly(
+                id_mapper.create_request.return_value,
                 has_entries(
                     {
                         "name": attribute_requests[0],

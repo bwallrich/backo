@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from .request import DatabaseSearchRequest
+from .request import DatabaseSearchRequest, DatabaseCreateRequest
 from typing import Any
 
 
@@ -12,14 +12,29 @@ class IdMapper(ABC):
     def search_request(self, _id) -> DatabaseSearchRequest:
         pass
 
+    @abstractmethod
+    def create_request(self, item_value) -> DatabaseCreateRequest:
+        pass
+
+
 class BaseItem(ABC):
     @abstractmethod
     def base_item(self, base_response) -> dict:
         pass
 
+
 class Empty(BaseItem):
     def base_item(self, _base_response):
         return {}
+
+
+def _search_request(attribute, base_request):
+    return attribute.search_request(base_request)
+
+
+def _create_request(attribute, base_request, value):
+    return attribute.create_request(base_request, value)
+
 
 class DatabaseItem:
     """A DatabaseItem specifies how data should be loaded from the database to
@@ -34,7 +49,7 @@ class DatabaseItem:
     DatabaseItem specifies how to retrieve them from a specific database.
     """
 
-    def __init__(self, id_mapper: IdMapper, attributes: dict[str, Any], base = Empty()):
+    def __init__(self, id_mapper: IdMapper, attributes: dict[str, Any], base=Empty()):
         """
         The `id_mapper` specifies how a unique backo `_id` can be built from the
         external database, and how the item can be queried later in the
@@ -60,31 +75,73 @@ class DatabaseItem:
         self.base = base
         self.attributes = attributes
 
-    def _search_request_list(self, root_request, request_list, attributes_list):
+    def _request_list(
+        self, base_request, request_list, attributes_list, request_method
+    ):
         for attribute in attributes_list:
             if isinstance(attribute, list):
                 requests = []
-                self._search_request_list(root_request, requests, attribute)
+                self._request_list(base_request, requests, attribute, request_method)
                 request_list.append(requests)
             elif isinstance(attribute, dict):
                 requests = {}
-                self._search_request_dict(root_request, requests, attribute)
+                self._request_dict(base_request, requests, attribute, request_method)
                 request_list.append(requests)
             else:
-                request_list.append(attribute.search_request(root_request))
+                request_list.append(request_method(attribute, base_request))
 
-    def _search_request_dict(self, root_request, request_dict, attributes_dict):
+    def _request_dict(
+        self, base_request, request_dict, attributes_dict, request_method
+    ):
         for key, attribute in attributes_dict.items():
             if isinstance(attribute, list):
                 requests = []
-                self._search_request_list(root_request, requests, attribute)
+                self._request_list(base_request, requests, attribute, request_method)
                 request_dict[key] = requests
             elif isinstance(attribute, dict):
                 requests = {}
-                self._search_request_dict(root_request, requests, attribute)
+                self._request_dict(base_request, requests, attribute, request_method)
                 request_dict[key] = requests
             else:
-                request_dict[key] = attribute.search_request(root_request)
+                request_dict[key] = request_method(attribute, base_request)
+
+    def _request_list_with_values(
+        self, base_request, request_list, attributes_list, values, request_method
+    ):
+        for attribute, value in zip(attributes_list, values):
+            if isinstance(attribute, list):
+                requests = []
+                self._request_list_with_values(
+                    base_request, requests, attribute, value, request_method
+                )
+                request_list.append(requests)
+            elif isinstance(attribute, dict):
+                requests = {}
+                self._request_dict_with_values(
+                    base_request, requests, attribute, value, request_method
+                )
+                request_list.append(requests)
+            else:
+                request_list.append(request_method(attribute, base_request, value))
+
+    def _request_dict_with_values(
+        self, base_request, request_dict, attributes_dict, values, request_method
+    ):
+        for (key, attribute), value in zip(attributes_dict.items(), values.values()):
+            if isinstance(attribute, list):
+                requests = []
+                self._request_list_with_values(
+                    base_request, requests, attribute, value, request_method
+                )
+                request_dict[key] = requests
+            elif isinstance(attribute, dict):
+                requests = {}
+                self._request_dict_with_values(
+                    base_request, requests, attribute, value, request_method
+                )
+                request_dict[key] = requests
+            else:
+                request_dict[key] = request_method(attribute, base_request, value)
 
     def search_request(self, _id):
         """Builds a set of search requests that will be able to load all the
@@ -104,7 +161,37 @@ class DatabaseItem:
         #  the `DatabaseItem`. Each attribute is allowed to either modify the
         #  `base_request`, build a new request or do nothing.
         attributes_requests = {}
-        self._search_request_dict(base_request, attributes_requests, self.attributes)
+        self._request_dict(
+            base_request, attributes_requests, self.attributes, _search_request
+        )
+        return base_request, attributes_requests
+
+    def create_request(self, item_value):
+        """Builds a set of search requests that will be able to load all the
+        attributes required to load the item represented by `_id`.
+
+        Responses obtained by the DatabaseEngine will then be passed to the
+        created_id() method of the DatabaseItem.
+
+        :param item_value: JSON-like dict with values of attributes of the new
+        item
+        """
+
+        # Builds request required by the `id_mapper` to create the `item` with
+        # value `item_value` and initialize its _id
+        base_request = self.id_mapper.create_request(item_value)
+
+        #  Builds additional requests required to create all `attributes` of the
+        #  `DatabaseItem`. Each attribute is allowed to either modify the
+        #  `base_request`, build a new request or do nothing.
+        attributes_requests = {}
+        self._request_dict_with_values(
+            base_request,
+            attributes_requests,
+            self.attributes,
+            item_value,
+            _create_request,
+        )
         return base_request, attributes_requests
 
     def _load_list(
@@ -175,5 +262,10 @@ class DatabaseItem:
         """
         item = self.base.base_item(root_request_response)
         # TODO: attributes is not necessarily a dict
-        self._load_dict(root_request_response, attribute_responses, item, self.attributes)
+        self._load_dict(
+            root_request_response, attribute_responses, item, self.attributes
+        )
         return item
+
+    def created_id(self, base_create_response):
+        return self.id_mapper.id(base_create_response)
