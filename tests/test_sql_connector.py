@@ -9,7 +9,7 @@ import unittest
 # import json
 
 from backo import Item, Collection
-from backo import DBSQLConnector
+from backo import DBSQLiteConnector
 from backo import Backoffice, current_user
 from backo import NotFoundError
 
@@ -85,17 +85,17 @@ class TestSQLiteConnector(unittest.TestCase):
         # print(json.dumps(self._meta, indent=4))
 
         # --- DB for user
-        self.db_users = DBSQLConnector(
+        self.db_users = DBSQLiteConnector(
             collection="users", path="sqlite_test_db", meta=self._meta
         )
 
         # --- DB for animals
-        self.db_animals = DBSQLConnector(
+        self.db_animals = DBSQLiteConnector(
             collection="animals", path="sqlite_test_db", meta=self._meta
         )
 
         # --- DB for types
-        self.db_types = DBSQLConnector(
+        self.db_types = DBSQLiteConnector(
             collection="types", path="sqlite_test_db", meta=self._meta
         )
 

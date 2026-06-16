@@ -29,7 +29,7 @@ KPARSE_MODEL = {
 log = log_system.get_or_create_logger("test")
 
 
-class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attributes
+class DBSQLiteConnector(DBConnector):  # pylint: disable=too-many-instance-attributes
     """Test SQL Connector
 
     This is the way to save / store / retrieve objects in yaml files
