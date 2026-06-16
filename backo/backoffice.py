@@ -19,7 +19,7 @@ from .collection import Collection
 from .item import Item
 from .log import LogLevel, log_system
 from .migration_report import MigrationReport
-from .openapi import BACKO_META_SCHEMA, JSON_PATCH_SCHEMA
+from .openapi import BACKO_FILTER_SCHEMA, BACKO_META_SCHEMA, JSON_PATCH_SCHEMA
 from .request_decorators import error_to_http_handler
 from .transaction import OperatorType, Transaction
 
@@ -261,6 +261,7 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
         }
         spec["components"]["schemas"]["json-patch"] = JSON_PATCH_SCHEMA
         spec["components"]["schemas"]["backo-meta"] = BACKO_META_SCHEMA
+        spec["components"]["schemas"]["backo-filter"] = BACKO_FILTER_SCHEMA
         return spec
 
     @error_to_http_handler

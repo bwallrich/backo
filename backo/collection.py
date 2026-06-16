@@ -2,7 +2,7 @@
 The Collection module
 """
 
-# pylint: disable=logging-fstring-interpolation, too-many-public-methods
+# pylint: disable=logging-fstring-interpolation, too-many-public-methods, too-many-lines, too-many-statements, wrong-import-order
 import copy
 import json
 import pprint
@@ -195,9 +195,15 @@ class Collection:
         }
 
     def get_openapi_routes(self) -> dict:
+        """
+        Return the paths section of the OpenAPI specification.
+        """
         return self._openapi.get_routes()
 
     def get_openapi_schemas(self) -> dict:
+        """
+        Return the schemas section of the OpenAPI specification.
+        """
         return self._openapi.get_schemas()
 
     def set(self, datas: dict | list) -> Item | list:

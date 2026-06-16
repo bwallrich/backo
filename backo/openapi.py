@@ -8,6 +8,8 @@ from .action import Action
 from .selection import Selection
 
 JSON_PATCH_SCHEMA: dict[str, Any] = {
+    "title": "json-patch",
+    "description": "A JSON Patch document as defined in RFC 6902.",
     "type": "array",
     "items": {
         "oneOf": [
@@ -63,6 +65,8 @@ JSON_PATCH_SCHEMA: dict[str, Any] = {
 
 
 BACKO_META_SCHEMA: dict[str, Any] = {
+    "title": "backo-meta",
+    "description": "Metadata of a Backo collection.",
     "type": "object",
     "properties": {
         "types": {"type": "array", "items": {"type": "string"}},
@@ -83,6 +87,13 @@ BACKO_META_SCHEMA: dict[str, Any] = {
         },
         "sub_scheme": {"type": "object"},
     },
+}
+
+BACKO_FILTER_SCHEMA: dict[str, Any] = {
+    "title": "backo-filter",
+    "description": "Filter for Backo selection.",
+    "type": "object",
+    "properties": {},  # TODO
 }
 
 
@@ -662,7 +673,7 @@ class OpenAPISpec:
         """
         Set OpenAPI specification for POST /items/_selections/<string:selection>/<string:id>
         """
-        for name, selection in selections.items():
+        for name in selections.keys():
             spec: dict[str, Any] = {}
             spec["summary"] = f"Selection {name} on {item_name}"
             spec["description"] = (
@@ -710,8 +721,15 @@ class OpenAPISpec:
             self.__add_spec(base_route + f"/{name}", "get", spec)
 
             spec = dict(spec)
+            del spec["parameters"]
             spec["operationId"] = f"selection_post_{name}_{item_name}"
-            spec["requestBody"] = {"content": {}}
+            spec["requestBody"] = {
+                "content": {
+                    "application/json": {
+                        "schema": {"$ref": "#/components/schemas/backo-filter"}
+                    }
+                }
+            }
 
             self.__add_spec(base_route + f"/{name}", "post", spec)
 
