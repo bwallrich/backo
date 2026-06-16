@@ -63,7 +63,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
         try:
             self._con = sqlite3.connect(f"{self._path}/{self._dbname}.db")
-            self._con.row_factory = sqlite3.Row
+            self._con.row_factory = sqlite3.Row # Enable to get a column indexed by name
             self._cursor = self._con.cursor()
         except Exception as e:
             raise DBError('SQLLite connection error at "{0}"', self._path) from e
@@ -376,6 +376,9 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
     # --- Columns & meta utils functions ---
 
     def _is_ref_list(self, col_data):
+        """
+        Check whether given col is a RefsList
+        """
         return "RefsList" in col_data["types"]
 
     def _is_many_to_many(self, col_data):
@@ -402,7 +405,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
     def _get_scalar_cols(self):
         """
-        Filter & get only Ref / RefsList cols
+        Get cols that are scalar (Ref or Atomic value)
         """
         return [
             (col_name, col_data)
@@ -412,7 +415,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
     def _get_one_to_many_cols_data(self):
         """
-        Filter & get only Ref cols
+        Get cols that are one-to-many relationship (Ref -> ?)
         """
         return [
             (col_name, col_data)
@@ -422,7 +425,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
     def _get_many_to_many_cols_data(self):
         """
-        Filter & get only RefsList - RefsList cols
+        Get cols data that are many-to-many relationship
         """
         return [
             self._many_to_many_data(col_name, col_data)
@@ -432,8 +435,11 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
 
     def _get_many_to_one_cols_data(self):
         """
-        Filter & get only RefsList - Ref cols
+        Get cols that are many-to-one relationship (RefsList -> ?)
         """
+        # Return some data about relationship and join table
+        # in this specific format  (compatbile with _many_to_many_data)
+        # Need to extract this to a class...
         return [
             {
                 "col_name": col_name,
@@ -469,6 +475,9 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         col = first_side[1].replace("$.", "").replace(".", "_")
         table_name = f"{first_side[0]}_{col}_{second_side[0]}"
 
+        # Return some data about relationship and join table
+        # in this specific format  (compatbile with _get_many_to_one_cols_data)
+        # Need to extract this to a class...
         return {
             "col_name": col_name,
             "data": col_data,
@@ -554,6 +563,7 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         """
         return query, (_id,)
 
+    # Note: non exhaustive ! need completion
     def _map_val(self, val, target_types):
         """
         Map a value according to given target type
@@ -569,11 +579,13 @@ class DBSQLConnector(DBConnector):  # pylint: disable=too-many-instance-attribut
         """
         Map a row result from SQL to an object
         """
+        # Create object
         o = {}
+
+        # Get cols that are not RefLists
         for col_name, col_data in self._scheme.items():
             col_types = col_data["types"]
-
-            row_dict = dict(row)
+            row_dict = dict(row) # Need to convert to dict (for indexation)
             if col_name in row_dict and "RefsList" not in col_types:
                 val = row[col_name]
                 if val:
