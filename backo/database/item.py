@@ -32,16 +32,16 @@ class Empty(BaseItem):
         return {}
 
 
-def _search_request(attribute, base_request):
-    return attribute.search_request(base_request)
+def _search_request(attribute, base_request, _id):
+    return attribute.search_request(base_request, _id)
 
 
 def _create_request(attribute, base_request, value):
     return attribute.create_request(base_request, value)
 
 
-def _delete_request(attribute, base_request):
-    return attribute.delete_request(base_request)
+def _delete_request(attribute, base_request, _id):
+    return attribute.delete_request(base_request, _id)
 
 
 class DatabaseItem:
@@ -84,34 +84,34 @@ class DatabaseItem:
         self.attributes = attributes
 
     def _request_list(
-        self, base_request, request_list, attributes_list, request_method
+        self, base_request, request_list, attributes_list, _id, request_method
     ):
         for attribute in attributes_list:
             if isinstance(attribute, list):
                 requests = []
-                self._request_list(base_request, requests, attribute, request_method)
+                self._request_list(base_request, requests, attribute, _id, request_method)
                 request_list.append(requests)
             elif isinstance(attribute, dict):
                 requests = {}
-                self._request_dict(base_request, requests, attribute, request_method)
+                self._request_dict(base_request, requests, attribute, _id, request_method)
                 request_list.append(requests)
             else:
-                request_list.append(request_method(attribute, base_request))
+                request_list.append(request_method(attribute, base_request, _id))
 
     def _request_dict(
-        self, base_request, request_dict, attributes_dict, request_method
+        self, base_request, request_dict, attributes_dict, _id, request_method
     ):
         for key, attribute in attributes_dict.items():
             if isinstance(attribute, list):
                 requests = []
-                self._request_list(base_request, requests, attribute, request_method)
+                self._request_list(base_request, requests, attribute, _id, request_method)
                 request_dict[key] = requests
             elif isinstance(attribute, dict):
                 requests = {}
-                self._request_dict(base_request, requests, attribute, request_method)
+                self._request_dict(base_request, requests, attribute, _id, request_method)
                 request_dict[key] = requests
             else:
-                request_dict[key] = request_method(attribute, base_request)
+                request_dict[key] = request_method(attribute, base_request, _id)
 
     def _request_list_with_values(
         self, base_request, request_list, attributes_list, values, request_method
@@ -170,7 +170,7 @@ class DatabaseItem:
         #  `base_request`, build a new request or do nothing.
         attributes_requests = {}
         self._request_dict(
-            base_request, attributes_requests, self.attributes, _search_request
+            base_request, attributes_requests, self.attributes, _id, _search_request
         )
         return base_request, attributes_requests
 
@@ -218,7 +218,7 @@ class DatabaseItem:
         #  `base_request`, build a new request or do nothing.
         attributes_requests = {}
         self._request_dict(
-            base_request, attributes_requests, self.attributes, _delete_request
+            base_request, attributes_requests, self.attributes, _id, _delete_request
         )
         return base_request, attributes_requests
 

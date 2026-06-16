@@ -10,7 +10,11 @@ from hamcrest import (
 )
 
 from backo.database.item import DatabaseItem, IdMapper
-from backo.database.request import DatabaseSearchRequest, DatabaseCreateRequest, DatabaseDeleteRequest
+from backo.database.request import (
+    DatabaseSearchRequest,
+    DatabaseCreateRequest,
+    DatabaseDeleteRequest,
+)
 
 
 class TestDatabaseItem(unittest.TestCase):
@@ -45,7 +49,9 @@ class TestDatabaseItem(unittest.TestCase):
                 attribute.search_request.call_args_list,
                 contains_exactly(
                     has_properties(
-                        args=contains_exactly(id_mapper.search_request.return_value)
+                        args=contains_exactly(
+                            id_mapper.search_request.return_value, "mock_id"
+                        )
                     )
                 ),
             )
@@ -101,7 +107,9 @@ class TestDatabaseItem(unittest.TestCase):
                 attribute.search_request.call_args_list,
                 contains_exactly(
                     has_properties(
-                        args=contains_exactly(id_mapper.search_request.return_value)
+                        args=contains_exactly(
+                            id_mapper.search_request.return_value, "mock_id"
+                        )
                     )
                 ),
             )
@@ -333,7 +341,9 @@ class TestDatabaseItem(unittest.TestCase):
                 attribute.delete_request.call_args_list,
                 contains_exactly(
                     has_properties(
-                        args=contains_exactly(id_mapper.delete_request.return_value)
+                        args=contains_exactly(
+                            id_mapper.delete_request.return_value, "mock_id"
+                        )
                     )
                 ),
             )
@@ -389,7 +399,9 @@ class TestDatabaseItem(unittest.TestCase):
                 attribute.delete_request.call_args_list,
                 contains_exactly(
                     has_properties(
-                        args=contains_exactly(id_mapper.delete_request.return_value)
+                        args=contains_exactly(
+                            id_mapper.delete_request.return_value, "mock_id"
+                        )
                     )
                 ),
             )
@@ -413,7 +425,6 @@ class TestDatabaseItem(unittest.TestCase):
                 ),
             ),
         )
-
 
     def test_load_simple_item(self):
         """Tests LdapItem.load method for a simple item, without references.
