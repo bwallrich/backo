@@ -12,6 +12,14 @@ class IdMapper(ABC):
     def search_request(self, _id) -> DatabaseSearchRequest:
         pass
 
+class BaseItem(ABC):
+    @abstractmethod
+    def base_item(self, base_response) -> dict:
+        pass
+
+class Empty(BaseItem):
+    def base_item(self, _base_response):
+        return {}
 
 class DatabaseItem:
     """A DatabaseItem specifies how data should be loaded from the database to
@@ -26,7 +34,7 @@ class DatabaseItem:
     DatabaseItem specifies how to retrieve them from a specific database.
     """
 
-    def __init__(self, id_mapper: IdMapper, attributes: dict[str, Any]):
+    def __init__(self, id_mapper: IdMapper, attributes: dict[str, Any], base = Empty()):
         """
         The `id_mapper` specifies how a unique backo `_id` can be built from the
         external database, and how the item can be queried later in the
@@ -49,6 +57,7 @@ class DatabaseItem:
         :param attributes: Specification of database attributes
         """
         self.id_mapper = id_mapper
+        self.base = base
         self.attributes = attributes
 
     def _search_request_list(self, root_request, request_list, attributes_list):
@@ -164,7 +173,7 @@ class DatabaseItem:
         Notice the `_id` is not yet included in the result, as it only includes
         values retrieved using the `attributes` specification.
         """
-        item = {}
+        item = self.base.base_item(root_request_response)
         # TODO: attributes is not necessarily a dict
         self._load_dict(root_request_response, attribute_responses, item, self.attributes)
         return item
