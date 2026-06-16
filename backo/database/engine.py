@@ -105,3 +105,12 @@ class DatabaseEngine:
         base_response, attributes_responses = self._execute_requests(
             base_request, attribute_requests, self.database_connection.execute_delete
         )
+
+    def save(self, _id, item_value):
+        base_request, attribute_requests = self.database_item.update_request(
+            _id, item_value
+        )
+
+        base_response, attributes_responses = self._execute_requests(
+            base_request, attribute_requests, self.database_connection.execute_update
+        )

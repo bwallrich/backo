@@ -14,3 +14,7 @@ class DatabaseConnection(ABC):
     @abstractmethod
     def execute_delete(self, query):
         pass
+
+    @abstractmethod
+    def execute_update(self, query):
+        pass

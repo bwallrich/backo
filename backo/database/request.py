@@ -8,3 +8,7 @@ class DatabaseCreateRequest:
 
 class DatabaseDeleteRequest:
     pass
+
+
+class DatabaseUpdateRequest:
+    pass

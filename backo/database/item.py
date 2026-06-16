@@ -20,6 +20,10 @@ class IdMapper(ABC):
     def delete_request(self, _id) -> DatabaseDeleteRequest:
         pass
 
+    @abstractmethod
+    def update_request(self, _id, item_value) -> DatabaseDeleteRequest:
+        pass
+
 
 class BaseItem(ABC):
     @abstractmethod
@@ -42,6 +46,10 @@ def _create_request(attribute, base_request, value):
 
 def _delete_request(attribute, base_request, _id):
     return attribute.delete_request(base_request, _id)
+
+
+def _update_request(attribute, base_request, _id, value):
+    return attribute.update_request(base_request, _id, value)
 
 
 class DatabaseItem:
@@ -89,11 +97,15 @@ class DatabaseItem:
         for attribute in attributes_list:
             if isinstance(attribute, list):
                 requests = []
-                self._request_list(base_request, requests, attribute, _id, request_method)
+                self._request_list(
+                    base_request, requests, attribute, _id, request_method
+                )
                 request_list.append(requests)
             elif isinstance(attribute, dict):
                 requests = {}
-                self._request_dict(base_request, requests, attribute, _id, request_method)
+                self._request_dict(
+                    base_request, requests, attribute, _id, request_method
+                )
                 request_list.append(requests)
             else:
                 request_list.append(request_method(attribute, base_request, _id))
@@ -104,11 +116,15 @@ class DatabaseItem:
         for key, attribute in attributes_dict.items():
             if isinstance(attribute, list):
                 requests = []
-                self._request_list(base_request, requests, attribute, _id, request_method)
+                self._request_list(
+                    base_request, requests, attribute, _id, request_method
+                )
                 request_dict[key] = requests
             elif isinstance(attribute, dict):
                 requests = {}
-                self._request_dict(base_request, requests, attribute, _id, request_method)
+                self._request_dict(
+                    base_request, requests, attribute, _id, request_method
+                )
                 request_dict[key] = requests
             else:
                 request_dict[key] = request_method(attribute, base_request, _id)
@@ -150,6 +166,44 @@ class DatabaseItem:
                 request_dict[key] = requests
             else:
                 request_dict[key] = request_method(attribute, base_request, value)
+
+    def _request_list_with_id_and_values(
+        self, base_request, request_list, attributes_list, _id, values, request_method
+    ):
+        for attribute, value in zip(attributes_list, values):
+            if isinstance(attribute, list):
+                requests = []
+                self._request_list_with_id_and_values(
+                    base_request, requests, attribute, _id, value, request_method
+                )
+                request_list.append(requests)
+            elif isinstance(attribute, dict):
+                requests = {}
+                self._request_dict_with_id_and_values(
+                    base_request, requests, attribute, _id, value, request_method
+                )
+                request_list.append(requests)
+            else:
+                request_list.append(request_method(attribute, base_request, _id, value))
+
+    def _request_dict_with_id_and_values(
+        self, base_request, request_dict, attributes_dict, _id, values, request_method
+    ):
+        for (key, attribute), value in zip(attributes_dict.items(), values.values()):
+            if isinstance(attribute, list):
+                requests = []
+                self._request_list_with_id_and_values(
+                    base_request, requests, attribute, _id, value, request_method
+                )
+                request_dict[key] = requests
+            elif isinstance(attribute, dict):
+                requests = {}
+                self._request_dict_with_id_and_values(
+                    base_request, requests, attribute, _id, value, request_method
+                )
+                request_dict[key] = requests
+            else:
+                request_dict[key] = request_method(attribute, base_request, _id, value)
 
     def search_request(self, _id):
         """Builds a set of search requests that will be able to load all the
@@ -219,6 +273,34 @@ class DatabaseItem:
         attributes_requests = {}
         self._request_dict(
             base_request, attributes_requests, self.attributes, _id, _delete_request
+        )
+        return base_request, attributes_requests
+
+    def update_request(self, _id, item_value):
+        """Builds a set of update requests that will be able to update the
+        attributes of the item represented by `_id` with values from
+        `item_value`.
+
+        :param _id: Backo ID of the item to update
+        :param item_value: JSON-like dict with values of attributes of the new
+        item
+        """
+
+        # Builds request required by the `id_mapper` to create the `item` with
+        # value `item_value` and initialize its _id
+        base_request = self.id_mapper.update_request(_id, item_value)
+
+        #  Builds additional requests required to create all `attributes` of the
+        #  `DatabaseItem`. Each attribute is allowed to either modify the
+        #  `base_request`, build a new request or do nothing.
+        attributes_requests = {}
+        self._request_dict_with_id_and_values(
+            base_request,
+            attributes_requests,
+            self.attributes,
+            _id,
+            item_value,
+            _update_request,
         )
         return base_request, attributes_requests
 

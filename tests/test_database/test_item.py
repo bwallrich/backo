@@ -14,6 +14,7 @@ from backo.database.request import (
     DatabaseSearchRequest,
     DatabaseCreateRequest,
     DatabaseDeleteRequest,
+    DatabaseUpdateRequest,
 )
 
 
@@ -410,6 +411,185 @@ class TestDatabaseItem(unittest.TestCase):
             delete_requests,
             contains_exactly(
                 id_mapper.delete_request.return_value,
+                has_entries(
+                    {
+                        "name": attribute_requests[0],
+                        "nested": {
+                            "data": [
+                                [attribute_requests[1], attribute_requests[2]],
+                                attribute_requests[3],
+                                {"nested_data": attribute_requests[4]},
+                            ],
+                            "time": attribute_requests[5],
+                        },
+                    }
+                ),
+            ),
+        )
+
+    def test_update_request_simple_item(self):
+        id_mapper = MagicMock(spec=IdMapper)
+
+        attribute_requests = [MagicMock(spec=DatabaseUpdateRequest) for _ in range(3)]
+        attribute_mocks = [
+            MagicMock(spec=DatabaseItem, request=attribute_requests[i])
+            for i in range(3)
+        ]
+        for i in range(3):
+            attribute_mocks[i].update_request.return_value = attribute_requests[i]
+
+        database_item = DatabaseItem(
+            id_mapper,
+            {
+                "login": attribute_mocks[0],
+                "name": attribute_mocks[1],
+                "contact": attribute_mocks[2],
+            },
+        )
+
+        update_requests = database_item.update_request(
+            "mock_id", {"login": "up_login", "name": "up_name", "contact": "up_contact"}
+        )
+
+        assert_that(
+            id_mapper.update_request.call_args_list,
+            contains_exactly(
+                has_properties(
+                    args=contains_exactly(
+                        "mock_id",
+                        has_entries(
+                            {
+                                "login": "up_login",
+                                "name": "up_name",
+                                "contact": "up_contact",
+                            }
+                        ),
+                    )
+                )
+            ),
+        )
+        for attribute, value in zip(
+            attribute_mocks, ["up_login", "up_name", "up_contact"]
+        ):
+            assert_that(
+                attribute.update_request.call_args_list,
+                contains_exactly(
+                    has_properties(
+                        args=contains_exactly(
+                            id_mapper.update_request.return_value, "mock_id", value
+                        )
+                    )
+                ),
+            )
+
+        assert_that(
+            update_requests,
+            contains_exactly(
+                id_mapper.update_request.return_value,
+                has_entries(
+                    {
+                        "login": attribute_requests[0],
+                        "name": attribute_requests[1],
+                        "contact": attribute_requests[2],
+                    }
+                ),
+            ),
+        )
+
+    def test_update_request_with_complex_nested_attributes(self):
+        id_mapper = MagicMock(spec=IdMapper)
+
+        attribute_requests = [MagicMock(spec=DatabaseUpdateRequest) for _ in range(6)]
+        attribute_mocks = [
+            MagicMock(spec=DatabaseItem, request=attribute_requests[i])
+            for i in range(6)
+        ]
+        for i in range(6):
+            attribute_mocks[i].update_request.return_value = attribute_requests[i]
+
+        database_item = DatabaseItem(
+            id_mapper,
+            {
+                "name": attribute_mocks[0],
+                "nested": {
+                    "data": [
+                        [attribute_mocks[1], attribute_mocks[2]],
+                        attribute_mocks[3],
+                        {"nested_data": attribute_mocks[4]},
+                    ],
+                    "time": attribute_mocks[5],
+                },
+            },
+        )
+
+        update_requests = database_item.update_request(
+            "mock_id",
+            {
+                "name": "up_name",
+                "nested": {
+                    "data": [
+                        [12, 13],
+                        "data_2",
+                        {"nested_data": "up_nested_value"},
+                    ],
+                    "time": "up_time",
+                },
+            },
+        )
+
+        assert_that(
+            id_mapper.update_request.call_args_list,
+            contains_exactly(
+                has_properties(
+                    args=contains_exactly(
+                        "mock_id",
+                        has_entries(
+                            {
+                                "name": "up_name",
+                                "nested": has_entries(
+                                    {
+                                        "data": contains_exactly(
+                                            contains_exactly(12, 13),
+                                            "data_2",
+                                            has_entries(
+                                                {"nested_data": "up_nested_value"}
+                                            ),
+                                        ),
+                                        "time": "up_time",
+                                    }
+                                ),
+                            }
+                        ),
+                    )
+                )
+            ),
+        )
+        for attribute, value in zip(
+            attribute_mocks,
+            [
+                "up_name",
+                12,
+                13,
+                "data_2",
+                "up_nested_value",
+                "up_time",
+            ],
+        ):
+            assert_that(
+                attribute.update_request.call_args_list,
+                contains_exactly(
+                    has_properties(
+                        args=contains_exactly(
+                            id_mapper.update_request.return_value, "mock_id", value
+                        )
+                    )
+                ),
+            )
+
+        assert_that(
+            update_requests,
+            contains_exactly(
+                id_mapper.update_request.return_value,
                 has_entries(
                     {
                         "name": attribute_requests[0],
