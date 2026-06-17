@@ -48,3 +48,5 @@ class TestOpenAPI(unittest.TestCase):
         self.assertIn("backo-meta", spec["components"]["schemas"])
         self.assertIn("json-patch", spec["components"]["schemas"])
         self.assertIn("backo-filter", spec["components"]["schemas"])
+        # Expecting no routes
+        self.assertEqual(len(spec["paths"]), 0)
