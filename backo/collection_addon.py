@@ -12,7 +12,6 @@ from stricto import Permissions
 
 from .log import log_system, LogLevel
 
-
 log = log_system.get_or_create_logger("select", LogLevel.INFO)
 
 

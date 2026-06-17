@@ -13,7 +13,6 @@ sys.path.insert(1, "../../../stricto")
 
 from stricto import Kparse, validation_parameters
 
-
 KPARSE_MODEL = {
     "buffer_size": {"type": int, "default": 8192},
 }

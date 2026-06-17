@@ -2,6 +2,9 @@
 backoffice : The main application
 """
 
+# linter is lost with different modules with the same name
+# pylint: disable=no-name-in-module
+
 import json
 import sys
 from functools import wraps

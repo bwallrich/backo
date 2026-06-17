@@ -2,6 +2,7 @@ pyyaml
 mongo
 black
 flask
+requests
 pyjwt
 deepdiff
 python-magic

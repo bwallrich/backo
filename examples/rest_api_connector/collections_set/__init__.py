@@ -1,6 +1,4 @@
 """Module for all collections"""
 
-from .books import books
+from .vms import vms
 from .users import users
-
-__all__ = ["books", "users"]

@@ -3,7 +3,6 @@
 # pylint: disable=unused-argument, logging-fstring-interpolation
 
 from backo import (
-    Dict,
     String,
     Collection,
     Item,
@@ -12,9 +11,9 @@ from backo import (
     LogLevel,
 )
 
-from .db_country_connector import MyDBRestfullConnector
+from .vms_connector import VMsConnector
 
-log = log_system.get_or_create_logger("countries", LogLevel.INFO)
+log = log_system.get_or_create_logger("vms", LogLevel.INFO)
 
 
 # ------------------------------------------------
@@ -23,15 +22,12 @@ log = log_system.get_or_create_logger("countries", LogLevel.INFO)
 
 
 # --------------------
-# Description of "what is a country"
+# Description of "what is a vm"
 # --------------------
 item = Item(
     {
-        # "name": Dict({"common": String(), "official": String()}),
         "name": String(),
-        "cca2": String(),
-        "cca3": String(),
-        "flags": Dict({"png": String(), "svg": String(), "alt": String()}),
+        "image": String(),
     },
     meta_data_handler=GenericMetaDataHandler(),
 )
@@ -40,16 +36,9 @@ item = Item(
 # ------------------------------------------------
 # COLLECTION
 # ------------------------------------------------
-connector = MyDBRestfullConnector()
+connector = VMsConnector()
 
-countries = Collection(
-    "countries",
-    item,
-    connector,
-    can_create=False,
-    can_modify=False,
-    can_delete=False,
-)
+vms = Collection("vms", item, connector)
 
 
 # ------------------------------------------------

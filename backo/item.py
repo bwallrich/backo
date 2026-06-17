@@ -15,7 +15,6 @@ from .meta_data_handler import StandardMetaDataHandler, GenericMetaDataHandler
 from .loop_path import LoopPath
 from .status import StatusType
 
-
 log = log_system.get_or_create_logger("Item")
 
 # used for developpement
@@ -460,5 +459,4 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
             self._collection.name,
             self._id,
         )
-        print(f"Item trigg created {id(self)} {self.get_value()}")
         self.trigg("created", **kwargs)

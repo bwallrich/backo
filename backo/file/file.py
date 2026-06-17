@@ -12,7 +12,6 @@ import io
 import magic
 from werkzeug.datastructures import FileStorage
 
-
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
@@ -448,10 +447,6 @@ class File(Dict):
 
         # check the content_type
         if self._authorized_mime_types is not None:
-            print(
-                f"File check constraint mime types {type(value)} {self._authorized_mime_types}"
-            )
-
             mt = None
             if isinstance(value, File):
                 mt = value.content_type.get_value()

@@ -95,3 +95,7 @@ Database
 .. autoclass:: DBYmlConnector
    :members:
    :show-inheritance: 
+
+.. autoclass:: DBRestfullConnector
+   :members:
+   :show-inheritance: 

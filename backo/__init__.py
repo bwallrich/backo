@@ -14,6 +14,8 @@ from .item import Item
 from .db_yml_connector import DBYmlConnector
 from .db_mongo_connector import DBMongoConnector
 from .db_connector import DBConnector
+from .db_restfull_connector import DBRestfullConnector
+from .db_backo_redirect import DBRedirect
 from .current_user import current_user, CurrentUser, CurrentUserWrapper
 from .error import (
     DBError,

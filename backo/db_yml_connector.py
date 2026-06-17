@@ -17,7 +17,6 @@ from .db_connector import DBConnector
 from .error import NotFoundError, DBError
 from .log import log_system
 
-
 KPARSE_MODEL = {"path": {"type": str, "default": "/tmp"}}
 
 log = log_system.get_or_create_logger("yml")

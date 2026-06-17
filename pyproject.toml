@@ -16,6 +16,7 @@ classifiers = [
 dependencies = [
   "pyjwt",
   "flask",
+  "requests",
   "pyyaml",
   "deepdiff",
   "python-magic",

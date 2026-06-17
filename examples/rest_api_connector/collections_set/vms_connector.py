@@ -1,5 +1,5 @@
 """
-Module using DBRestfullConnector to connect to restcountries.com API and retrieve country data.
+Module using DBRestfullConnector to connect to the Hypervisor REST API
 
 Note: we assume that the signature of some inherited methods differ from the mother class
 """
@@ -12,21 +12,20 @@ from backo import (
     DBError,
 )
 
-log = log_system.get_or_create_logger("wget", LogLevel.DEBUG)
+log = log_system.get_or_create_logger("vms-connector", LogLevel.DEBUG)
 
 
-class MyDBRestfullConnector(
-    DBRestfullConnector
-):  # pylint: disable=too-many-instance-attributes
+class VMsConnector(DBRestfullConnector):  # pylint: disable=too-many-instance-attributes
     """An example of a rest API connector"""
 
     def __init__(self, **kwargs):
         """constructor"""
         DBRestfullConnector.__init__(
             self,
-            host="www.apicountries.com",
-            tls=True,
-            prefix="countries",
+            host="localhost",
+            port=12345,
+            tls=False,
+            prefix="api/v1/hypervisor",
             **kwargs,
         )
 
@@ -40,40 +39,35 @@ class MyDBRestfullConnector(
         :rtype: str
 
         """
-        return o["alpha3Code"]
-
-    def _clean_data(self, o: dict) -> dict:
-        """clean data from unwanted informations
-
-        :param o: the object
-        :type o: dict
-        """
-        n = {}
-        n["_id"] = self.generate_id(o)
-        n["name"] = o["name"]
-        n["flags"] = o["flags"]
-        n["cca2"] = o["alpha2Code"]
-        n["cca3"] = o["alpha3Code"]
-        return n
+        return o["_id"]
 
     def drop(self):  # pylint: disable=unused-argument
-        raise DBError("MyDBRestfullConnector doenst implement drop() method")
+        raise DBError("VMsConnector doenst implement drop() method")
 
     def create(self, o: dict) -> str:  # pylint: disable=unused-argument
-        raise DBError("MyDBRestfullConnector doenst implement create() method")
+        return super().create(
+            endpoint="vms",
+            o=o,
+        )
 
     def save(self, _id: str, o: dict):  # pylint: disable=unused-argument
-        raise DBError("MyDBRestfullConnector doenst implement save() method")
+        return super().save(
+            _id,
+            endpoint="vms",
+            o=o,
+        )
 
     def delete_by_id(self, _id: str):  # pylint: disable=unused-argument
-        raise DBError("MyDBRestfullConnector doenst implement delete_by_id() method")
+        return super().delete_by_id(
+            _id,
+            endpoint="vms",
+        )
 
     def get_by_id(self, _id: str) -> dict:
         """See :func:`DBConnector.get_by_id`"""
         return super().get_by_id(
             _id,
-            endpoint="alpha",
-            query_options={"fields": "name,flags,cca2,cca3"},
+            endpoint="vms",
         )
 
     def select(
@@ -102,8 +96,9 @@ class MyDBRestfullConnector(
         return super().select(
             select_filter,
             projection,
-            page_size,
-            num_of_element_to_skip,
             sort_object,
-            **kwargs,
+            num_of_element_to_skip,
+            page_size,
+            endpoint="vms",
+            method="GET",
         )

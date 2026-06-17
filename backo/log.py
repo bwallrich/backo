@@ -71,6 +71,20 @@ class LogLevel:  # pylint: disable=too-few-public-methods
     DEBUG = logging.DEBUG
     NOTSET = logging.NOTSET
 
+    @classmethod
+    def get(cls, level_as_str: str) -> int:
+        """Return the level
+
+        :param level_as_str: a level in string (like "ERROR", "WARNING"...)
+        :type level_as_str: str
+        :return: logging facility
+        :rtype: int
+        """
+        try:
+            return object.__getattribute__(LogLevel, level_as_str)
+        except AttributeError:
+            return 0
+
 
 def stack(level: int = 10) -> str:
     """Return the stack of call

@@ -25,7 +25,6 @@ from .collection_addon import CollectionAddon
 from .log import log_system, LogLevel
 from .error import DBError
 
-
 log = log_system.get_or_create_logger("select", LogLevel.INFO)
 
 KPARSE_MODEL = {

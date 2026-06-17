@@ -35,7 +35,7 @@ class TestBackoffice(unittest.TestCase):
         response = self.client.get("/nationality/countries/can")
         self.assertEqual(response.status_code, 200)
         results = json.loads(response.data)
-        self.assertEqual(results["name"]["common"], "Canada")
+        self.assertEqual(results["name"], "Canada")
         self.assertEqual(results["_id"], "CAN")
 
     def test_get_a_false_country(self):
@@ -49,7 +49,7 @@ class TestBackoffice(unittest.TestCase):
         """
         try to select country
         """
-        response = self.client.get("/nationality/countries?name.common=France")
+        response = self.client.get("/nationality/countries?name=France")
         self.assertEqual(response.status_code, 200)
         results = json.loads(response.data)
         self.assertEqual(results["total"], 1)

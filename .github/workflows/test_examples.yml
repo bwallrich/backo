@@ -1,0 +1,57 @@
+name: TestExamples
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+    services:
+      mongodb:
+        image: mongo:latest
+        env:
+          MONGO_INITDB_DATABASE: testMongo
+        ports:
+          - 27017:27017
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libmagic1
+        python -m pip install --upgrade pip
+        python -m pip install -r requirements.txt
+        python -m pip install -r examples/rest_api_connector/requirements.txt
+
+    - name: Run media library tests
+      working-directory: examples/media_library
+      run: |
+        python -m unittest tests
+
+    - name: Start REST API example server
+      working-directory: examples/rest_api_connector/rest-api
+      run: |
+        nohup python rest_api.py &
+        echo $! > "$RUNNER_TEMP/rest_api_connector.pid"
+
+    - name: Wait for REST API example server
+      run: |
+        curl --retry 30 --retry-delay 1 --retry-connrefused --fail http://127.0.0.1:12345/api/v1/hypervisor/vms
+
+    - name: Run rest_api_connector tests
+      working-directory: examples/rest_api_connector
+      run: |
+        python -m unittest tests
+
+    - name: Stop REST API example server
+      if: always()
+      run: |
+        if [ -f "$RUNNER_TEMP/rest_api_connector.pid" ]; then
+          kill "$(cat "$RUNNER_TEMP/rest_api_connector.pid")" || true
+        fi
