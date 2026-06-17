@@ -9,9 +9,7 @@ from backo import (
     DBRestfullConnector,
     log_system,
     LogLevel,
-    NotFoundError,
     DBError,
-    RestAPIError,
 )
 
 log = log_system.get_or_create_logger("wget", LogLevel.DEBUG)
@@ -26,9 +24,9 @@ class MyDBRestfullConnector(
         """constructor"""
         DBRestfullConnector.__init__(
             self,
-            host="restcountries.com",
+            host="www.apicountries.com",
             tls=True,
-            prefix="v3.1",
+            prefix="countries",
             **kwargs,
         )
 
@@ -42,16 +40,21 @@ class MyDBRestfullConnector(
         :rtype: str
 
         """
-        return o["cca3"]
+        return o["alpha3Code"]
 
-    def _clean_data(self, o: dict) -> None:
+    def _clean_data(self, o: dict) -> dict:
         """clean data from unwanted informations
 
         :param o: the object
         :type o: dict
         """
-        del o["name"]["nativeName"]
-        o["_id"] = self.generate_id(o)
+        n = {}
+        n["_id"] = self.generate_id(o)
+        n["name"] = o["name"]
+        n["flags"] = o["flags"]
+        n["cca2"] = o["alpha2Code"]
+        n["cca3"] = o["alpha3Code"]
+        return n
 
     def drop(self):  # pylint: disable=unused-argument
         raise DBError("MyDBRestfullConnector doenst implement drop() method")
@@ -67,20 +70,11 @@ class MyDBRestfullConnector(
 
     def get_by_id(self, _id: str) -> dict:
         """See :func:`DBConnector.get_by_id`"""
-        try:
-            return super().get_by_id(
-                _id,
-                endpoint="alpha",
-                query_options={"fields": "name,flags,cca2,cca3"},
-            )
-        except RestAPIError as e:
-            # restcountries.com returns a 400 - Bad request when a country is not found, so we consider that as a NotFoundError
-            status_code = None
-            if len(e.args) > 0 and isinstance(e.args[-1], int):
-                status_code = e.args[-1]
-            if status_code == 400:
-                raise NotFoundError('_id "{0}" not found', _id) from e
-            raise e
+        return super().get_by_id(
+            _id,
+            endpoint="alpha",
+            query_options={"fields": "name,flags,cca2,cca3"},
+        )
 
     def select(
         self,
@@ -89,6 +83,7 @@ class MyDBRestfullConnector(
         page_size=0,
         num_of_element_to_skip=0,
         sort_object={"_id": 1},
+        **kwargs,
     ) -> list:
         """See :func:`DBConnector.select`
 
@@ -104,35 +99,11 @@ class MyDBRestfullConnector(
             page_size,
         )
 
-        try:
-            status_code, list_of_countries = self._request(
-                endpoint="all",
-                query_options={"fields": "name,flags,cca2,cca3"},
-                method="GET",
-            )
-        except RestAPIError as e:
-            # restcountries.com may return 400 for invalid request parameters.
-            status_code = None
-            if len(e.args) > 0 and isinstance(e.args[-1], int):
-                status_code = e.args[-1]
-            if status_code == 400:
-                raise NotFoundError('selection error country "{0}"', status_code) from e
-            raise e
-
-        if status_code == 404:
-            raise NotFoundError('selection error country "{0}"', status_code)
-
-        if status_code != 200:
-            raise RestAPIError(
-                'REST API returned status "{0}" for countries selection',
-                status_code,
-                status_code,
-            )
-
-        if list_of_countries is None:
-            return []
-
-        for c in list_of_countries:
-            self._clean_data(c)
-
-        return list_of_countries
+        return super().select(
+            select_filter,
+            projection,
+            page_size,
+            num_of_element_to_skip,
+            sort_object,
+            **kwargs,
+        )

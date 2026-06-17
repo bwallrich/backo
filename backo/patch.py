@@ -1,5 +1,5 @@
 """
-Module providing the Item() Class
+Module providing the Patch() Class
 """
 
 # pylint: disable=wrong-import-position, no-member, import-error, protected-access, wrong-import-order, attribute-defined-outside-init
@@ -23,7 +23,6 @@ def must(value, o) -> bool:  # pylint: disable=unused-argument
     :return: True if start with a $.
     :rtype: bool
     """
-    print(f'MUST "{value}" -> {bool(re.match(r"^\$.*", value))}')
     return bool(re.match(r"^\$.*", value))
 
 

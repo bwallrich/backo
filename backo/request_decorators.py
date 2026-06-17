@@ -22,7 +22,7 @@ from stricto import (
     SKeyError,
     SRightError,
 )
-from .error import NotFoundError, PathNotFoundError, RestAPIError
+from .error import NotFoundError, PathNotFoundError, DBError
 from .log import log_system, LogLevel
 
 log = log_system.get_or_create_logger("http", LogLevel.ERROR)
@@ -64,12 +64,10 @@ def error_to_http_handler(f):
             return return_http_error(404, repr(e))
         except PathNotFoundError as e:
             return return_http_error(400, repr(e))
-        except RestAPIError as e:
-            # RestAPIError carries status code as the last positional arg.
-            status_code = 500
-            if len(e.args) > 0 and isinstance(e.args[-1], int):
-                status_code = e.args[-1]
-            return return_http_error(status_code, repr(e))
+        except DBError as e:
+            log.error(f"Error 500 DBError {e}")
+            log.error(traceback.format_exc())
+            return return_http_error(500, repr(e))
         except SRightError as e:
             log.error(repr(e))
             return return_http_error(403, repr(e))

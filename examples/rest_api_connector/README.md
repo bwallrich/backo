@@ -36,14 +36,13 @@ The remote REST API is reachavalabler at `http://localhost:12345/api/v1/hypervis
 
 In addition to `backo` and its standard dependencies, this example requires:
 
-- `coloredlogs`
 - `pymongo`
 - `flask_cors`
 
 Install them in your environment:
 
 ```bash
-pip install coloredlogs pymongo flask-cors
+pip install pymongo flask-cors
 or
 pip install -r requirements.txt
 ```
@@ -104,13 +103,10 @@ For example, to get a specific VM we call `DBRestfullConnector.get_by_id` for th
 ```python
     def get_by_id(self, _id: str) -> dict:
         """See :func:`DBConnector.get_by_id`"""
-        try:
-            return super().get_by_id(
-                _id,
-                endpoint="vms",
-            )
-        except RestAPIError as e:
-            raise e
+        return super().get_by_id(
+            _id,
+            endpoint="vms",
+        )
 ```
 
 The [vms_connector.py](./collections_set/vms_connector.py) file implements the whole interface with the [rest-api](./rest-api/) REST API.

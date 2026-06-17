@@ -27,7 +27,8 @@ log = log_system.get_or_create_logger("countries", LogLevel.INFO)
 # --------------------
 item = Item(
     {
-        "name": Dict({"common": String(), "official": String()}),
+        # "name": Dict({"common": String(), "official": String()}),
+        "name": String(),
         "cca2": String(),
         "cca3": String(),
         "flags": Dict({"png": String(), "svg": String(), "alt": String()}),

@@ -9,9 +9,7 @@ from backo import (
     DBRestfullConnector,
     log_system,
     LogLevel,
-    NotFoundError,
     DBError,
-    RestAPIError,
 )
 
 log = log_system.get_or_create_logger("vms-connector", LogLevel.DEBUG)
@@ -47,42 +45,30 @@ class VMsConnector(DBRestfullConnector):  # pylint: disable=too-many-instance-at
         raise DBError("VMsConnector doenst implement drop() method")
 
     def create(self, o: dict) -> str:  # pylint: disable=unused-argument
-        try:
-            return super().create(
-                endpoint="vms",
-                o=o,
-            )
-        except RestAPIError as e:
-            raise e
+        return super().create(
+            endpoint="vms",
+            o=o,
+        )
 
     def save(self, _id: str, o: dict):  # pylint: disable=unused-argument
-        try:
-            return super().save(
-                _id,
-                endpoint="vms",
-                o=o,
-            )
-        except RestAPIError as e:
-            raise e
+        return super().save(
+            _id,
+            endpoint="vms",
+            o=o,
+        )
 
     def delete_by_id(self, _id: str):  # pylint: disable=unused-argument
-        try:
-            return super().delete_by_id(
-                _id,
-                endpoint="vms",
-            )
-        except RestAPIError as e:
-            raise e
+        return super().delete_by_id(
+            _id,
+            endpoint="vms",
+        )
 
     def get_by_id(self, _id: str) -> dict:
         """See :func:`DBConnector.get_by_id`"""
-        try:
-            return super().get_by_id(
-                _id,
-                endpoint="vms",
-            )
-        except RestAPIError as e:
-            raise e
+        return super().get_by_id(
+            _id,
+            endpoint="vms",
+        )
 
     def select(
         self,
@@ -91,6 +77,7 @@ class VMsConnector(DBRestfullConnector):  # pylint: disable=too-many-instance-at
         page_size=0,
         num_of_element_to_skip=0,
         sort_object={"_id": 1},
+        **kwargs,
     ) -> list:
         """See :func:`DBConnector.select`
 
@@ -106,35 +93,12 @@ class VMsConnector(DBRestfullConnector):  # pylint: disable=too-many-instance-at
             page_size,
         )
 
-        try:
-            status_code, list_of_vms = self._request(
-                endpoint="vms",
-                method="GET",
-            )
-        except RestAPIError as e:
-            raise e
-
-        if status_code == 404:
-            raise NotFoundError('selection error vm "{0}"', status_code)
-
-        if status_code != 200:
-            raise RestAPIError(
-                'REST API returned status "{0}" for vms selection',
-                status_code,
-                status_code,
-            )
-
-        if list_of_vms is None:
-            return []
-
-        # Rest API is a backo one, get the result from the response
-        if not isinstance(list_of_vms, list):
-            if isinstance(list_of_vms, dict):
-                if "result" in list_of_vms and isinstance(list_of_vms["result"], list):
-                    list_of_vms = list_of_vms["result"]
-                else:
-                    raise DBError(
-                        'select "vms" return a database error (not a list)', "vms"
-                    )
-
-        return list_of_vms
+        return super().select(
+            select_filter,
+            projection,
+            sort_object,
+            num_of_element_to_skip,
+            page_size,
+            endpoint="vms",
+            method="GET",
+        )

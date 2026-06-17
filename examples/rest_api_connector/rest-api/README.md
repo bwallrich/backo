@@ -15,14 +15,13 @@ The API prefix for VMs is:
 
 In addition to `backo` and its standard dependencies, this example requires:
 
-- `coloredlogs`
 - `pymongo`
 - `flask_cors`
 
 Install them in your environment:
 
 ```bash
-pip install coloredlogs pymongo flask-cors
+pip install pymongo flask-cors
 ```
 
 ## Run The Example

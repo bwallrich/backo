@@ -7,10 +7,8 @@ backoffice : The main application
 
 import sys
 import argparse
-import logging
 from pathlib import Path
 
-import coloredlogs
 import yaml
 from flask import Flask
 from flask_cors import CORS
@@ -18,7 +16,10 @@ from flask_cors import CORS
 sys.path.insert(1, "../../../stricto")
 sys.path.insert(1, "../../../backo")
 import constants
-from backo import Backoffice
+from backo import Backoffice, log_system, LogLevel
+
+log_system.add_handler(log_system.set_streamhandler())
+log = log_system.get_or_create_logger("rest_api_example")
 
 
 def create_app(config: dict):
@@ -29,7 +30,7 @@ def create_app(config: dict):
     setup_data_dir(config)
 
     # Set up logging
-    setup_logging(config["logging"]["level"])
+    log_system.setLevel(LogLevel.get(config["logging"]["level"]))
 
     # My back office
     myback = Backoffice("it")
@@ -70,26 +71,6 @@ def load_config(config_path: str) -> dict:
         config = yaml.safe_load(f)
 
     return config
-
-
-def setup_logging(level: str):
-    """
-    Set up logging configuration.
-
-    Args:
-        level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-    """
-    log_level_map = {
-        "DEBUG": logging.DEBUG,
-        "INFO": logging.INFO,
-        "WARNING": logging.WARNING,
-        "ERROR": logging.ERROR,
-        "CRITICAL": logging.CRITICAL,
-    }
-    log_level = log_level_map.get(level.upper(), logging.INFO)
-
-    # Configure standard logging
-    coloredlogs.install(level=log_level)
 
 
 def setup_data_dir(config: dict):
@@ -147,7 +128,7 @@ def main():
     host = config["server"]["host"]
     port = config["server"]["port"]
 
-    logging.warning(f"Starting server on {host}:{port}")
+    log.info(f"Starting server on {host}:{port}")
     app.run(host=host, port=port)
 
 

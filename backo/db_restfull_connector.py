@@ -7,10 +7,12 @@ Module providing a generic REST API based database connector.
 from abc import abstractmethod
 from typing import Callable
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from stricto import Kparse
 
 from .db_connector import DBConnector
-from .error import NotFoundError, RestAPIError
+from .error import NotFoundError, DBError
 from .log import log_system, LogLevel
 
 log = log_system.get_or_create_logger("db-restfull-connector", LogLevel.DEBUG)
@@ -42,20 +44,23 @@ class DBRestfullConnector(DBConnector):
 
     This connector allows complete interaction with other REST APIs.
 
-    :param ``**kwargs``:
-        - *host=* ``str`` -- The API host
-        - *port=* ``int`` -- The API port
-        - *tls=* ``bool`` -- Whether to use TLS (HTTPS) for API requests
-        - *validate_cert=* ``bool`` -- Whether to validate TLS certificates (if TLS is True)
-        - *prefix=* ``str`` -- Path prefix used for all endpoints
-        - *username=* ``str`` -- Username for basic authentication (optional)
-        - *password=* ``str`` -- Password for basic authentication (optional)
-        - *auth_token=* ``str`` -- Bearer token for authentication (optional)
-        - *restriction=* ``Callable`` -- Restriction filter function (not implemented)
     """
 
     def __init__(self, **kwargs):
-        """constructor"""
+        """
+
+        :param ``**kwargs``:
+            - *host=* ``str`` -- The API host
+            - *port=* ``int`` -- The API port
+            - *tls=* ``bool`` -- Whether to use TLS (HTTPS) for API requests
+            - *validate_cert=* ``bool`` -- Whether to validate TLS certificates (if TLS is True)
+            - *prefix=* ``str`` -- Path prefix used for all endpoints
+            - *username=* ``str`` -- Username for basic authentication (optional)
+            - *password=* ``str`` -- Password for basic authentication (optional)
+            - *auth_token=* ``str`` -- Bearer token for authentication (optional)
+            - *restriction=* ``Callable`` -- Restriction filter function (not implemented)
+
+        """
         options = Kparse(kwargs, KPARSE_MODEL)
 
         self._host = options.get("host")
@@ -69,6 +74,12 @@ class DBRestfullConnector(DBConnector):
 
         # Store the API base URI for use in endpoint methods
         self._uri = self._build_uri()
+
+        self._session = requests.Session()
+        retry = Retry(connect=3, backoff_factor=0.5)
+        adapter = HTTPAdapter(max_retries=retry)
+        self._session.mount(self._uri, adapter)
+        self._session.mount(self._uri, adapter)
 
         DBConnector.__init__(self, **kwargs)
 
@@ -111,7 +122,7 @@ class DBRestfullConnector(DBConnector):
         :type data: dict | list | None
         :param method: HTTP method (GET, POST, PUT, PATCH, DELETE...)
         :type method: str
-        :return: tuple(status_code, parsed JSON response when possible, else response text)
+        :return: tuple(status_code, parsed JSON response when possible, else response text, Error or None)
         """
         endpoint = endpoint.strip("/") if endpoint else ""
         uri = self._uri
@@ -130,7 +141,7 @@ class DBRestfullConnector(DBConnector):
             headers["Authorization"] = f"Bearer {self._auth_token}"
 
         try:
-            response = requests.request(
+            response = self._session.request(
                 method=method.upper(),
                 url=uri,
                 params=query_options,
@@ -144,48 +155,41 @@ class DBRestfullConnector(DBConnector):
             status_code = response.status_code
 
             if not response.text:
-                return status_code, None
+                return status_code, None, None
 
             try:
-                return status_code, response.json()
+                return status_code, response.json(), None
             except ValueError:
-                return status_code, response.text
+                return status_code, response.text, None
+
         except requests.exceptions.HTTPError as http_error:
-            raise RestAPIError(
-                'REST request error "{0} {1}" ({2})',
-                method.upper(),
-                uri,
-                http_error.response.status_code,
-            ) from http_error
+            return http_error.response.status_code, None, http_error
         except requests.exceptions.RequestException as request_error:
-            raise RestAPIError(
-                'REST connection error "{0} {1}": {2}',
-                method.upper(),
-                uri,
-                request_error,
-            ) from request_error
+            return None, None, request_error
+        except Exception as e: # pylint: disable=broad-exception-caught
+            return None, None, e
 
     @abstractmethod
     def drop(self, **kwargs):
         """Drop the collection / table / resource (TO implement in subclasses)
 
-        :param kwargs: Endpoint options
-        :type kwargs: dict
-        :param kwargs.endpoint: endpoint name relative to ``self._uri``
-        :type kwargs.endpoint: str | None
-        :param kwargs.method: HTTP method option from endpoint model (ignored by create,
-            which always uses ``POST``)
-        :type kwargs.method: str | None
-        :param kwargs.url_parameters: path parameters appended to endpoint
-        :type kwargs.url_parameters: list | None
-        :param kwargs.query_options: query string options appended after ``?``
-        :type kwargs.query_options: dict | None
-        :param kwargs.data: payload option from endpoint model (ignored by create,
-            which uses ``o`` as request payload)
-        :type kwargs.data: dict | list | None
+        
+        :param ``**kwargs``:
+            - *endpoint=* ``str | None`` -- endpoint name relative to ``self._uri``
+            - *method=* ``str | None`` -- HTTP method option from endpoint model \
+                (ignored by create, which always uses ``POST``)
+            - *url_parameters=* ``list | None`` -- path parameters appended to endpoint
+            - *query_options=* ``dict | None`` -- query string options appended after ``?``
+            - *data=* ``dict | None`` -- payload option from endpoint model (ignored by create,
+                which uses ``o`` as request payload)
+            - *username=* ``str`` -- Username for basic authentication (optional)
+            - *password=* ``str`` -- Password for basic authentication (optional)
+            - *auth_token=* ``str`` -- Bearer token for authentication (optional)
+            - *restriction=* ``Callable`` -- Restriction filter function (not implemented)
+
         :return: True if the object was successfully deleted
         :rtype: bool
-        :raise Error: Raise an error RestAPIError, NotFoundError or any db error
+        :raise Error: Raise an error DBError, NotFoundError or any db error
 
         """
 
@@ -210,7 +214,7 @@ class DBRestfullConnector(DBConnector):
         :type kwargs.data: dict | list | None
         :return: the object _id
         :rtype: str
-        :raise Error: Raise an error RestAPIError, NotFoundError or any db error
+        :raise Error: Raise an error DBError, NotFoundError or any db error
 
         """
         options = Kparse(kwargs, KPARSE_MODEL_ENDPOINT)
@@ -226,50 +230,35 @@ class DBRestfullConnector(DBConnector):
             query_options,
         )
 
-        try:
-            status_code, data = self._request(
-                endpoint=endpoint,
-                url_parameters=url_parameters,
-                query_options=query_options,
-                data=o,
-                method="POST",
-            )
-        except RestAPIError as e:
-            status_code = None
-            if len(e.args) > 0 and isinstance(e.args[-1], int):
-                status_code = e.args[-1]
+        status_code, data, error = self._request(
+            endpoint=endpoint,
+            url_parameters=url_parameters,
+            query_options=query_options,
+            data=o,
+            method="POST",
+        )
 
+        if error is not None:
             if status_code == 404:
-                raise NotFoundError('Create endpoint "{0}" not found', endpoint) from e
-
-            if status_code is not None:
-                raise RestAPIError(
-                    'REST API returned status "{0}" while creating object',
-                    status_code,
-                    status_code,
-                ) from e
-
-            raise RestAPIError("REST API error while creating object") from e
+                raise NotFoundError(
+                    'Create endpoint "{0}" not found', endpoint
+                ) from error
+            raise DBError('Endpoint "{0}" error', endpoint) from error
 
         if status_code == 404:
             raise NotFoundError('Create endpoint "{0}" not found', endpoint)
 
         if status_code not in (200, 201, 202):
-            raise RestAPIError(
+            raise DBError(
                 'REST API returned status "{0}" while creating object',
-                status_code,
                 status_code,
             )
 
         if isinstance(data, dict) and data.get("_id") is not None:
             return data.get("_id")
 
-        if o.get("_id") is not None:
-            return o.get("_id")
-
-        raise RestAPIError(
+        raise DBError(
             "REST API create response does not contain _id",
-            status_code,
         )
 
     def save(self, _id: str, o: dict, **kwargs):  # pylint: disable=unused-argument
@@ -293,7 +282,7 @@ class DBRestfullConnector(DBConnector):
         :type kwargs.data: dict | list | None
         :return: True if the object was successfully saved/updated
         :rtype: bool
-        :raise Error: Raise an error RestAPIError, NotFoundError or any db error
+        :raise Error: Raise an error DBError, NotFoundError or any db error
 
         """
         options = Kparse(kwargs, KPARSE_MODEL_ENDPOINT)
@@ -310,44 +299,29 @@ class DBRestfullConnector(DBConnector):
             query_options,
         )
 
-        try:
-            status_code, _ = self._request(
-                endpoint=endpoint,
-                url_parameters=url_parameters or [_id],
-                query_options=query_options,
-                method="PUT",
-                data=o,
-            )
-        except RestAPIError as e:
-            status_code = None
-            if len(e.args) > 0 and isinstance(e.args[-1], int):
-                status_code = e.args[-1]
+        status_code, _data, error = self._request(
+            endpoint=endpoint,
+            url_parameters=url_parameters or [_id],
+            query_options=query_options,
+            method="PUT",
+            data=o,
+        )
 
+        if error is not None:
             if status_code == 404:
-                raise NotFoundError('_id "{0}" not found', _id) from e
-
-            if status_code is not None:
-                raise RestAPIError(
-                    'REST API returned status "{0}" for _id "{1}"',
-                    status_code,
-                    _id,
-                    status_code,
-                ) from e
-
-            raise RestAPIError('REST API error while updating _id "{0}"', _id) from e
+                raise NotFoundError('_id "{0}" not found', _id) from error
+            log.error(error)
+            raise DBError('Endpoint "{0}" error', endpoint) from error
 
         if status_code == 404:
             raise NotFoundError('_id "{0}" not found', _id)
 
-        if status_code not in (200, 201, 202, 204):
-            raise RestAPIError(
-                'REST API returned status "{0}" for _id "{1}"',
+        if status_code not in (200, 201, 202):
+            raise DBError(
+                'REST API returned status "{0}" while saving object "{1}',
                 status_code,
                 _id,
-                status_code,
             )
-
-        return True
 
     def delete_by_id(self, _id: str, **kwargs) -> bool:
         """Delete the object by issuing a DELETE request to the REST API
@@ -370,7 +344,7 @@ class DBRestfullConnector(DBConnector):
         :type kwargs.data: dict | list | None
         :return: True if the object was successfully deleted
         :rtype: bool
-        :raise Error: Raise an error RestAPIError, NotFoundError or any db error
+        :raise Error: Raise an error DBError, NotFoundError or any db error
 
         """
         options = Kparse(kwargs, KPARSE_MODEL_ENDPOINT)
@@ -387,43 +361,27 @@ class DBRestfullConnector(DBConnector):
             query_options,
         )
 
-        try:
-            status_code, _ = self._request(
-                endpoint=endpoint,
-                url_parameters=url_parameters or [_id],
-                query_options=query_options,
-                method="DELETE",
-            )
-        except RestAPIError as e:
-            status_code = None
-            if len(e.args) > 0 and isinstance(e.args[-1], int):
-                status_code = e.args[-1]
+        status_code, _data, error = self._request(
+            endpoint=endpoint,
+            url_parameters=url_parameters or [_id],
+            query_options=query_options,
+            method="DELETE",
+        )
 
+        if error is not None:
             if status_code == 404:
-                raise NotFoundError('_id "{0}" not found', _id) from e
-
-            if status_code is not None:
-                raise RestAPIError(
-                    'REST API returned status "{0}" for _id "{1}"',
-                    status_code,
-                    _id,
-                    status_code,
-                ) from e
-
-            raise RestAPIError('REST API error while deleting _id "{0}"', _id) from e
+                raise NotFoundError('_id "{0}" not found', _id) from error
+            raise DBError('Endpoint "{0}" error', endpoint) from error
 
         if status_code == 404:
             raise NotFoundError('_id "{0}" not found', _id)
 
         if status_code not in (200, 202, 204):
-            raise RestAPIError(
-                'REST API returned status "{0}" for _id "{1}"',
+            raise DBError(
+                'REST API returned status "{0}" while saving object "{1}',
                 status_code,
                 _id,
-                status_code,
             )
-
-        return True
 
     def get_by_id(self, _id: str, **kwargs) -> dict:
         """Get the objectby its _id by issuing a GET request to the REST API
@@ -446,7 +404,7 @@ class DBRestfullConnector(DBConnector):
         :type kwargs.data: dict | list | None
         :return: the object corresponding to the _id
         :rtype: dict
-        :raise Error: Raise an error RestAPIError, NotFoundError or any db error
+        :raise Error: Raise an error DBError, NotFoundError or any db error
 
         """
         options = Kparse(kwargs, KPARSE_MODEL_ENDPOINT)
@@ -458,43 +416,30 @@ class DBRestfullConnector(DBConnector):
         log.debug(
             f"Get {_id} from endpoint {endpoint} with url_parameters {url_parameters} and query_options {query_options}"
         )
-        try:
-            status_code, data = self._request(
-                endpoint=endpoint,
-                url_parameters=url_parameters or [_id],
-                query_options=query_options,
-                method="GET",
-            )
-        except RestAPIError as e:
-            status_code = None
-            if len(e.args) > 0 and isinstance(e.args[-1], int):
-                status_code = e.args[-1]
+        status_code, data, error = self._request(
+            endpoint=endpoint,
+            url_parameters=url_parameters or [_id],
+            query_options=query_options,
+            method="GET",
+        )
 
+        if error is not None:
             if status_code == 404:
-                raise NotFoundError('_id "{0}" not found', _id) from e
-
-            if status_code is not None:
-                raise RestAPIError(
-                    'REST API returned status "{0}" for _id "{1}"',
-                    status_code,
-                    _id,
-                    status_code,
-                ) from e
-
-            raise RestAPIError('REST API error while getting _id "{0}"', _id) from e
+                raise NotFoundError('_id "{0}" not found', _id) from error
+            raise DBError('Endpoint "{0}" error', endpoint) from error
 
         if status_code == 404:
             raise NotFoundError('_id "{0}" not found', _id)
 
         if status_code != 200:
-            raise RestAPIError(
-                'REST API returned status "{0}" for _id "{1}"',
+            raise DBError(
+                'REST API returned status "{0}" while getting object "{1}',
                 status_code,
                 _id,
             )
 
         if hasattr(self, "_clean_data"):
-            self._clean_data(data)
+            return self._clean_data(data)
 
         return data
 
@@ -539,3 +484,48 @@ class DBRestfullConnector(DBConnector):
         :raise Error: Raise an error DBError or any db error
 
         """
+
+        options = Kparse(kwargs, KPARSE_MODEL_ENDPOINT)
+
+        endpoint = options.get("endpoint")
+
+        status_code, data, error = self._request(
+            endpoint=endpoint,
+            url_parameters=options.get("url_parameters"),
+            query_options=options.get("query_options"),
+            method="GET",
+        )
+
+        if error is not None:
+            if status_code == 404:
+                raise NotFoundError('Endpoint "{0}" not found', endpoint) from error
+            raise DBError('Endpoint "{0}" error', endpoint) from error
+
+        if status_code == 404:
+            raise NotFoundError('selection error "{0}"', status_code)
+
+        if status_code != 200:
+            raise DBError('selection error "{0}"', status_code)
+
+        if data is None:
+            return []
+
+        if isinstance(data, list):
+            if hasattr(self, "_clean_data"):
+                r = []
+                for d in data:
+                    r.append(self._clean_data(d))
+                return r
+            return data
+
+        if isinstance(data, dict):
+            if "result" in data and isinstance(data["result"], list):
+                if hasattr(self, "_clean_data"):
+                    r = []
+                    for d in data["result"]:
+                        r.append(self._clean_data(d))
+                    return r
+
+                return data["result"]
+
+        raise DBError('select endpoint "{0}" return non understandable dict', endpoint)

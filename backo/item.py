@@ -459,5 +459,4 @@ class Item(Dict):  # pylint: disable=too-many-instance-attributes
             self._collection.name,
             self._id,
         )
-        print(f"Item trigg created {id(self)} {self.get_value()}")
         self.trigg("created", **kwargs)
