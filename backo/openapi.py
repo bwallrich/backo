@@ -93,7 +93,7 @@ BACKO_FILTER_SCHEMA: dict[str, Any] = {
     "title": "backo-filter",
     "description": "Filter for Backo selection.",
     "type": "object",
-    "properties": {},  # TODO
+    "properties": {},  # TODO # pylint: disable=fixme
 }
 
 
