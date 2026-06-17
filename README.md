@@ -128,7 +128,7 @@ my_backoffice.build_routes(flask)
 
 It represents a database entity and includes all the methods required for CRUD operations: *Create*, *Read*, *Update*, and *Delete*.
 
-A generic object is a [stricto](https://github.com/bwallrich/stricto) `Dict()` object.
+A generic object is a [stricto](https://github.com/backo-stricto/stricto) `Dict()` object.
 
 
 
@@ -208,11 +208,11 @@ Relations cardinalities are expressed by the mean of `Ref()` and `RefsList()`:
 | Option for Ref | Default | Description |
 | - | - | - |
 | <kbd>coll=</kbd> | None | the collection to make the ref |
-| <kbd>field=</kbd> | None | The reverse field in the targeted collection (use [selector](https://github.com/bwallrich/stricto?tab=readme-ov-file#selectors) to target it) |
+| <kbd>field=</kbd> | None | The reverse field in the targeted collection (use [selector](https://github.com/backo-stricto/stricto?tab=readme-ov-file#selectors) to target it) |
 | <kbd>ods=</kbd> | ```DeleteStrategy.MUST_BE_EMPTY``` | *On Delete Strategy* see [ods](#deletion-strategies-ods)|
 | <kbd>ofs=</kbd> | ```FillStrategy.FILL``` | *On Fill Strategy* |
 
-And all options availables in [stricto String()](https://github.com/bwallrich/stricto?tab=readme-ov-file#string) fields.
+And all options availables in [stricto String()](https://github.com/backo-stricto/stricto?tab=readme-ov-file#string) fields.
 
 
 #### Deletion strategies (`ods`)
@@ -258,7 +258,7 @@ a_book = Item({
 
 ## Files objects
 
-backo can manage files in a simple way : Like other [stricto types](https://github.com/bwallrich/stricto?tab=readme-ov-file#basic-types).
+backo can manage files in a simple way : Like other [stricto types](https://github.com/backo-stricto/stricto?tab=readme-ov-file#basic-types).
 You can use File() or BlobFile().
 
 | object | Description |
@@ -266,7 +266,7 @@ You can use File() or BlobFile().
 | File() | Generic object to manage a file. You need to define a FileConnector to indicate the object File where to store the file |
 | BlobFile() | File data is integrated literally into the datastructure, so there is no need for a FileConnector. Reserved for small files. |
 
-You can use all [parameters](https://github.com/bwallrich/stricto?tab=readme-ov-file#types) for Files like other fields. 
+You can use all [parameters](https://github.com/backo-stricto/stricto?tab=readme-ov-file#types) for Files like other fields. 
 
 
 However there are extra specific parameters :
@@ -431,7 +431,7 @@ def your_function_name(right_name: str, o: Item) -> bool:
 An action represent some modifications to an Item witch is more complex than just a PATCH/PUT (modification).
 
 An action is compose by :
-1. an [Stricto Dict](https://github.com/bwallrich/stricto?tab=readme-ov-file#dict)
+1. an [Stricto Dict](https://github.com/backo-stricto/stricto?tab=readme-ov-file#dict)
 2. a function
 3. Some rights
 
@@ -509,11 +509,11 @@ See [actions routes](#actions-routes) for resulting RESTful API routes.
 ## Selection
 
 
-A selection is a *named* list of Items with sub elements provided by a [path](https://github.com/bwallrich/stricto#selectors).
+A selection is a *named* list of Items with sub elements provided by a [path](https://github.com/backo-stricto/stricto#selectors).
 
 An selection is compose by :
-1. a list of [selectors](https://github.com/bwallrich/stricto#selectors)
-2. a [filter](https://github.com/bwallrich/stricto#matching)
+1. a list of [selectors](https://github.com/backo-stricto/stricto#selectors)
+2. a [filter](https://github.com/backo-stricto/stricto#matching)
 3. Some rights
 
 > [!IMPORTANT]  
@@ -697,13 +697,13 @@ However, using jwt is a goot solution. See [Authentication](#authentication) for
 
 ### current_user API
 
-`current_user` is a very simple [Stricto Dict](https://github.com/bwallrich/stricto?tab=readme-ov-file#dict) (but can be [extended](#extend-current_user)). It contains :
+`current_user` is a very simple [Stricto Dict](https://github.com/backo-stricto/stricto?tab=readme-ov-file#dict) (but can be [extended](#extend-current_user)). It contains :
 
 | key | type | usage |
 | - | - | - |
-| _id | [Stricto String()](https://github.com/bwallrich/stricto?tab=readme-ov-file#string) | the _id of the user. 
-| login | [Stricto String()](https://github.com/bwallrich/stricto?tab=readme-ov-file#string) | the login or whatever you store . 
-| roles | [Stricto List( String() )](https://github.com/bwallrich/stricto?tab=readme-ov-file#list) | the list of roles for this users. A *role* is a kid of group the user belongs to | 
+| _id | [Stricto String()](https://github.com/backo-stricto/stricto?tab=readme-ov-file#string) | the _id of the user. 
+| login | [Stricto String()](https://github.com/backo-stricto/stricto?tab=readme-ov-file#string) | the login or whatever you store . 
+| roles | [Stricto List( String() )](https://github.com/backo-stricto/stricto?tab=readme-ov-file#list) | the list of roles for this users. A *role* is a kid of group the user belongs to | 
 | has_role() | function | return True or false to the role givent in param | 
 | reset() | function | change the current_user object type. See [extend current_user](#extend-current_user) for that| 
 
@@ -755,7 +755,7 @@ Api routes are generated
 ### CRUD Routes
 #### GET \<my-app-name\>/\<collection name\>/\<_id\> \?_view=\<view name\>
 
-```_view``` are defined in [stricto views](https://github.com/bwallrich/stricto?tab=readme-ov-file#views)
+```_view``` are defined in [stricto views](https://github.com/backo-stricto/stricto?tab=readme-ov-file#views)
 
 Return the object of this collection *by _id*.
 
@@ -789,12 +789,12 @@ Get a list of objects matching the query string. The query string can be with th
 | \<field\>.\<subfield\> | \<value\> | Matches items where `<field>` is a nested dictionary containing `<subfield>` equal to `<value>`. Example: `address.number=1` matches items where address.number equals to 1. |
 
 
-[list of available operators](https://github.com/bwallrich/stricto?tab=readme-ov-file#filtering-and-matching)
+[list of available operators](https://github.com/backo-stricto/stricto?tab=readme-ov-file#filtering-and-matching)
 
 
 | key | value | default | description |
 | - | - | - | - |
-| \_view | string | "client" | selects the view ([stricto views](https://github.com/bwallrich/stricto?tab=readme-ov-file#views))  |
+| \_view | string | "client" | selects the view ([stricto views](https://github.com/backo-stricto/stricto?tab=readme-ov-file#views))  |
 | \_page | int | - | sets the desired number of items per page in paginated data presentation |
 | \_skip | int | - | skips the n-first items of the result list in paginated data presentation. |
 
@@ -866,7 +866,7 @@ Delete the user that has _id = *1234*.
 
 #### PATCH /\<my-app-name\>/\<collection name\>/\<_id\>
 Partial change of an existing object whose id is `_id`.
-Please refer to the [Stricto patch method](https://github.com/bwallrich/stricto?tab=readme-ov-file#patch).
+Please refer to the [Stricto patch method](https://github.com/backo-stricto/stricto?tab=readme-ov-file#patch).
 
 ##### Example
 ```bash
@@ -883,14 +883,14 @@ Patch content can be a *list of patch operations*.
 
 Check the validity of an item field.
 
-Please refer to [stricto selectors](https://github.com/bwallrich/stricto#selectors) for more details on selectors.
+Please refer to [stricto selectors](https://github.com/backo-stricto/stricto#selectors) for more details on selectors.
 
 get must provide a json structure in the body :
 
 | field | type | descrimtion |
 | -- | -- | -- |
 | item | dict | the data to check. It can be partial, see examples belowv |
-| path | string | the field to check in the item. This is a selector. Please refer to [stricto selectors](https://github.com/bwallrich/stricto#selectors) for more details |
+| path | string | the field to check in the item. This is a selector. Please refer to [stricto selectors](https://github.com/backo-stricto/stricto#selectors) for more details |
 
 The answer is a status 200 message with a json structure :
 
@@ -995,9 +995,9 @@ Describe an element (an item, a key in an item)
 | transform | boolean | say there is a transformation function |
 | exists | boolean | false mean this field does not exist and must not be displayed |
 | rights | [meta rights description](#meta-rights-description) | the description of rights |
-| sub_scheme | [meta element description](#meta-element-description) | reccusive description for childs if this object is a [Dict](https://github.com/bwallrich/stricto?tab=readme-ov-file#dict) or an Item |
-| sub_type | [meta element description](#meta-element-description) | description of the content if this object is a [List](https://github.com/bwallrich/stricto?tab=readme-ov-file#list) |
-| sub_types | array of [meta element description](#meta-element-description) | description of the tuple content if this object is a [Tuple](https://github.com/bwallrich/stricto?tab=readme-ov-file#tuple) |
+| sub_scheme | [meta element description](#meta-element-description) | reccusive description for childs if this object is a [Dict](https://github.com/backo-stricto/stricto?tab=readme-ov-file#dict) or an Item |
+| sub_type | [meta element description](#meta-element-description) | description of the content if this object is a [List](https://github.com/backo-stricto/stricto?tab=readme-ov-file#list) |
+| sub_types | array of [meta element description](#meta-element-description) | description of the tuple content if this object is a [Tuple](https://github.com/backo-stricto/stricto?tab=readme-ov-file#tuple) |
 
 ##### meta rights description
 
@@ -1242,11 +1242,11 @@ moon_address.users # -> return [ astro._id ]
 
 ### _id
 
-You dont't have to care about *_ids* in your item description. Backo will alter schema to add `_id` for each Item (see [stricto schemas](https://github.com/bwallrich/stricto?tab=readme-ov-file#schemas) for details).
+You dont't have to care about *_ids* in your item description. Backo will alter schema to add `_id` for each Item (see [stricto schemas](https://github.com/backo-stricto/stricto?tab=readme-ov-file#schemas) for details).
 
 ### _meta
 
-the db_connector adds meta data to each item by [altering its schema](https://github.com/bwallrich/stricto?tab=readme-ov-file#schemas).
+the db_connector adds meta data to each item by [altering its schema](https://github.com/backo-stricto/stricto?tab=readme-ov-file#schemas).
 
 
 The provided *meta_data_handler* give this Dict() :

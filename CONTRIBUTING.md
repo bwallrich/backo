@@ -1,4 +1,4 @@
-# Contributing to ctricto
+# Contributing to btricto
 
 Help wanted! We'd love your contributions to backo. Please review the following guidelines before contributing. Also, feel free to propose changes to these guidelines by updating this file and submitting a pull request.
 
