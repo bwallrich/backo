@@ -6,13 +6,29 @@ import unittest
 
 from flask import Flask
 
-from backo import Backoffice
+from backo import (
+    Backoffice,
+    BlobFile,
+    Bool,
+    Collection,
+    DBYmlConnector,
+    Int,
+    Item,
+    String,
+)
+
+YML_DIR = "/tmp/backo_tests_openapi"
 
 
 class TestOpenAPI(unittest.TestCase):
     """
     Test OpenAPI specification generation.
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Setup test DBYmlConnector and clean it before each test
+        self.__connector = DBYmlConnector(path=YML_DIR)
 
     def test_openapi_route(self):
         """
@@ -50,3 +66,65 @@ class TestOpenAPI(unittest.TestCase):
         self.assertIn("backo-filter", spec["components"]["schemas"])
         # Expecting no routes
         self.assertEqual(len(spec["paths"]), 0)
+
+    def test_openapi_simple_collection(self):
+        """
+        Test OpenAPI specification generation for a backoffice with a simple collection.
+        """
+        # Setup Test Backoffice with a simple test Collection
+        backoffice = Backoffice("app")
+        backoffice.register_collection(
+            Collection(
+                "test",
+                Item(
+                    {
+                        "str": String(),
+                        "int": Int(),
+                        "bool": Bool(),
+                        "blobfile": BlobFile(),
+                    }
+                ),
+                self.__connector,
+            )
+        )
+        backoffice.build_routes(Flask(__name__))
+        spec = backoffice.get_openapi()
+        # expecting the test schema to be present in the components
+        self.assertIn("test", spec["components"]["schemas"])
+        # expecting all properties to be present in the test schema with the correct type
+        for properties, type in zip(
+            ["_id", "_meta", "str", "int", "bool", "blobfile"],
+            ["string", "object", "string", "integer", "boolean", "string"],
+        ):
+            self.assertIn(
+                properties, spec["components"]["schemas"]["test"]["properties"]
+            )
+            self.assertEqual(
+                spec["components"]["schemas"]["test"]["properties"][properties]["type"],
+                type,
+            )
+        # expecting the _meta property to be a reference to the test__meta schema
+        self.assertEqual(
+            spec["components"]["schemas"]["test"]["properties"]["_meta"]["$ref"],
+            "#/components/schemas/test__meta",
+        )
+        # expecting the blobfile property to have contentEncoding set to base64
+        self.assertEqual(
+            spec["components"]["schemas"]["test"]["properties"]["blobfile"][
+                "contentEncoding"
+            ],
+            "base64",
+        )
+        # expecting no required properties in the test schema
+        self.assertEqual(len(spec["components"]["schemas"]["test"]["required"]), 0)
+        # expecting the title of the test schema to be "test"
+        self.assertEqual(spec["components"]["schemas"]["test"]["title"], "test")
+
+        # expecting routes to be present for the test collection
+        self.assertEqual(len(spec["paths"]), 6)
+        self.assertIn("/test", spec["paths"])
+        self.assertIn("/test/_meta", spec["paths"])
+        self.assertIn("/test/_check", spec["paths"])
+        self.assertIn("/test/{id}", spec["paths"])
+        self.assertIn("/test/{id}/{path}", spec["paths"])
+        self.assertIn("/test/_selections/_all", spec["paths"])
