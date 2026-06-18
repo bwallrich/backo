@@ -66,7 +66,7 @@ class DBRedirect(DBRestfullConnector):  # pylint: disable=too-many-instance-attr
         page_size=0,
         num_of_element_to_skip=0,
         sort_object={"_id": 1},
-        **kwargs
+        **kwargs,
     ) -> list:
         """See :func:`DBConnector.select`
 
@@ -80,5 +80,5 @@ class DBRedirect(DBRestfullConnector):  # pylint: disable=too-many-instance-attr
             num_of_element_to_skip,
             sort_object,
             endpoint=self._remote_collection,
-            **kwargs
+            **kwargs,
         )

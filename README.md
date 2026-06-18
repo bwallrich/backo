@@ -128,7 +128,7 @@ my_backoffice.build_routes(flask)
 
 It represents a database entity and includes all the methods required for CRUD operations: *Create*, *Read*, *Update*, and *Delete*.
 
-A generic object is a [stricto](https://github.com/bwallrich/stricto) `Dict()` object.
+A generic object is a [stricto](https://github.com/backo-stricto/stricto) `Dict()` object.
 
 
 
@@ -164,15 +164,15 @@ backoffice.register_collection( "cats", cats )
 
 ### Methods
 
-| Method | Description |
-| - | - |
-| ```.create( data :dict )``` | Create a new `Item` in the database using the provided `data` dictionary.
-| ```.save()``` | saves the current `Item` to the database. |
-| ```.load( _id :str )``` | loads an `Item` from the database by its `_id`. |
-| ```.reload()``` | reloads the current `Item` from the database. |
-| ```.delete()``` | deletes the current `Item` from the database. |
-| ```.new()``` | creates a new empty `Item` (must be populated with `.set()` and then saved). |
-| ```.select()``` | retrieves a selection of `Item` from the database based on the selection criteria. |
+| Method                      | Description                                                                        |
+| --------------------------- | ---------------------------------------------------------------------------------- |
+| ```.create( data :dict )``` | Create a new `Item` in the database using the provided `data` dictionary.          |
+| ```.save()```               | saves the current `Item` to the database.                                          |
+| ```.load( _id :str )```     | loads an `Item` from the database by its `_id`.                                    |
+| ```.reload()```             | reloads the current `Item` from the database.                                      |
+| ```.delete()```             | deletes the current `Item` from the database.                                      |
+| ```.new()```                | creates a new empty `Item` (must be populated with `.set()` and then saved).       |
+| ```.select()```             | retrieves a selection of `Item` from the database based on the selection criteria. |
 
 For each function above, an error is triggered in case of something went wrong.
 
@@ -183,12 +183,12 @@ Relations cardinalities are expressed by the mean of `Ref()` and `RefsList()`:
 
 
 
-| Item A | Item B | description |
-| -- | -- | -- |
-| <kbd>Ref</kbd> | <kbd>Ref</kbd> | 0 or One to one |
-| <kbd>Ref</kbd> | <kbd>RefsList</kbd> | 0 or One to many |
-| <kbd>Ref(require=True)</kbd> | <kbd>RefsList</kbd> | One to many |
-| <kbd>RefsList</kbd> | <kbd>RefsList</kbd> | Many to many |
+| Item A                       | Item B              | description      |
+| ---------------------------- | ------------------- | ---------------- |
+| <kbd>Ref</kbd>               | <kbd>Ref</kbd>      | 0 or One to one  |
+| <kbd>Ref</kbd>               | <kbd>RefsList</kbd> | 0 or One to many |
+| <kbd>Ref(require=True)</kbd> | <kbd>RefsList</kbd> | One to many      |
+| <kbd>RefsList</kbd>          | <kbd>RefsList</kbd> | Many to many     |
 
 
 ### RefsList
@@ -208,11 +208,11 @@ Relations cardinalities are expressed by the mean of `Ref()` and `RefsList()`:
 | Option for Ref | Default | Description |
 | - | - | - |
 | <kbd>coll=</kbd> | None | the collection to make the ref |
-| <kbd>field=</kbd> | None | The reverse field in the targeted collection (use [selector](https://github.com/bwallrich/stricto?tab=readme-ov-file#selectors) to target it) |
+| <kbd>field=</kbd> | None | The reverse field in the targeted collection (use [selector](https://github.com/backo-stricto/stricto?tab=readme-ov-file#selectors) to target it) |
 | <kbd>ods=</kbd> | ```DeleteStrategy.MUST_BE_EMPTY``` | *On Delete Strategy* see [ods](#deletion-strategies-ods)|
 | <kbd>ofs=</kbd> | ```FillStrategy.FILL``` | *On Fill Strategy* |
 
-And all options availables in [stricto String()](https://github.com/bwallrich/stricto?tab=readme-ov-file#string) fields.
+And all options availables in [stricto String()](https://github.com/backo-stricto/stricto?tab=readme-ov-file#string) fields.
 
 
 #### Deletion strategies (`ods`)
@@ -258,25 +258,25 @@ a_book = Item({
 
 ## Files objects
 
-backo can manage files in a simple way : Like other [stricto types](https://github.com/bwallrich/stricto?tab=readme-ov-file#basic-types).
+backo can manage files in a simple way : Like other [stricto types](https://github.com/backo-stricto/stricto?tab=readme-ov-file#basic-types).
 You can use File() or BlobFile().
 
-| object | Description |
-| -- | -- |
-| File() | Generic object to manage a file. You need to define a FileConnector to indicate the object File where to store the file |
+| object     | Description                                                                                                                  |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| File()     | Generic object to manage a file. You need to define a FileConnector to indicate the object File where to store the file      |
 | BlobFile() | File data is integrated literally into the datastructure, so there is no need for a FileConnector. Reserved for small files. |
 
-You can use all [parameters](https://github.com/bwallrich/stricto?tab=readme-ov-file#types) for Files like other fields. 
+You can use all [parameters](https://github.com/backo-stricto/stricto?tab=readme-ov-file#types) for Files like other fields. 
 
 
 However there are extra specific parameters :
 
-| Option | Default | Description |
-| - | - | - |
-| ```mime_types=[ str ]``` | None | The list of allowed content types |
-| ```max_size=8192``` | None | The maximum size of the file |
-| ```work_connector=FileConnector``` | None | File working copy connector (main file location) |
-| ```storage_connector=FileConnector``` | None | Second fileConnector used to store the file permanently after processing. If unset, file unique location is *work_connector* |
+| Option                                | Default | Description                                                                                                                  |
+| ------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| ```mime_types=[ str ]```              | None    | The list of allowed content types                                                                                            |
+| ```max_size=8192```                   | None    | The maximum size of the file                                                                                                 |
+| ```work_connector=FileConnector```    | None    | File working copy connector (main file location)                                                                             |
+| ```storage_connector=FileConnector``` | None    | Second fileConnector used to store the file permanently after processing. If unset, file unique location is *work_connector* |
 
 
 Attributes and methods of the File object:
@@ -416,11 +416,11 @@ def your_function_name(right_name: str, o: Item) -> bool:
 
 ```
 
-| right | description |
-| -- | -- |
-| can_read | Check if the collection can be read |
-| can_modify | Check if some elements in the collection can be modified |
-| can_delete | Check if some elements in the collection can be deleted |
+| right      | description                                              |
+| ---------- | -------------------------------------------------------- |
+| can_read   | Check if the collection can be read                      |
+| can_modify | Check if some elements in the collection can be modified |
+| can_delete | Check if some elements in the collection can be deleted  |
 
 
 
@@ -431,7 +431,7 @@ def your_function_name(right_name: str, o: Item) -> bool:
 An action represent some modifications to an Item witch is more complex than just a PATCH/PUT (modification).
 
 An action is compose by :
-1. an [Stricto Dict](https://github.com/bwallrich/stricto?tab=readme-ov-file#dict)
+1. an [Stricto Dict](https://github.com/backo-stricto/stricto?tab=readme-ov-file#dict)
 2. a function
 3. Some rights
 
@@ -492,10 +492,10 @@ def your_function_name(right_name: str, o: Item) -> bool:
 
 ```
 
-| right | description |
-| -- | -- |
-| can_execute | Check if [current_user](#current_user) can execute the action |
-| can_see|exists | Check if this action is a available for this item |
+| right       | description                                                   |
+| ----------- | ------------------------------------------------------------- |
+| can_execute | Check if [current_user](#current_user) can execute the action |
+| can_see     | exists                                                        | Check if this action is a available for this item |
 
 
 ### routes
@@ -509,11 +509,11 @@ See [actions routes](#actions-routes) for resulting RESTful API routes.
 ## Selection
 
 
-A selection is a *named* list of Items with sub elements provided by a [path](https://github.com/bwallrich/stricto#selectors).
+A selection is a *named* list of Items with sub elements provided by a [path](https://github.com/backo-stricto/stricto#selectors).
 
 An selection is compose by :
-1. a list of [selectors](https://github.com/bwallrich/stricto#selectors)
-2. a [filter](https://github.com/bwallrich/stricto#matching)
+1. a list of [selectors](https://github.com/backo-stricto/stricto#selectors)
+2. a [filter](https://github.com/backo-stricto/stricto#matching)
 3. Some rights
 
 > [!IMPORTANT]  
@@ -557,9 +557,9 @@ def your_function_name(right_name: str, o: Item) -> bool:
 
 ```
 
-| right | description |
-| -- | -- |
-| can_read | Check if [current_user](#current_user) can do the selection |
+| right    | description                                                 |
+| -------- | ----------------------------------------------------------- |
+| can_read | Check if [current_user](#current_user) can do the selection |
 
 
 ### routes
@@ -697,13 +697,13 @@ However, using jwt is a goot solution. See [Authentication](#authentication) for
 
 ### current_user API
 
-`current_user` is a very simple [Stricto Dict](https://github.com/bwallrich/stricto?tab=readme-ov-file#dict) (but can be [extended](#extend-current_user)). It contains :
+`current_user` is a very simple [Stricto Dict](https://github.com/backo-stricto/stricto?tab=readme-ov-file#dict) (but can be [extended](#extend-current_user)). It contains :
 
 | key | type | usage |
 | - | - | - |
-| _id | [Stricto String()](https://github.com/bwallrich/stricto?tab=readme-ov-file#string) | the _id of the user. 
-| login | [Stricto String()](https://github.com/bwallrich/stricto?tab=readme-ov-file#string) | the login or whatever you store . 
-| roles | [Stricto List( String() )](https://github.com/bwallrich/stricto?tab=readme-ov-file#list) | the list of roles for this users. A *role* is a kid of group the user belongs to | 
+| _id | [Stricto String()](https://github.com/backo-stricto/stricto?tab=readme-ov-file#string) | the _id of the user. 
+| login | [Stricto String()](https://github.com/backo-stricto/stricto?tab=readme-ov-file#string) | the login or whatever you store . 
+| roles | [Stricto List( String() )](https://github.com/backo-stricto/stricto?tab=readme-ov-file#list) | the list of roles for this users. A *role* is a kid of group the user belongs to | 
 | has_role() | function | return True or false to the role givent in param | 
 | reset() | function | change the current_user object type. See [extend current_user](#extend-current_user) for that| 
 
@@ -755,7 +755,7 @@ Api routes are generated
 ### CRUD Routes
 #### GET \<my-app-name\>/\<collection name\>/\<_id\> \?_view=\<view name\>
 
-```_view``` are defined in [stricto views](https://github.com/bwallrich/stricto?tab=readme-ov-file#views)
+```_view``` are defined in [stricto views](https://github.com/backo-stricto/stricto?tab=readme-ov-file#views)
 
 Return the object of this collection *by _id*.
 
@@ -771,30 +771,30 @@ curl -X GET 'http://localhost/myApp/users/123?_view=otherviewname'
 ```
 Answers can be :
 
-| code | data | Description |
-| - | - | - |
-| 200 | JSON object data | the requested item |
-| 401 | None | you are not authorized to view this item |
-| 404 | None | item not found |
-| 500 | None | server-side error |
+| code | data             | Description                              |
+| ---- | ---------------- | ---------------------------------------- |
+| 200  | JSON object data | the requested item                       |
+| 401  | None             | you are not authorized to view this item |
+| 404  | None             | item not found                           |
+| 500  | None             | server-side error                        |
 
 #### GET \<my-app-name\>/\<collection name\>?\<query_string\>
 
 Get a list of objects matching the query string. The query string can be with this format
 
-| key | value | description |
-| - | - | - |
-| \<field\> | \<value\> | matches items where `<field>` equals `<value>`. Example: `surname=donald` finds all items where surname equals to "donald". |
-| \<field\>.\<operator\> | \<value\> | matches items where `<field>` satisfies `<operator>` with `<value>`. Example: `age.$lt=12` finds items where age is less than 12. |
+| key                    | value     | description                                                                                                                                                                  |
+| ---------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \<field\>              | \<value\> | matches items where `<field>` equals `<value>`. Example: `surname=donald` finds all items where surname equals to "donald".                                                  |
+| \<field\>.\<operator\> | \<value\> | matches items where `<field>` satisfies `<operator>` with `<value>`. Example: `age.$lt=12` finds items where age is less than 12.                                            |
 | \<field\>.\<subfield\> | \<value\> | Matches items where `<field>` is a nested dictionary containing `<subfield>` equal to `<value>`. Example: `address.number=1` matches items where address.number equals to 1. |
 
 
-[list of available operators](https://github.com/bwallrich/stricto?tab=readme-ov-file#filtering-and-matching)
+[list of available operators](https://github.com/backo-stricto/stricto?tab=readme-ov-file#filtering-and-matching)
 
 
 | key | value | default | description |
 | - | - | - | - |
-| \_view | string | "client" | selects the view ([stricto views](https://github.com/bwallrich/stricto?tab=readme-ov-file#views))  |
+| \_view | string | "client" | selects the view ([stricto views](https://github.com/backo-stricto/stricto?tab=readme-ov-file#views))  |
 | \_page | int | - | sets the desired number of items per page in paginated data presentation |
 | \_skip | int | - | skips the n-first items of the result list in paginated data presentation. |
 
@@ -866,7 +866,7 @@ Delete the user that has _id = *1234*.
 
 #### PATCH /\<my-app-name\>/\<collection name\>/\<_id\>
 Partial change of an existing object whose id is `_id`.
-Please refer to the [Stricto patch method](https://github.com/bwallrich/stricto?tab=readme-ov-file#patch).
+Please refer to the [Stricto patch method](https://github.com/backo-stricto/stricto?tab=readme-ov-file#patch).
 
 ##### Example
 ```bash
@@ -883,19 +883,19 @@ Patch content can be a *list of patch operations*.
 
 Check the validity of an item field.
 
-Please refer to [stricto selectors](https://github.com/bwallrich/stricto#selectors) for more details on selectors.
+Please refer to [stricto selectors](https://github.com/backo-stricto/stricto#selectors) for more details on selectors.
 
 get must provide a json structure in the body :
 
 | field | type | descrimtion |
 | -- | -- | -- |
-| item | dict | the data to check. It can be partial, see examples belowv |
-| path | string | the field to check in the item. This is a selector. Please refer to [stricto selectors](https://github.com/bwallrich/stricto#selectors) for more details |
+| item | dict | the data to check. It can be partial, see examples below |
+| path | string | the field to check in the item. This is a selector. Please refer to [stricto selectors](https://github.com/backo-stricto/stricto#selectors) for more details |
 
 The answer is a status 200 message with a json structure :
 
-| field | type | descrimtion |
-| -- | -- | -- |
+| field | type           | descrimtion                                           |
+| ----- | -------------- | ----------------------------------------------------- |
 | error | string or null | if null ther is no error, otherwise the error message |
 
 
@@ -940,10 +940,10 @@ is used to call an action.
 ### Selections routes
 
 
-| Method | Route | Description |
-| -- | -- | -- |
-| <kbd>GET</kbd> | \<my-app-name\>/\<collection name\>/_selections/\<selection_name\> | do the selection  |
-| <kbd>POST</kbd> | \<my-app-name\>/\<collection name\>/_selections/\<selection_name\> | do the selection with complex filter  |
+| Method          | Route                                                              | Description                          |
+| --------------- | ------------------------------------------------------------------ | ------------------------------------ |
+| <kbd>GET</kbd>  | \<my-app-name\>/\<collection name\>/_selections/\<selection_name\> | do the selection                     |
+| <kbd>POST</kbd> | \<my-app-name\>/\<collection name\>/_selections/\<selection_name\> | do the selection with complex filter |
 
 #### example
 
@@ -965,39 +965,39 @@ Meta route are used to retrieve introspective informations about the application
 
 Return the structure of the application as a JSON with thoses keys :
 
-| key | type | description |
-| - | - | - |
-| name | string | The name of the application |
+| key         | type                              | description                         |
+| ----------- | --------------------------------- | ----------------------------------- |
+| name        | string                            | The name of the application         |
 | collections | array of *collection description* | list of all collections description |
 
 ##### collection description
 
 Describe a collection
 
-| key | type | description |
-| - | - | - |
-| name | string | The name ov the collection |
-| item | [meta element description](#meta-element-description) | description of an item |
+| key  | type                                                  | description                |
+| ---- | ----------------------------------------------------- | -------------------------- |
+| name | string                                                | The name ov the collection |
+| item | [meta element description](#meta-element-description) | description of an item     |
 
 ##### meta element description
 
 Describe an element (an item, a key in an item)
 
-| key | type | description |
-| - | - | - |
-| type | string | the type of this element. For example *"<class 'backo.item.Item'>"* or *"<class 'stricto.string.String'>"* |
-| type_short | string | the type of this element, but a short version like *"Item"* or *"String"*|
-| description | string | a sort of comment. (optional) or null |
-| require | boolean | mean this element is required or not |
-| in | array of values | if the element must be in a list of value, or null if not. |
-| constraints | boolean | means if there is one or more constraints on this value |
-| default | -- | the default value for this field (= null if no default value) |
-| transform | boolean | say there is a transformation function |
-| exists | boolean | false mean this field does not exist and must not be displayed |
-| rights | [meta rights description](#meta-rights-description) | the description of rights |
-| sub_scheme | [meta element description](#meta-element-description) | reccusive description for childs if this object is a [Dict](https://github.com/bwallrich/stricto?tab=readme-ov-file#dict) or an Item |
-| sub_type | [meta element description](#meta-element-description) | description of the content if this object is a [List](https://github.com/bwallrich/stricto?tab=readme-ov-file#list) |
-| sub_types | array of [meta element description](#meta-element-description) | description of the tuple content if this object is a [Tuple](https://github.com/bwallrich/stricto?tab=readme-ov-file#tuple) |
+| key         | type                                                           | description                                                                                                                          |
+| ----------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| type        | string                                                         | the type of this element. For example *"<class 'backo.item.Item'>"* or *"<class 'stricto.string.String'>"*                           |
+| type_short  | string                                                         | the type of this element, but a short version like *"Item"* or *"String"*                                                            |
+| description | string                                                         | a sort of comment. (optional) or null                                                                                                |
+| require     | boolean                                                        | mean this element is required or not                                                                                                 |
+| in          | array of values                                                | if the element must be in a list of value, or null if not.                                                                           |
+| constraints | boolean                                                        | means if there is one or more constraints on this value                                                                              |
+| default     | --                                                             | the default value for this field (= null if no default value)                                                                        |
+| transform   | boolean                                                        | say there is a transformation function                                                                                               |
+| exists      | boolean                                                        | false mean this field does not exist and must not be displayed                                                                       |
+| rights      | [meta rights description](#meta-rights-description)            | the description of rights                                                                                                            |
+| sub_scheme  | [meta element description](#meta-element-description)          | reccusive description for childs if this object is a [Dict](https://github.com/bwallrich/stricto?tab=readme-ov-file#dict) or an Item |
+| sub_type    | [meta element description](#meta-element-description)          | description of the content if this object is a [List](https://github.com/bwallrich/stricto?tab=readme-ov-file#list)                  |
+| sub_types   | array of [meta element description](#meta-element-description) | description of the tuple content if this object is a [Tuple](https://github.com/bwallrich/stricto?tab=readme-ov-file#tuple)          |
 
 ##### meta rights description
 
@@ -1225,6 +1225,20 @@ curl -X POST 'http://localhost/myApp/users/_meta' -d { 'name' : "John" }
 
 ```
 
+### OpenAPI route
+This route is used to generate the OpenAPI specification of the backoffice.
+
+For a local usage, you can take at look at [documento](https://github.com/backo-stricto/documento) to quickly serve the documentation using either Swagger, ReDoc, Rapidoc or ST
+calar.
+
+#### GET /\<my-app-name\>/openapi
+
+Return the OpenAPI specification in JSON format.
+
+```bash
+curl -x GET http://localhost/myApp/openapi
+```
+
 ## Internal usage
 Typical use cases for users and related addresses.
 
@@ -1242,11 +1256,11 @@ moon_address.users # -> return [ astro._id ]
 
 ### _id
 
-You dont't have to care about *_ids* in your item description. Backo will alter schema to add `_id` for each Item (see [stricto schemas](https://github.com/bwallrich/stricto?tab=readme-ov-file#schemas) for details).
+You dont't have to care about *_ids* in your item description. Backo will alter schema to add `_id` for each Item (see [stricto schemas](https://github.com/backo-stricto/stricto?tab=readme-ov-file#schemas) for details).
 
 ### _meta
 
-the db_connector adds meta data to each item by [altering its schema](https://github.com/bwallrich/stricto?tab=readme-ov-file#schemas).
+the db_connector adds meta data to each item by [altering its schema](https://github.com/backo-stricto/stricto?tab=readme-ov-file#schemas).
 
 
 The provided *meta_data_handler* give this Dict() :
@@ -1274,11 +1288,11 @@ Each Item has a specific workflow and triggers specific events.
 
 The defined states for each item are following:
 
-| State | descripion |
-| - | - |
-| UNSET | The Item result of a ```.new()``` function. It can't be saved in this state |
-| UNSAVED | The Item has been modified and must be saved |
-| SAVED | The Item is saved in the DB and has not been changed since last save |
+| State   | descripion                                                                  |
+| ------- | --------------------------------------------------------------------------- |
+| UNSET   | The Item result of a ```.new()``` function. It can't be saved in this state |
+| UNSAVED | The Item has been modified and must be saved                                |
+| SAVED   | The Item is saved in the DB and has not been changed since last save        |
 
 
 
@@ -1299,12 +1313,12 @@ stateDiagram
 ### Events
 The following events are triggered when the functions above are called:
 
-| function | event before | event after |
-| - | - | - |
-| .load() |  | "loaded" |
-| .save() |"before_save" | "saved" |
-| .delete() | "before_delete" |  |
-| .create() | None | "created" |
+| function  | event before    | event after |
+| --------- | --------------- | ----------- |
+| .load()   |                 | "loaded"    |
+| .save()   | "before_save"   | "saved"     |
+| .delete() | "before_delete" |             |
+| .create() | None            | "created"   |
 
 #### Example
 Below is a simple use case on how to use these events:
@@ -1405,16 +1419,16 @@ DEBUG-custom- "/my_path/myfile.py", line 196 : this is a debug message with stac
 
 Currently available loggers are :
 
-| logger | description |
-| - | - |
-| backoffice | The main Backoffice system |
-| Item | The database itself (CRUD operations ) |
-| ref | Ref and RefsList objects |
-| transaction | transactions and roolback |
-| yml | yaml database connector |
-| mongo | mongo database connector |
-| select | selections |
-| migration | see [migration](#migration) |
+| logger      | description                            |
+| ----------- | -------------------------------------- |
+| backoffice  | The main Backoffice system             |
+| Item        | The database itself (CRUD operations ) |
+| ref         | Ref and RefsList objects               |
+| transaction | transactions and roolback              |
+| yml         | yaml database connector                |
+| mongo       | mongo database connector               |
+| select      | selections                             |
+| migration   | see [migration](#migration)            |
 
 
 

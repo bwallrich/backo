@@ -298,7 +298,6 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         if isinstance(reverse_field, refslist.RefsList):
             if reverse_field._fill_strategy == refslist.FillStrategy.FILL:
                 if root._id.get_value() not in reverse_field.get_value():
-
                     # update the reverse
                     log.debug(f"update reverse refList {me._reverse} with {root._id}")
                     reverse_field.append(root._id)

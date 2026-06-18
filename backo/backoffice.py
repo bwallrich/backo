@@ -6,20 +6,22 @@ The Backoffice module
 
 import json
 import sys
-from typing import Callable
+from typing import Any, Callable
+
 from flask import Flask
 
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
-from stricto import SSyntaxError, validation_parameters, Kparse
+from stricto import Kparse, SSyntaxError, validation_parameters
 
-from .item import Item
-from .request_decorators import error_to_http_handler
-from .transaction import Transaction, OperatorType
 from .collection import Collection
+from .item import Item
 from .migration_report import MigrationReport
 from .log import log_system, LogLevel
+from .openapi import BACKO_FILTER_SCHEMA, BACKO_META_SCHEMA, JSON_PATCH_SCHEMA
+from .request_decorators import error_to_http_handler
+from .transaction import OperatorType, Transaction
 
 log = log_system.get_or_create_logger("backoffice", LogLevel.INFO)
 
@@ -207,6 +209,11 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
         )
         flask_app.view_functions[f"_meta_{self.name}"] = self._meta_http
 
+        flask_app.add_url_rule(
+            f"{my_path}/openapi", f"_openapi_{self.name}", methods=["GET"]
+        )
+        flask_app.view_functions[f"_openapi_{self.name}"] = self._export_openapi
+
     def get_meta(self):
         """
         Get all meta information for all collections, view, actions
@@ -225,6 +232,45 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
         """GET meta information :func:`get_meta` via https"""
         log.debug(f"get meta information for {self.name}")
         return (json.dumps(self.get_meta()), 200)
+
+    def get_openapi(self) -> dict:
+        """
+        Get the OpenAPI specification for this backoffice
+
+        :meta private:
+        """
+
+        spec: dict[str, Any] = {
+            "openapi": "3.1.0",
+            "info": {
+                "title": f"{self.name}",
+                "description": f"{self.name} backoffice powered by Backo",
+            },
+            "paths": {
+                path: spec
+                for collection in self.collections.values()
+                for path, spec in collection.get_openapi_routes().items()
+            },
+            "components": {
+                "schemas": {
+                    schema: spec
+                    for collection in self.collections.values()
+                    for schema, spec in collection.get_openapi_schemas().items()
+                }
+            },
+        }
+        spec["components"]["schemas"]["json-patch"] = JSON_PATCH_SCHEMA
+        spec["components"]["schemas"]["backo-meta"] = BACKO_META_SCHEMA
+        spec["components"]["schemas"]["backo-filter"] = BACKO_FILTER_SCHEMA
+        return spec
+
+    @error_to_http_handler
+    def _export_openapi(self):
+        return (
+            json.dumps(self.get_openapi()),
+            200,
+            {"Content-Type": "application/json"},
+        )
 
     def check_syntax(self) -> None:
         """

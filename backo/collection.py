@@ -2,48 +2,49 @@
 The Collection module
 """
 
-# pylint: disable=logging-fstring-interpolation, too-many-public-methods
+# pylint: disable=logging-fstring-interpolation, too-many-public-methods, too-many-lines, too-many-statements, wrong-import-order
+import copy
 import json
+import pprint
 import re
 import sys
-import copy
-import pprint
-from typing import Self, Callable
-from deepdiff import DeepDiff
+from typing import Callable, Self
 
-from flask import request, Blueprint
+from deepdiff import DeepDiff
+from flask import Blueprint, request
+
+from backo.openapi import OpenAPISpec
 
 # used for developpement
 sys.path.insert(1, "../../stricto")
 
 from stricto import (
-    Permissions,
-    StrictoEncoder,
-    FreeDict,
     Dict,
-    String,
-    STypeError,
+    FreeDict,
+    Kparse,
+    Permissions,
     SAttributeError,
-    SSyntaxError,
     SConstraintError,
     SError,
     SRightError,
-    Kparse,
+    SSyntaxError,
+    StrictoEncoder,
+    String,
+    STypeError,
     validation_parameters,
 )
 
-
-from .item import Item
 from .action import Action
-from .selection import Selection
+from .api_toolbox import append_path_to_filter, multidict_to_filter, request_to_object
 from .db_connector import DBConnector
 from .error import PathNotFoundError
-from .log import log_system, LogLevel
-from .request_decorators import error_to_http_handler, check_content_type
-from .api_toolbox import multidict_to_filter, append_path_to_filter, request_to_object
-from .patch import Patch
-from .migration_report import MigrationReport
 from .file.file import File
+from .item import Item
+from .log import LogLevel, log_system
+from .migration_report import MigrationReport
+from .patch import Patch
+from .request_decorators import check_content_type, error_to_http_handler
+from .selection import Selection
 
 log = log_system.get_or_create_logger("collection", LogLevel.INFO)
 log_migration = log_system.get_or_create_logger("migration")
@@ -166,6 +167,10 @@ class Collection:
         can_read = self._permissions.get("read", True)
         self.register_selection("_all", Selection(None, can_read=can_read))
 
+        # Setup the OpenAPI builder
+        self._openapi = OpenAPISpec()
+        self._openapi.add_schema(self.name, self.model.get_schema())
+
     def get_meta(self) -> dict:
         """Return the meta data for this collection and actions"""
 
@@ -181,14 +186,25 @@ class Collection:
             m["name"] = sel_name
             selections.append(m)
 
-        d = {
+        return {
             "name": self.name,
             "item": self.model.get_schema(),
             "rights": self._permissions.get_as_dict_of_strings(),
             "actions": actions,
             "selections": selections,
         }
-        return d
+
+    def get_openapi_routes(self) -> dict:
+        """
+        Return the paths section of the OpenAPI specification.
+        """
+        return self._openapi.get_routes()
+
+    def get_openapi_schemas(self) -> dict:
+        """
+        Return the schemas section of the OpenAPI specification.
+        """
+        return self._openapi.get_schemas()
 
     def set(self, datas: dict | list) -> Item | list:
         """Set an object or a list of object
@@ -476,6 +492,12 @@ class Collection:
             log.info(f"Add route GET {self.name}/")
             collection_blueprint.add_url_rule("", "select", methods=["GET"])
             collection_blueprint.view_functions[f"{self.name}.select"] = self.filtering
+            self._openapi.add_get_all(
+                f"/{self.name}",
+                self.name,
+                (200, "Successful response"),
+                [(400, "Bad Request"), (500, "Something went wrong")],
+            )
 
         # POST / Create data
         if self._permissions.is_strictly_allowed_to("create") is not False:
@@ -483,6 +505,13 @@ class Collection:
             collection_blueprint.add_url_rule("", "create", methods=["POST"])
             collection_blueprint.view_functions[f"{self.name}.create"] = (
                 self.http_create
+            )
+            self._openapi.add_post_item(
+                f"/{self.name}",
+                self.name,
+                self.model.get_schema(),
+                (201, "Item created"),
+                [(400, "Bad request"), (500, "Something went wrong")],
             )
 
         # CHECK / Check values
@@ -494,16 +523,33 @@ class Collection:
                 methods=["POST"],
             )
             collection_blueprint.view_functions[f"{self.name}.check"] = self.http_check
+            self._openapi.add_check_item(
+                f"/{self.name}/_check",
+                self.name,
+                self.model.get_schema(),
+                (200, "Check result"),
+            )
 
         # META /> Check values
         if self._permissions.is_strictly_allowed_to("modify") is not False:
-            log.info(f"Add route GET {self.name}/_meta")
+            log.info(f"Add route POST {self.name}/_meta")
             collection_blueprint.add_url_rule(
                 "/_meta",
                 "meta",
                 methods=["POST"],
             )
             collection_blueprint.view_functions[f"{self.name}.meta"] = self.http_meta
+            self._openapi.add_meta_item(
+                f"/{self.name}/_meta",
+                self.name,
+                self.model.get_schema(),
+                (200, "Meta result"),
+                [
+                    (400, "Bad request"),
+                    (404, "Not found"),
+                    (500, "Something went wrong"),
+                ],
+            )
 
         if self._permissions.is_strictly_allowed_to("read") is not False:
             # GET /<_id>
@@ -530,6 +576,18 @@ class Collection:
                 self.http_get_path_by_id
             )
 
+            self._openapi.add_get_item(
+                f"/{self.name}/{{id}}",
+                self.name,
+                self.model.get_schema(),
+                (200, "Item returned"),
+                [
+                    (400, "Bad request"),
+                    (404, "Not found"),
+                    (500, "Something went wrong"),
+                ],
+            )
+
         # PUT /<_id> Modify Data
         if self._permissions.is_strictly_allowed_to("modify") is not False:
             log.info(f"Add route PUT {self.name}/<string:_id>")
@@ -539,6 +597,17 @@ class Collection:
                 methods=["PUT"],
             )
             collection_blueprint.view_functions[f"{self.name}.put"] = self.http_modify
+            self._openapi.add_put_item(
+                f"/{self.name}/{{id}}",
+                self.name,
+                self.model.get_schema(),
+                (200, "Item modified"),
+                [
+                    (400, "Bad request"),
+                    (404, "Not found"),
+                    (500, "Something went wrong"),
+                ],
+            )
 
         # PATCH /<_id> Modify Data
         if self._permissions.is_strictly_allowed_to("modify") is not False:
@@ -550,6 +619,16 @@ class Collection:
             )
             collection_blueprint.view_functions[f"{self.name}.patch_one"] = (
                 self.http_patch_one
+            )
+            self._openapi.add_patch_item(
+                f"/{self.name}/{{id}}",
+                self.name,
+                (200, "Item modified"),
+                [
+                    (400, "Bad request"),
+                    (404, "Not found"),
+                    (500, "Something went wrong"),
+                ],
             )
 
         # DELETE /<_id> Delete Data
@@ -563,6 +642,16 @@ class Collection:
             collection_blueprint.view_functions[f"{self.name}.delete"] = (
                 self.http_delete
             )
+            self._openapi.add_del_item(
+                f"/{self.name}/{{id}}",
+                self.name,
+                (200, "Item modified"),
+                [
+                    (400, "Bad request"),
+                    (404, "Not found"),
+                    (500, "Something went wrong"),
+                ],
+            )
 
         # Actions
         if self._permissions.is_strictly_allowed_to("read") is not False:
@@ -575,6 +664,18 @@ class Collection:
                 methods=["POST"],
             )
             collection_blueprint.view_functions[f"{self.name}.go"] = self._action_go
+
+            self._openapi.add_actions(
+                f"/{self.name}/_actions",
+                self.name,
+                self._actions,
+                (200, "Action properly executed"),
+                [
+                    (400, "Bad request"),
+                    (404, "Not found"),
+                    (500, "Something went wrong"),
+                ],
+            )
 
         # Selections
         if self._permissions.is_strictly_allowed_to("read") is not False:
@@ -595,6 +696,17 @@ class Collection:
             )
             collection_blueprint.view_functions[f"{self.name}.do_post_selection"] = (
                 self.do_post_selection
+            )
+            self._openapi.add_selections(
+                f"/{self.name}/_selections",
+                self.name,
+                self._selections,
+                (200, "Selection properly executed"),
+                [
+                    (400, "Bad request"),
+                    (404, "Not found"),
+                    (500, "Something went wrong"),
+                ],
             )
 
         return collection_blueprint

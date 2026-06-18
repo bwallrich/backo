@@ -166,7 +166,7 @@ class DBRestfullConnector(DBConnector):
             return http_error.response.status_code, None, http_error
         except requests.exceptions.RequestException as request_error:
             return None, None, request_error
-        except Exception as e: # pylint: disable=broad-exception-caught
+        except Exception as e:  # pylint: disable=broad-exception-caught
             return None, None, e
 
     @abstractmethod
