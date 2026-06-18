@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.2.1] 2026-06-18
+    * Feat
+      * openapi information
+      * DBRestfullConnector() for REST API Connector
+      * DBRedirect() for Redirect to Backo server (like a proxy)
+    * Internal
+      * Moving repo to backo-stricto organisation
+    * Doc
+      * Adding uv env documentation
+  
 ## [0.2.0] 2026-06-01
     * Internal
       * Refactoring to follow stricto 0.1.x to 0.2.0

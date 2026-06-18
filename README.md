@@ -2,10 +2,10 @@
 # Back Office Low Code (backo)
 
 
-![release](https://img.shields.io/github/v/release/bwallrich/backo.svg?label=latest)
+![release](https://img.shields.io/github/v/release/backo-stricto/backo.svg?label=latest)
 
 
-![pylint](https://img.shields.io/github/actions/workflow/status/bwallrich/backo/pylint.yml?label=linter) ![test](https://img.shields.io/github/actions/workflow/status/bwallrich/backo/test.yml?label=test)
+![pylint](https://img.shields.io/github/actions/workflow/status/backo-stricto/backo/pylint.yml?label=linter) ![test](https://img.shields.io/github/actions/workflow/status/backo-stricto/backo/test.yml?label=test)
 
 Jump to [Quickstart](#quickstart) for a basic setup.
 
@@ -1542,6 +1542,8 @@ The migration returns a report structure :
 
 For personal use only.
 
+Legacy virtualenv workflow:
+
 ```bash
 # all tests
 python -m unittest tests
@@ -1564,6 +1566,35 @@ cd docs
 make html
 
 ```
+
+
+uv workflow:
+
+```bash
+uv sync --group dev
+
+# all tests
+uv run python -m unittest tests
+# or for only some tests
+uv run python -m unittest tests/test_bool.py
+# or for a specific test
+uv run python -m unittest tests.TestDict.test_simple_type
+
+# reformat
+uv run black .
+
+# pylint
+uv run pylint $(git ls-files '*.py')
+
+# coverage
+# for all tests
+uv run coverage run -m unittest tests
+# for a single tests suite
+uv run coverage run -m unittest tests.MyTests
+uv run coverage html # report under htmlcov/index.html
+firefox htmlcov/index.html
+```
+
 
 
 ### Building a new release

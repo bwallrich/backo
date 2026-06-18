@@ -1,6 +1,6 @@
 [project]
 name = "backo"
-version = "0.2.0"
+version = "0.2.1"
 authors = [
   { name="Bertrand Wallrich", email="Bertrand.Wallrich@inria.fr" },
 ]
@@ -21,13 +21,20 @@ dependencies = [
   "deepdiff",
   "python-magic",
   "pymongo",
-  "stricto>=0.2.1"
+  "stricto>=0.2.2"
+]
+
+[dependency-groups]
+dev = [
+    "black",
+    "coverage",
+    "pylint",
 ]
 
 [project.urls]
-GitHub = "https://github.com/bwallrich/backo"
-Homepage = "https://github.com/bwallrich/backo"
-Issues = "https://github.com/bwallrich/backo/issues"
+GitHub = "https://github.com/backo-stricto/backo"
+Homepage = "https://github.com/backo-stricto/backo"
+Issues = "https://github.com/backo-stricto/backo/issues"
 
 [build-system]
 requires = ["hatchling"]
