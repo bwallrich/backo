@@ -266,7 +266,11 @@ class Backoffice:  # pylint: disable=too-many-instance-attributes
 
     @error_to_http_handler
     def _export_openapi(self):
-        return (json.dumps(self.get_openapi()), 200)
+        return (
+            json.dumps(self.get_openapi()),
+            200,
+            {"Content-Type": "application/json"},
+        )
 
     def check_syntax(self) -> None:
         """

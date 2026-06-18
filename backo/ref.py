@@ -138,7 +138,9 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         a["reverse"] = self._reverse
         return a
 
-    def check_syntax(self, event_name: str, root, me, **kwargs):  # pylint: disable=unused-argument
+    def check_syntax(
+        self, event_name: str, root, me, **kwargs
+    ):  # pylint: disable=unused-argument
         """
         Check if everything is correct log some warnings
         """
@@ -165,13 +167,17 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
             reverse_field = other.select(me._reverse)
             # Must check == None rather
 
-            if not isinstance(reverse_field, (refslist.RefsList, Ref)):  # pylint: disable=singleton-comparison
+            if not isinstance(
+                reverse_field, (refslist.RefsList, Ref)
+            ):  # pylint: disable=singleton-comparison
                 log.error(
                     f'{root._collection.name}/{me.path_name()}: Collection "{me._collection}", "{me._reverse}" is not a Ref or a RefsList'
                 )
                 return
 
-    def on_before_save(self, event_name, root, me, **kwargs):  # pylint: disable=unused-argument
+    def on_before_save(
+        self, event_name, root, me, **kwargs
+    ):  # pylint: disable=unused-argument
         """
         Before saving, check if the reference
         as changed from an old value
@@ -227,7 +233,9 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
         if me.get_value() is not None:
             self.on_created(event_name, root, me, **kwargs)
 
-    def on_created(self, event_name, root, me, **kwargs):  # pylint: disable=unused-argument
+    def on_created(
+        self, event_name, root, me, **kwargs
+    ):  # pylint: disable=unused-argument
         """
         The object as been created
         check for the reverse field and modify it
@@ -302,7 +310,9 @@ class Ref(String):  # pylint: disable=too-many-instance-attributes
             "{0}.{1} is not a Ref or a RefsList", self._collection, me._reverse
         )
 
-    def on_delete(self, event_name, root, me, **kwargs):  # pylint: disable=unused-argument, too-many-return-statements
+    def on_delete(
+        self, event_name, root, me, **kwargs
+    ):  # pylint: disable=unused-argument, too-many-return-statements
         """
         The object will be deleted
         clean structure
