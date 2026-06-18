@@ -40,8 +40,10 @@ class DatabaseEngine:
                 response = []
                 self._execute_list_requests(request, response, request_method)
                 responses.append(response)
-            else:
+            elif request is not None:
                 responses.append(request_method(request))
+            else:
+                responses.append(None)
 
     def _execute_nested_requests(self, requests_dict, responses, request_method):
         for key, value in requests_dict.items():
@@ -51,8 +53,10 @@ class DatabaseEngine:
             elif isinstance(value, list):
                 responses[key] = []
                 self._execute_list_requests(value, responses[key], request_method)
-            else:
+            elif value is not None:
                 responses[key] = request_method(value)
+            else:
+                responses[key] = None
 
     def _execute_requests(self, base_request, attributes_requests, request_method):
         base_response = request_method(base_request)
@@ -67,7 +71,7 @@ class DatabaseEngine:
             self._execute_list_requests(
                 attributes_requests, attribute_responses, request_method
             )
-        else:
+        elif attributes_requests is not None:
             attribute_responses = request_method(attributes_requests)
         return base_response, attribute_responses
 
