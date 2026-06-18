@@ -10,6 +10,83 @@ from flask import Request
 from werkzeug.datastructures import ImmutableMultiDict
 
 
+def flatter(out: dict, src: Any, root_path=[]) -> None:
+    """avoid nested dict by combination of key.
+    follow nested dict into list too.
+
+    transform
+
+    { 'location' : {
+        'street' : 'far'
+        }
+    }
+
+    into
+
+    { 'location.street' : 'far' }
+
+
+
+    :param out: the flattened dict
+    :type out: dict
+    :param src: the dict to "flatten"
+    :type src: dict
+    :param root_path: internal, defaults to []
+    :type root_path: list, optional
+    """
+    if isinstance(src, dict):
+        for key, value in src.items():
+            flatter(out, value, root_path + [key])
+        return
+
+    if isinstance(src, list):
+        a = []
+        for value in src:
+            if isinstance(value, dict):
+                o = {}
+                flatter(o, value)
+                a.append(o)
+            else:
+                a.append(value)
+        out[f'{".".join(root_path)}'] = a
+        return
+
+    out[f'{".".join(root_path)}'] = src
+
+
+def unflatter(out: dict, path: list[str], value: Any) -> None:
+    """unflatter dict
+
+    This is the opposite of flatter()
+
+    :param out: the output dict
+    :type out: dict
+    :param path: the key as a path, like [ 'location', 'street' ]
+    :type path: list[str]
+    :param value: any value
+    :type value: Any
+    """
+
+    k = path.pop(0)
+    if len(path) == 0:
+        if isinstance(value, list):
+            a = []
+            for subv in value:
+                if isinstance(subv, dict):
+                    o = {}
+                    for k, v in subv.items():
+                        unflatter(o, k.split("."), v)
+                    a.append(o)
+                else:
+                    a.append(subv)
+            out[k] = a
+        else:
+            out[k] = value
+        return
+    out[k] = {}
+    unflatter(out[k], path, value)
+
+
 def append_path_to_filter(filter_as_dict: dict, key, value: list | tuple):
     """transform a
 

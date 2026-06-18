@@ -13,6 +13,7 @@ from stricto import *
 from .item import Item
 from .db_yml_connector import DBYmlConnector
 from .db_mongo_connector import DBMongoConnector
+from .db_sqlite_connector import DBSQLiteConnector
 from .db_connector import DBConnector
 from .db_restfull_connector import DBRestfullConnector
 from .db_backo_redirect import DBRedirect
@@ -47,4 +48,9 @@ from .request_decorators import (
     return_http_error,
     error_to_http_handler,
 )
-from .api_toolbox import multidict_to_filter, append_path_to_filter
+from .api_toolbox import (
+    multidict_to_filter,
+    append_path_to_filter,
+    flatter,
+    unflatter,
+)
