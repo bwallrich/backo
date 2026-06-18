@@ -21,3 +21,8 @@ from .test_migrations import TestMigrations
 from .test_file import TestFile
 from .test_rest_api_connector import TestRestApiConnector
 from .test_database import TestDatabaseEngine, TestDatabaseItem
+from .test_utils import (
+    TestNestedDataPathFind,
+    TestNestedDataPathUpdate,
+    TestNestedDataPathDelete,
+)
