@@ -607,19 +607,22 @@ class TestDatabaseItem(unittest.TestCase):
         )
 
     def test_load_simple_item(self):
-        """Tests LdapItem.load method for a simple item, without references.
+        """Tests DatabaseItem.load method for a simple item, without references.
 
         The item must be loaded from the mocked LDAP response.
         """
 
         root_response = MagicMock()
+        mock_id_mapper = MagicMock(spec=IdMapper)
+        mock_id_mapper.load.return_value = {}
+
         attribute_responses = [MagicMock() for _ in range(3)]
         attribute_mocks = [
             MagicMock(spec=DatabaseItem, response=attribute_responses[i])
             for i in range(3)
         ]
         database_item = DatabaseItem(
-            MagicMock(spec=IdMapper),
+            mock_id_mapper,
             {
                 "login": attribute_mocks[0],
                 "name": attribute_mocks[1],
@@ -639,6 +642,11 @@ class TestDatabaseItem(unittest.TestCase):
                 "name": attribute_responses[1],
                 "contact": attribute_responses[2],
             },
+        )
+
+        assert_that(
+            mock_id_mapper.load.call_args_list,
+            contains_exactly(has_properties(args=contains_exactly(root_response))),
         )
 
         for i in range(len(attribute_mocks)):
@@ -663,19 +671,22 @@ class TestDatabaseItem(unittest.TestCase):
         )
 
     def test_load_item_with_complex_nested_attributes(self):
-        """Tests LdapItem.load method for a simple item, without references.
+        """Tests DatabaseItem.load method for a simple item, without references.
 
         The item must be loaded from the mocked LDAP response.
         """
 
         root_response = MagicMock()
+        mock_id_mapper = MagicMock(spec=IdMapper)
+        mock_id_mapper.load.return_value = {}
+
         attribute_responses = [MagicMock() for _ in range(6)]
         attribute_mocks = [
             MagicMock(spec=DatabaseItem, response=attribute_responses[i])
             for i in range(6)
         ]
         database_item = DatabaseItem(
-            MagicMock(spec=IdMapper),
+            mock_id_mapper,
             {
                 "name": attribute_mocks[0],
                 "nested": {
@@ -710,6 +721,11 @@ class TestDatabaseItem(unittest.TestCase):
                     "time": attribute_responses[5],
                 },
             },
+        )
+
+        assert_that(
+            mock_id_mapper.load.call_args_list,
+            contains_exactly(has_properties(args=contains_exactly(root_response))),
         )
 
         for i in range(len(attribute_mocks)):
