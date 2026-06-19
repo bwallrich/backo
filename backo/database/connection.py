@@ -1,20 +1,23 @@
-from abc import ABC, abstractmethod
 from .request import DatabaseSearchRequest
 
 
-class DatabaseConnection(ABC):
-    @abstractmethod
+class DatabaseConnection:
     def execute_search(self, query):
-        pass
+        raise NotImplementedError(
+            "This DatabaseConnection does not support item search"
+        )
 
-    @abstractmethod
     def execute_create(self, query):
-        pass
+        raise NotImplementedError(
+            "This DatabaseConnection does not support item creation"
+        )
 
-    @abstractmethod
     def execute_delete(self, query):
-        pass
+        raise NotImplementedError(
+            "This DatabaseConnection does not support item deletion"
+        )
 
-    @abstractmethod
     def execute_update(self, query):
-        pass
+        raise NotImplementedError(
+            "This DatabaseConnection does not support item update"
+        )

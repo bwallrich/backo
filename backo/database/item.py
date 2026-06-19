@@ -3,26 +3,21 @@ from .request import DatabaseSearchRequest, DatabaseCreateRequest, DatabaseDelet
 from typing import Any
 
 
-class ItemMapper(ABC):
-    @abstractmethod
+class ItemMapper:
     def created_id(self, create_response) -> str:
-        pass
+        raise NotImplementedError("This ItemMapper does not support item creation")
 
-    @abstractmethod
     def search_request(self, _id) -> DatabaseSearchRequest:
-        pass
+        raise NotImplementedError("This ItemMapper does not support item search")
 
-    @abstractmethod
     def create_request(self, item_value) -> DatabaseCreateRequest:
-        pass
+        raise NotImplementedError("This ItemMapper does not support item creation")
 
-    @abstractmethod
     def delete_request(self, _id) -> DatabaseDeleteRequest:
-        pass
+        raise NotImplementedError("This ItemMapper does not support item deletion")
 
-    @abstractmethod
     def update_request(self, _id, item_value) -> DatabaseDeleteRequest:
-        pass
+        raise NotImplementedError("This ItemMapper does not support item update")
 
     def load(self, _base_response):
         return {}
