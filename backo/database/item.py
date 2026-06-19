@@ -77,13 +77,13 @@ class DatabaseItem:
     DatabaseItem specifies how to retrieve them from a specific database.
     """
 
-    def __init__(self, item_mapper: ItemMapper, attributes: dict[str, Any]):
+    def __init__(self, item_mapper: ItemMapper, model: dict[str, Any]):
         """
         The `item_mapper` specifies how a unique backo `_id` can be built from the
         external database, and how the item can be queried later in the
         database.
 
-        `attributes` is a dict mapping JSON fields to specification of database
+        `model` is a dict mapping JSON fields to specification of database
         attributes. Here is a simple example for LDAP:
         ```
         {
@@ -97,11 +97,11 @@ class DatabaseItem:
         of the search performed using the search_request() parameters.
 
         :param item_mapper: Specifies how to map database entries to backo `_id`s.
-        :param attributes: Specification of database attributes
+        :param model: Dictionnary of database attributes
         """
         self.item_mapper = item_mapper
-        self.attributes = attributes
-        self._set_attribute_paths(self.attributes, [])
+        self.model = model
+        self._set_attribute_paths(self.model, [])
 
     def _set_attribute_paths(self, attributes, current_path):
         if isinstance(attributes, list):
@@ -243,14 +243,14 @@ class DatabaseItem:
         # initialization of the `DatabaseItem` instance associated to an `_id`
         base_request = self.item_mapper.search_request(_id)
 
-        #  Builds additional requests required to initialize all `attributes` of
+        #  Builds additional requests required to initialize all attributes of
         #  the `DatabaseItem`. Each attribute is allowed to either modify the
         #  `base_request`, build a new request or do nothing.
-        attributes_requests = {}
+        model_requests = {}
         self._request_dict(
-            base_request, attributes_requests, self.attributes, _id, _search_request
+            base_request, model_requests, self.model, _id, _search_request
         )
-        return base_request, attributes_requests
+        return base_request, model_requests
 
     def create_request(self, item_value):
         """Builds a set of search requests that will be able to load all the
@@ -267,18 +267,18 @@ class DatabaseItem:
         # value `item_value` and initialize its _id
         base_request = self.item_mapper.create_request(item_value)
 
-        #  Builds additional requests required to create all `attributes` of the
+        #  Builds additional requests required to create all attributes of the
         #  `DatabaseItem`. Each attribute is allowed to either modify the
         #  `base_request`, build a new request or do nothing.
-        attributes_requests = {}
+        model_requests = {}
         self._request_dict_with_values(
             base_request,
-            attributes_requests,
-            self.attributes,
+            model_requests,
+            self.model,
             item_value,
             _create_request,
         )
-        return base_request, attributes_requests
+        return base_request, model_requests
 
     def delete_request(self, _id):
         """Builds a set of delete requests that will be able to delete all the
@@ -291,14 +291,14 @@ class DatabaseItem:
         # corresponding to _id
         base_request = self.item_mapper.delete_request(_id)
 
-        #  Builds additional requests required to delete all `attributes` of the
+        #  Builds additional requests required to delete all attributes of the
         #  `DatabaseItem`. Each attribute is allowed to either modify the
         #  `base_request`, build a new request or do nothing.
-        attributes_requests = {}
+        model_requests = {}
         self._request_dict(
-            base_request, attributes_requests, self.attributes, _id, _delete_request
+            base_request, model_requests, self.model, _id, _delete_request
         )
-        return base_request, attributes_requests
+        return base_request, model_requests
 
     def update_request(self, _id, item_value):
         """Builds a set of update requests that will be able to update the
@@ -314,19 +314,19 @@ class DatabaseItem:
         # value `item_value` and initialize its _id
         base_request = self.item_mapper.update_request(_id, item_value)
 
-        #  Builds additional requests required to create all `attributes` of the
+        #  Builds additional requests required to create all attributes of the
         #  `DatabaseItem`. Each attribute is allowed to either modify the
         #  `base_request`, build a new request or do nothing.
-        attributes_requests = {}
+        model_requests = {}
         self._request_dict_with_id_and_values(
             base_request,
-            attributes_requests,
-            self.attributes,
+            model_requests,
+            self.model,
             _id,
             item_value,
             _update_request,
         )
-        return base_request, attributes_requests
+        return base_request, model_requests
 
     def _load_list(
         self, root_request_response, attributes_responses, item_list, attributes_list
@@ -392,13 +392,11 @@ class DatabaseItem:
         backo item using `item.load(loaded_json_dict)`.
 
         Notice the `_id` is not yet included in the result, as it only includes
-        values retrieved using the `attributes` specification.
+        values retrieved using the `model`.
         """
         item = self.item_mapper.load(root_request_response)
-        # TODO: attributes is not necessarily a dict
-        self._load_dict(
-            root_request_response, attribute_responses, item, self.attributes
-        )
+        # TODO: model is not necessarily a dict
+        self._load_dict(root_request_response, attribute_responses, item, self.model)
         return item
 
     def created_id(self, base_create_response):
