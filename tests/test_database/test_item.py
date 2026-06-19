@@ -9,7 +9,7 @@ from hamcrest import (
     has_properties,
 )
 
-from backo.database.item import DatabaseItem, DatabaseAttribute, IdMapper
+from backo.database.item import DatabaseItem, DatabaseAttribute, ItemMapper
 from backo.database.request import (
     DatabaseSearchRequest,
     DatabaseCreateRequest,
@@ -20,15 +20,12 @@ from backo.database.request import (
 
 class TestDatabaseItem(unittest.TestCase):
     def test_init_database_item(self):
-        id_mapper = MagicMock(spec=IdMapper)
+        item_mapper = MagicMock(spec=ItemMapper)
 
-        attribute_mocks = [
-            MagicMock(spec=DatabaseAttribute)
-            for i in range(6)
-        ]
+        attribute_mocks = [MagicMock(spec=DatabaseAttribute) for i in range(6)]
 
         database_item = DatabaseItem(
-            id_mapper,
+            item_mapper,
             {
                 "name": attribute_mocks[0],
                 "nested": {
@@ -41,19 +38,24 @@ class TestDatabaseItem(unittest.TestCase):
                 },
             },
         )
-        for attribute, path in zip(attribute_mocks, [
-            ["name"],
-            ["nested", "data", 0, 0],
-            ["nested", "data", 0, 1],
-            ["nested", "data", 1],
-            ["nested", "data", 2, "nested_data"],
-            ["nested", "time"],
-            ]):
-            assert_that(attribute.set_attribute_path.call_args_list,
-                        contains_exactly(has_properties(args=contains_exactly(path))))
+        for attribute, path in zip(
+            attribute_mocks,
+            [
+                ["name"],
+                ["nested", "data", 0, 0],
+                ["nested", "data", 0, 1],
+                ["nested", "data", 1],
+                ["nested", "data", 2, "nested_data"],
+                ["nested", "time"],
+            ],
+        ):
+            assert_that(
+                attribute.set_attribute_path.call_args_list,
+                contains_exactly(has_properties(args=contains_exactly(path))),
+            )
 
     def test_search_request_simple_item(self):
-        id_mapper = MagicMock(spec=IdMapper)
+        item_mapper = MagicMock(spec=ItemMapper)
 
         attribute_requests = [MagicMock(spec=DatabaseSearchRequest) for _ in range(3)]
         attribute_mocks = [
@@ -64,7 +66,7 @@ class TestDatabaseItem(unittest.TestCase):
             attribute_mocks[i].search_request.return_value = attribute_requests[i]
 
         database_item = DatabaseItem(
-            id_mapper,
+            item_mapper,
             {
                 "login": attribute_mocks[0],
                 "name": attribute_mocks[1],
@@ -75,7 +77,7 @@ class TestDatabaseItem(unittest.TestCase):
         search_requests = database_item.search_request("mock_id")
 
         assert_that(
-            id_mapper.search_request.call_args_list,
+            item_mapper.search_request.call_args_list,
             contains_exactly(has_properties(args=contains_exactly("mock_id"))),
         )
         for attribute in attribute_mocks:
@@ -84,7 +86,7 @@ class TestDatabaseItem(unittest.TestCase):
                 contains_exactly(
                     has_properties(
                         args=contains_exactly(
-                            id_mapper.search_request.return_value, "mock_id"
+                            item_mapper.search_request.return_value, "mock_id"
                         )
                     )
                 ),
@@ -93,7 +95,7 @@ class TestDatabaseItem(unittest.TestCase):
         assert_that(
             search_requests,
             contains_exactly(
-                id_mapper.search_request.return_value,
+                item_mapper.search_request.return_value,
                 has_entries(
                     {
                         "login": attribute_requests[0],
@@ -105,7 +107,7 @@ class TestDatabaseItem(unittest.TestCase):
         )
 
     def test_search_request_with_complex_nested_attributes(self):
-        id_mapper = MagicMock(spec=IdMapper)
+        item_mapper = MagicMock(spec=ItemMapper)
 
         attribute_requests = [MagicMock(spec=DatabaseSearchRequest) for _ in range(6)]
         attribute_mocks = [
@@ -116,7 +118,7 @@ class TestDatabaseItem(unittest.TestCase):
             attribute_mocks[i].search_request.return_value = attribute_requests[i]
 
         database_item = DatabaseItem(
-            id_mapper,
+            item_mapper,
             {
                 "name": attribute_mocks[0],
                 "nested": {
@@ -133,7 +135,7 @@ class TestDatabaseItem(unittest.TestCase):
         search_requests = database_item.search_request("mock_id")
 
         assert_that(
-            id_mapper.search_request.call_args_list,
+            item_mapper.search_request.call_args_list,
             contains_exactly(has_properties(args=contains_exactly("mock_id"))),
         )
         for attribute in attribute_mocks:
@@ -142,7 +144,7 @@ class TestDatabaseItem(unittest.TestCase):
                 contains_exactly(
                     has_properties(
                         args=contains_exactly(
-                            id_mapper.search_request.return_value, "mock_id"
+                            item_mapper.search_request.return_value, "mock_id"
                         )
                     )
                 ),
@@ -151,7 +153,7 @@ class TestDatabaseItem(unittest.TestCase):
         assert_that(
             search_requests,
             contains_exactly(
-                id_mapper.search_request.return_value,
+                item_mapper.search_request.return_value,
                 has_entries(
                     {
                         "name": attribute_requests[0],
@@ -169,7 +171,7 @@ class TestDatabaseItem(unittest.TestCase):
         )
 
     def test_create_request_simple_item(self):
-        id_mapper = MagicMock(spec=IdMapper)
+        item_mapper = MagicMock(spec=ItemMapper)
 
         attribute_requests = [MagicMock(spec=DatabaseCreateRequest) for _ in range(3)]
         attribute_mocks = [
@@ -180,7 +182,7 @@ class TestDatabaseItem(unittest.TestCase):
             attribute_mocks[i].create_request.return_value = attribute_requests[i]
 
         database_item = DatabaseItem(
-            id_mapper,
+            item_mapper,
             {
                 "login": attribute_mocks[0],
                 "name": attribute_mocks[1],
@@ -193,7 +195,7 @@ class TestDatabaseItem(unittest.TestCase):
         )
 
         assert_that(
-            id_mapper.create_request.call_args_list,
+            item_mapper.create_request.call_args_list,
             contains_exactly(
                 has_properties(
                     args=contains_exactly(
@@ -216,7 +218,7 @@ class TestDatabaseItem(unittest.TestCase):
                 contains_exactly(
                     has_properties(
                         args=contains_exactly(
-                            id_mapper.create_request.return_value, value
+                            item_mapper.create_request.return_value, value
                         )
                     )
                 ),
@@ -225,7 +227,7 @@ class TestDatabaseItem(unittest.TestCase):
         assert_that(
             create_requests,
             contains_exactly(
-                id_mapper.create_request.return_value,
+                item_mapper.create_request.return_value,
                 has_entries(
                     {
                         "login": attribute_requests[0],
@@ -237,7 +239,7 @@ class TestDatabaseItem(unittest.TestCase):
         )
 
     def test_create_request_with_complex_nested_attributes(self):
-        id_mapper = MagicMock(spec=IdMapper)
+        item_mapper = MagicMock(spec=ItemMapper)
 
         attribute_requests = [MagicMock(spec=DatabaseSearchRequest) for _ in range(6)]
         attribute_mocks = [
@@ -248,7 +250,7 @@ class TestDatabaseItem(unittest.TestCase):
             attribute_mocks[i].create_request.return_value = attribute_requests[i]
 
         database_item = DatabaseItem(
-            id_mapper,
+            item_mapper,
             {
                 "name": attribute_mocks[0],
                 "nested": {
@@ -277,7 +279,7 @@ class TestDatabaseItem(unittest.TestCase):
         )
 
         assert_that(
-            id_mapper.create_request.call_args_list,
+            item_mapper.create_request.call_args_list,
             contains_exactly(
                 has_properties(
                     args=contains_exactly(
@@ -318,7 +320,7 @@ class TestDatabaseItem(unittest.TestCase):
                 contains_exactly(
                     has_properties(
                         args=contains_exactly(
-                            id_mapper.create_request.return_value, value
+                            item_mapper.create_request.return_value, value
                         )
                     )
                 ),
@@ -327,7 +329,7 @@ class TestDatabaseItem(unittest.TestCase):
         assert_that(
             create_requests,
             contains_exactly(
-                id_mapper.create_request.return_value,
+                item_mapper.create_request.return_value,
                 has_entries(
                     {
                         "name": attribute_requests[0],
@@ -345,7 +347,7 @@ class TestDatabaseItem(unittest.TestCase):
         )
 
     def test_delete_request_simple_item(self):
-        id_mapper = MagicMock(spec=IdMapper)
+        item_mapper = MagicMock(spec=ItemMapper)
 
         attribute_requests = [MagicMock(spec=DatabaseDeleteRequest) for _ in range(3)]
         attribute_mocks = [
@@ -356,7 +358,7 @@ class TestDatabaseItem(unittest.TestCase):
             attribute_mocks[i].delete_request.return_value = attribute_requests[i]
 
         database_item = DatabaseItem(
-            id_mapper,
+            item_mapper,
             {
                 "login": attribute_mocks[0],
                 "name": attribute_mocks[1],
@@ -367,7 +369,7 @@ class TestDatabaseItem(unittest.TestCase):
         delete_requests = database_item.delete_request("mock_id")
 
         assert_that(
-            id_mapper.delete_request.call_args_list,
+            item_mapper.delete_request.call_args_list,
             contains_exactly(has_properties(args=contains_exactly("mock_id"))),
         )
         for attribute in attribute_mocks:
@@ -376,7 +378,7 @@ class TestDatabaseItem(unittest.TestCase):
                 contains_exactly(
                     has_properties(
                         args=contains_exactly(
-                            id_mapper.delete_request.return_value, "mock_id"
+                            item_mapper.delete_request.return_value, "mock_id"
                         )
                     )
                 ),
@@ -385,7 +387,7 @@ class TestDatabaseItem(unittest.TestCase):
         assert_that(
             delete_requests,
             contains_exactly(
-                id_mapper.delete_request.return_value,
+                item_mapper.delete_request.return_value,
                 has_entries(
                     {
                         "login": attribute_requests[0],
@@ -397,7 +399,7 @@ class TestDatabaseItem(unittest.TestCase):
         )
 
     def test_delete_request_with_complex_nested_attributes(self):
-        id_mapper = MagicMock(spec=IdMapper)
+        item_mapper = MagicMock(spec=ItemMapper)
 
         attribute_requests = [MagicMock(spec=DatabaseSearchRequest) for _ in range(6)]
         attribute_mocks = [
@@ -408,7 +410,7 @@ class TestDatabaseItem(unittest.TestCase):
             attribute_mocks[i].delete_request.return_value = attribute_requests[i]
 
         database_item = DatabaseItem(
-            id_mapper,
+            item_mapper,
             {
                 "name": attribute_mocks[0],
                 "nested": {
@@ -425,7 +427,7 @@ class TestDatabaseItem(unittest.TestCase):
         delete_requests = database_item.delete_request("mock_id")
 
         assert_that(
-            id_mapper.delete_request.call_args_list,
+            item_mapper.delete_request.call_args_list,
             contains_exactly(has_properties(args=contains_exactly("mock_id"))),
         )
         for attribute in attribute_mocks:
@@ -434,7 +436,7 @@ class TestDatabaseItem(unittest.TestCase):
                 contains_exactly(
                     has_properties(
                         args=contains_exactly(
-                            id_mapper.delete_request.return_value, "mock_id"
+                            item_mapper.delete_request.return_value, "mock_id"
                         )
                     )
                 ),
@@ -443,7 +445,7 @@ class TestDatabaseItem(unittest.TestCase):
         assert_that(
             delete_requests,
             contains_exactly(
-                id_mapper.delete_request.return_value,
+                item_mapper.delete_request.return_value,
                 has_entries(
                     {
                         "name": attribute_requests[0],
@@ -461,7 +463,7 @@ class TestDatabaseItem(unittest.TestCase):
         )
 
     def test_update_request_simple_item(self):
-        id_mapper = MagicMock(spec=IdMapper)
+        item_mapper = MagicMock(spec=ItemMapper)
 
         attribute_requests = [MagicMock(spec=DatabaseUpdateRequest) for _ in range(3)]
         attribute_mocks = [
@@ -472,7 +474,7 @@ class TestDatabaseItem(unittest.TestCase):
             attribute_mocks[i].update_request.return_value = attribute_requests[i]
 
         database_item = DatabaseItem(
-            id_mapper,
+            item_mapper,
             {
                 "login": attribute_mocks[0],
                 "name": attribute_mocks[1],
@@ -485,7 +487,7 @@ class TestDatabaseItem(unittest.TestCase):
         )
 
         assert_that(
-            id_mapper.update_request.call_args_list,
+            item_mapper.update_request.call_args_list,
             contains_exactly(
                 has_properties(
                     args=contains_exactly(
@@ -509,7 +511,7 @@ class TestDatabaseItem(unittest.TestCase):
                 contains_exactly(
                     has_properties(
                         args=contains_exactly(
-                            id_mapper.update_request.return_value, "mock_id", value
+                            item_mapper.update_request.return_value, "mock_id", value
                         )
                     )
                 ),
@@ -518,7 +520,7 @@ class TestDatabaseItem(unittest.TestCase):
         assert_that(
             update_requests,
             contains_exactly(
-                id_mapper.update_request.return_value,
+                item_mapper.update_request.return_value,
                 has_entries(
                     {
                         "login": attribute_requests[0],
@@ -530,7 +532,7 @@ class TestDatabaseItem(unittest.TestCase):
         )
 
     def test_update_request_with_complex_nested_attributes(self):
-        id_mapper = MagicMock(spec=IdMapper)
+        item_mapper = MagicMock(spec=ItemMapper)
 
         attribute_requests = [MagicMock(spec=DatabaseUpdateRequest) for _ in range(6)]
         attribute_mocks = [
@@ -541,7 +543,7 @@ class TestDatabaseItem(unittest.TestCase):
             attribute_mocks[i].update_request.return_value = attribute_requests[i]
 
         database_item = DatabaseItem(
-            id_mapper,
+            item_mapper,
             {
                 "name": attribute_mocks[0],
                 "nested": {
@@ -571,7 +573,7 @@ class TestDatabaseItem(unittest.TestCase):
         )
 
         assert_that(
-            id_mapper.update_request.call_args_list,
+            item_mapper.update_request.call_args_list,
             contains_exactly(
                 has_properties(
                     args=contains_exactly(
@@ -613,7 +615,7 @@ class TestDatabaseItem(unittest.TestCase):
                 contains_exactly(
                     has_properties(
                         args=contains_exactly(
-                            id_mapper.update_request.return_value, "mock_id", value
+                            item_mapper.update_request.return_value, "mock_id", value
                         )
                     )
                 ),
@@ -622,7 +624,7 @@ class TestDatabaseItem(unittest.TestCase):
         assert_that(
             update_requests,
             contains_exactly(
-                id_mapper.update_request.return_value,
+                item_mapper.update_request.return_value,
                 has_entries(
                     {
                         "name": attribute_requests[0],
@@ -646,8 +648,8 @@ class TestDatabaseItem(unittest.TestCase):
         """
 
         root_response = MagicMock()
-        mock_id_mapper = MagicMock(spec=IdMapper)
-        mock_id_mapper.load.return_value = {}
+        mock_item_mapper = MagicMock(spec=ItemMapper)
+        mock_item_mapper.load.return_value = {}
 
         attribute_responses = [MagicMock() for _ in range(3)]
         attribute_mocks = [
@@ -655,7 +657,7 @@ class TestDatabaseItem(unittest.TestCase):
             for i in range(3)
         ]
         database_item = DatabaseItem(
-            mock_id_mapper,
+            mock_item_mapper,
             {
                 "login": attribute_mocks[0],
                 "name": attribute_mocks[1],
@@ -678,7 +680,7 @@ class TestDatabaseItem(unittest.TestCase):
         )
 
         assert_that(
-            mock_id_mapper.load.call_args_list,
+            mock_item_mapper.load.call_args_list,
             contains_exactly(has_properties(args=contains_exactly(root_response))),
         )
 
@@ -710,8 +712,8 @@ class TestDatabaseItem(unittest.TestCase):
         """
 
         root_response = MagicMock()
-        mock_id_mapper = MagicMock(spec=IdMapper)
-        mock_id_mapper.load.return_value = {}
+        mock_item_mapper = MagicMock(spec=ItemMapper)
+        mock_item_mapper.load.return_value = {}
 
         attribute_responses = [MagicMock() for _ in range(6)]
         attribute_mocks = [
@@ -719,7 +721,7 @@ class TestDatabaseItem(unittest.TestCase):
             for i in range(6)
         ]
         database_item = DatabaseItem(
-            mock_id_mapper,
+            mock_item_mapper,
             {
                 "name": attribute_mocks[0],
                 "nested": {
@@ -757,7 +759,7 @@ class TestDatabaseItem(unittest.TestCase):
         )
 
         assert_that(
-            mock_id_mapper.load.call_args_list,
+            mock_item_mapper.load.call_args_list,
             contains_exactly(has_properties(args=contains_exactly(root_response))),
         )
 

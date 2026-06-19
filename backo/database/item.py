@@ -3,9 +3,9 @@ from .request import DatabaseSearchRequest, DatabaseCreateRequest, DatabaseDelet
 from typing import Any
 
 
-class IdMapper(ABC):
+class ItemMapper(ABC):
     @abstractmethod
-    def id(self, response) -> str:
+    def created_id(self, create_response) -> str:
         pass
 
     @abstractmethod
@@ -27,6 +27,7 @@ class IdMapper(ABC):
     def load(self, _base_response):
         return {}
 
+
 class DatabaseAttribute:
     def set_attribute_path(self, attribute_path):
         self.attribute_path = attribute_path
@@ -45,6 +46,7 @@ class DatabaseAttribute:
 
     def load(self, base_response, attribute_response):
         pass
+
 
 def _search_request(attribute, base_request, _id):
     return attribute.search_request(base_request, _id)
@@ -75,9 +77,9 @@ class DatabaseItem:
     DatabaseItem specifies how to retrieve them from a specific database.
     """
 
-    def __init__(self, id_mapper: IdMapper, attributes: dict[str, Any]):
+    def __init__(self, item_mapper: ItemMapper, attributes: dict[str, Any]):
         """
-        The `id_mapper` specifies how a unique backo `_id` can be built from the
+        The `item_mapper` specifies how a unique backo `_id` can be built from the
         external database, and how the item can be queried later in the
         database.
 
@@ -94,10 +96,10 @@ class DatabaseItem:
         `description` attributes of the LDAP response obtained from the result
         of the search performed using the search_request() parameters.
 
-        :param id_mapper: Specifies how to map database entries to backo `_id`s.
+        :param item_mapper: Specifies how to map database entries to backo `_id`s.
         :param attributes: Specification of database attributes
         """
-        self.id_mapper = id_mapper
+        self.item_mapper = item_mapper
         self.attributes = attributes
         self._set_attribute_paths(self.attributes, [])
 
@@ -237,9 +239,9 @@ class DatabaseItem:
         :param _id: Backo ID of the item to search
         """
 
-        # Builds request required by the `id_mapper` to perform the `base`
+        # Builds request required by the `item_mapper` to perform the `base`
         # initialization of the `DatabaseItem` instance associated to an `_id`
-        base_request = self.id_mapper.search_request(_id)
+        base_request = self.item_mapper.search_request(_id)
 
         #  Builds additional requests required to initialize all `attributes` of
         #  the `DatabaseItem`. Each attribute is allowed to either modify the
@@ -261,9 +263,9 @@ class DatabaseItem:
         item
         """
 
-        # Builds request required by the `id_mapper` to create the `item` with
+        # Builds request required by the `item_mapper` to create the `item` with
         # value `item_value` and initialize its _id
-        base_request = self.id_mapper.create_request(item_value)
+        base_request = self.item_mapper.create_request(item_value)
 
         #  Builds additional requests required to create all `attributes` of the
         #  `DatabaseItem`. Each attribute is allowed to either modify the
@@ -285,9 +287,9 @@ class DatabaseItem:
         :param _id: Backo ID of the item to delete
         """
 
-        # Builds request required by the `id_mapper` to delete the item
+        # Builds request required by the `item_mapper` to delete the item
         # corresponding to _id
-        base_request = self.id_mapper.delete_request(_id)
+        base_request = self.item_mapper.delete_request(_id)
 
         #  Builds additional requests required to delete all `attributes` of the
         #  `DatabaseItem`. Each attribute is allowed to either modify the
@@ -308,9 +310,9 @@ class DatabaseItem:
         item
         """
 
-        # Builds request required by the `id_mapper` to create the `item` with
+        # Builds request required by the `item_mapper` to create the `item` with
         # value `item_value` and initialize its _id
-        base_request = self.id_mapper.update_request(_id, item_value)
+        base_request = self.item_mapper.update_request(_id, item_value)
 
         #  Builds additional requests required to create all `attributes` of the
         #  `DatabaseItem`. Each attribute is allowed to either modify the
@@ -392,7 +394,7 @@ class DatabaseItem:
         Notice the `_id` is not yet included in the result, as it only includes
         values retrieved using the `attributes` specification.
         """
-        item = self.id_mapper.load(root_request_response)
+        item = self.item_mapper.load(root_request_response)
         # TODO: attributes is not necessarily a dict
         self._load_dict(
             root_request_response, attribute_responses, item, self.attributes
@@ -400,4 +402,4 @@ class DatabaseItem:
         return item
 
     def created_id(self, base_create_response):
-        return self.id_mapper.id(base_create_response)
+        return self.item_mapper.created_id(base_create_response)
