@@ -27,6 +27,24 @@ class IdMapper(ABC):
     def load(self, _base_response):
         return {}
 
+class DatabaseAttribute:
+    def set_attribute_path(self, attribute_path):
+        self.attribute_path = attribute_path
+
+    def search_request(self, base_request, _id):
+        pass
+
+    def create_request(self, base_request, value):
+        pass
+
+    def update_request(self, base_request, _id, value):
+        pass
+
+    def delete_request(self, base_request, _id):
+        pass
+
+    def load(self, base_response, attribute_response):
+        pass
 
 def _search_request(attribute, base_request, _id):
     return attribute.search_request(base_request, _id)
@@ -81,6 +99,19 @@ class DatabaseItem:
         """
         self.id_mapper = id_mapper
         self.attributes = attributes
+        self._set_attribute_paths(self.attributes, [])
+
+    def _set_attribute_paths(self, attributes, current_path):
+        if isinstance(attributes, list):
+            i = 0
+            for attribute in attributes:
+                self._set_attribute_paths(attribute, current_path + [i])
+                i += 1
+        elif isinstance(attributes, dict):
+            for key, attribute in attributes.items():
+                self._set_attribute_paths(attribute, current_path + [key])
+        else:
+            attributes.set_attribute_path(current_path)
 
     def _request_list(
         self, base_request, request_list, attributes_list, _id, request_method

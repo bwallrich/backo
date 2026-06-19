@@ -9,7 +9,7 @@ from hamcrest import (
     has_properties,
 )
 
-from backo.database.item import DatabaseItem, IdMapper
+from backo.database.item import DatabaseItem, DatabaseAttribute, IdMapper
 from backo.database.request import (
     DatabaseSearchRequest,
     DatabaseCreateRequest,
@@ -19,12 +19,45 @@ from backo.database.request import (
 
 
 class TestDatabaseItem(unittest.TestCase):
+    def test_init_database_item(self):
+        id_mapper = MagicMock(spec=IdMapper)
+
+        attribute_mocks = [
+            MagicMock(spec=DatabaseAttribute)
+            for i in range(6)
+        ]
+
+        database_item = DatabaseItem(
+            id_mapper,
+            {
+                "name": attribute_mocks[0],
+                "nested": {
+                    "data": [
+                        [attribute_mocks[1], attribute_mocks[2]],
+                        attribute_mocks[3],
+                        {"nested_data": attribute_mocks[4]},
+                    ],
+                    "time": attribute_mocks[5],
+                },
+            },
+        )
+        for attribute, path in zip(attribute_mocks, [
+            ["name"],
+            ["nested", "data", 0, 0],
+            ["nested", "data", 0, 1],
+            ["nested", "data", 1],
+            ["nested", "data", 2, "nested_data"],
+            ["nested", "time"],
+            ]):
+            assert_that(attribute.set_attribute_path.call_args_list,
+                        contains_exactly(has_properties(args=contains_exactly(path))))
+
     def test_search_request_simple_item(self):
         id_mapper = MagicMock(spec=IdMapper)
 
         attribute_requests = [MagicMock(spec=DatabaseSearchRequest) for _ in range(3)]
         attribute_mocks = [
-            MagicMock(spec=DatabaseItem, request=attribute_requests[i])
+            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
             for i in range(3)
         ]
         for i in range(3):
@@ -76,7 +109,7 @@ class TestDatabaseItem(unittest.TestCase):
 
         attribute_requests = [MagicMock(spec=DatabaseSearchRequest) for _ in range(6)]
         attribute_mocks = [
-            MagicMock(spec=DatabaseItem, request=attribute_requests[i])
+            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
             for i in range(6)
         ]
         for i in range(6):
@@ -140,7 +173,7 @@ class TestDatabaseItem(unittest.TestCase):
 
         attribute_requests = [MagicMock(spec=DatabaseCreateRequest) for _ in range(3)]
         attribute_mocks = [
-            MagicMock(spec=DatabaseItem, request=attribute_requests[i])
+            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
             for i in range(3)
         ]
         for i in range(3):
@@ -208,7 +241,7 @@ class TestDatabaseItem(unittest.TestCase):
 
         attribute_requests = [MagicMock(spec=DatabaseSearchRequest) for _ in range(6)]
         attribute_mocks = [
-            MagicMock(spec=DatabaseItem, request=attribute_requests[i])
+            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
             for i in range(6)
         ]
         for i in range(6):
@@ -316,7 +349,7 @@ class TestDatabaseItem(unittest.TestCase):
 
         attribute_requests = [MagicMock(spec=DatabaseDeleteRequest) for _ in range(3)]
         attribute_mocks = [
-            MagicMock(spec=DatabaseItem, request=attribute_requests[i])
+            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
             for i in range(3)
         ]
         for i in range(3):
@@ -368,7 +401,7 @@ class TestDatabaseItem(unittest.TestCase):
 
         attribute_requests = [MagicMock(spec=DatabaseSearchRequest) for _ in range(6)]
         attribute_mocks = [
-            MagicMock(spec=DatabaseItem, request=attribute_requests[i])
+            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
             for i in range(6)
         ]
         for i in range(6):
@@ -432,7 +465,7 @@ class TestDatabaseItem(unittest.TestCase):
 
         attribute_requests = [MagicMock(spec=DatabaseUpdateRequest) for _ in range(3)]
         attribute_mocks = [
-            MagicMock(spec=DatabaseItem, request=attribute_requests[i])
+            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
             for i in range(3)
         ]
         for i in range(3):
@@ -501,7 +534,7 @@ class TestDatabaseItem(unittest.TestCase):
 
         attribute_requests = [MagicMock(spec=DatabaseUpdateRequest) for _ in range(6)]
         attribute_mocks = [
-            MagicMock(spec=DatabaseItem, request=attribute_requests[i])
+            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
             for i in range(6)
         ]
         for i in range(6):
@@ -618,7 +651,7 @@ class TestDatabaseItem(unittest.TestCase):
 
         attribute_responses = [MagicMock() for _ in range(3)]
         attribute_mocks = [
-            MagicMock(spec=DatabaseItem, response=attribute_responses[i])
+            MagicMock(spec=DatabaseAttribute, response=attribute_responses[i])
             for i in range(3)
         ]
         database_item = DatabaseItem(
@@ -682,7 +715,7 @@ class TestDatabaseItem(unittest.TestCase):
 
         attribute_responses = [MagicMock() for _ in range(6)]
         attribute_mocks = [
-            MagicMock(spec=DatabaseItem, response=attribute_responses[i])
+            MagicMock(spec=DatabaseAttribute, response=attribute_responses[i])
             for i in range(6)
         ]
         database_item = DatabaseItem(
