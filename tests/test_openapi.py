@@ -17,6 +17,8 @@ from backo import (
     Item,
     String,
 )
+from backo.action import Action
+from backo.selection import Selection
 
 YML_DIR = "/tmp/backo_tests_openapi"
 
@@ -148,3 +150,52 @@ class TestOpenAPI(unittest.TestCase):
         self.assertEqual(len(spec["paths"]["/test/_selections/_all"]), 2)
         for method in ["get", "post"]:
             self.assertIn(method, spec["paths"]["/test/_selections/_all"])
+
+    def test_openapi_action(self):
+        """
+        Test OpenAPI specification generation for a backoffice with a simple action.
+        """
+        # Setup Test Backoffice with a simple test Collection
+        backoffice = Backoffice("app")
+        coll = Collection(
+            "test",
+            Item({"str": String()}),
+            self.__connector,
+        )
+        backoffice.register_collection(coll)
+        coll.register_action("do", Action({"str": String()}, lambda action, item: None))
+        backoffice.build_routes(Flask(__name__))
+        spec = backoffice.get_openapi()
+
+        self.assertIn("/test/_actions/do/{id}", spec["paths"])
+        self.assertIn("post", spec["paths"]["/test/_actions/do/{id}"])
+        request_body = spec["paths"]["/test/_actions/do/{id}"]["post"]["requestBody"]
+        schema = request_body["content"]["application/json"]["schema"]
+        self.assertIn("str", schema["properties"])
+        self.assertEqual(schema["properties"]["str"]["type"], "string")
+
+    def test_openapi_selection(self):
+        """
+        Test OpenAPI specification generation for a backoffice with a simple selection.
+        """
+        # Setup Test Backoffice with a simple test Collection
+        backoffice = Backoffice("app")
+        coll = Collection(
+            "test",
+            Item({"value": Float()}),
+            self.__connector,
+        )
+        backoffice.register_collection(coll)
+        coll.register_selection("see", Selection(["$.value"]))
+        backoffice.build_routes(Flask(__name__))
+        spec = backoffice.get_openapi()
+
+        self.assertIn("/test/_selections/see", spec["paths"])
+        selection_path = spec["paths"]["/test/_selections/see"]
+        self.assertIn("post", selection_path)
+        self.assertIn("get", selection_path)
+        selection_request_body = selection_path["post"]["requestBody"]
+        self.assertEqual(
+            selection_request_body["content"]["application/json"]["schema"]["$ref"],
+            "#/components/schemas/backo-filter",
+        )
