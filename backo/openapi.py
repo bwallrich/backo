@@ -551,7 +551,7 @@ class OpenAPISpec:
                 "content": {"text/plain": {}},
             }
 
-        self.__add_spec(f"/{route}/{{id}}", "del", spec)
+        self.__add_spec(route, "del", spec)
 
     def add_patch_item(
         self,
