@@ -97,14 +97,14 @@ class TestOpenAPI(unittest.TestCase):
         self.assertIn("test", spec["components"]["schemas"])
         # expecting all properties to be present in the test schema with the correct type
         schemas = spec["components"]["schemas"]
-        for properties, type in zip(
+        for properties, expected_type in zip(
             ["_id", "_meta", "str", "float", "int", "bool", "blobfile"],
             ["string", "object", "string", "number", "integer", "boolean", "string"],
         ):
             self.assertIn(properties, schemas["test"]["properties"])
             self.assertEqual(
                 schemas["test"]["properties"][properties]["type"],
-                type,
+                expected_type,
             )
         # expecting the _meta property to be a reference to the test__meta schema
         self.assertEqual(
