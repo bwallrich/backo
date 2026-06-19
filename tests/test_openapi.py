@@ -12,6 +12,7 @@ from backo import (
     Bool,
     Collection,
     DBYmlConnector,
+    Float,
     Int,
     Item,
     String,
@@ -79,6 +80,7 @@ class TestOpenAPI(unittest.TestCase):
                 Item(
                     {
                         "str": String(),
+                        "float": Float(),
                         "int": Int(),
                         "bool": Bool(),
                         "blobfile": BlobFile(),
@@ -92,39 +94,57 @@ class TestOpenAPI(unittest.TestCase):
         # expecting the test schema to be present in the components
         self.assertIn("test", spec["components"]["schemas"])
         # expecting all properties to be present in the test schema with the correct type
+        schemas = spec["components"]["schemas"]
         for properties, type in zip(
-            ["_id", "_meta", "str", "int", "bool", "blobfile"],
-            ["string", "object", "string", "integer", "boolean", "string"],
+            ["_id", "_meta", "str", "float", "int", "bool", "blobfile"],
+            ["string", "object", "string", "number", "integer", "boolean", "string"],
         ):
-            self.assertIn(
-                properties, spec["components"]["schemas"]["test"]["properties"]
-            )
+            self.assertIn(properties, schemas["test"]["properties"])
             self.assertEqual(
-                spec["components"]["schemas"]["test"]["properties"][properties]["type"],
+                schemas["test"]["properties"][properties]["type"],
                 type,
             )
         # expecting the _meta property to be a reference to the test__meta schema
         self.assertEqual(
-            spec["components"]["schemas"]["test"]["properties"]["_meta"]["$ref"],
+            schemas["test"]["properties"]["_meta"]["$ref"],
             "#/components/schemas/test__meta",
         )
         # expecting the blobfile property to have contentEncoding set to base64
         self.assertEqual(
-            spec["components"]["schemas"]["test"]["properties"]["blobfile"][
-                "contentEncoding"
-            ],
+            schemas["test"]["properties"]["blobfile"]["contentEncoding"],
             "base64",
         )
         # expecting no required properties in the test schema
-        self.assertEqual(len(spec["components"]["schemas"]["test"]["required"]), 0)
+        self.assertEqual(len(schemas["test"]["required"]), 0)
         # expecting the title of the test schema to be "test"
-        self.assertEqual(spec["components"]["schemas"]["test"]["title"], "test")
+        self.assertEqual(schemas["test"]["title"], "test")
 
         # expecting routes to be present for the test collection
         self.assertEqual(len(spec["paths"]), 6)
+        ## get and post on /test
         self.assertIn("/test", spec["paths"])
+        self.assertEqual(len(spec["paths"]["/test"]), 2)
+        for method in ["get", "post"]:
+            self.assertIn(method, spec["paths"]["/test"])
+        ## post on /test/_meta
         self.assertIn("/test/_meta", spec["paths"])
+        self.assertEqual(len(spec["paths"]["/test/_meta"]), 1)
+        self.assertIn("post", spec["paths"]["/test/_meta"])
+        ## post on /test/_check
         self.assertIn("/test/_check", spec["paths"])
+        self.assertEqual(len(spec["paths"]["/test/_check"]), 1)
+        self.assertIn("post", spec["paths"]["/test/_check"])
+        ## get, put, patch, delete on /test/{id}
         self.assertIn("/test/{id}", spec["paths"])
+        self.assertEqual(len(spec["paths"]["/test/{id}"]), 5)
+        for method in ["get", "post", "put", "patch", "delete"]:
+            self.assertIn(method, spec["paths"]["/test/{id}"])
+        ## get on /test/{id}/{path}
         self.assertIn("/test/{id}/{path}", spec["paths"])
+        self.assertEqual(len(spec["paths"]["/test/{id}/{path}"]), 1)
+        self.assertIn("get", spec["paths"]["/test/{id}/{path}"])
+        ## get and post on /test/_selections/_all
         self.assertIn("/test/_selections/_all", spec["paths"])
+        self.assertEqual(len(spec["paths"]["/test/_selections/_all"]), 2)
+        for method in ["get", "post"]:
+            self.assertIn(method, spec["paths"]["/test/_selections/_all"])
