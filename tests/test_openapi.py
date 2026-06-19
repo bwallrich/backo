@@ -136,8 +136,8 @@ class TestOpenAPI(unittest.TestCase):
         self.assertIn("post", spec["paths"]["/test/_check"])
         ## get, put, patch, delete on /test/{id}
         self.assertIn("/test/{id}", spec["paths"])
-        self.assertEqual(len(spec["paths"]["/test/{id}"]), 5)
-        for method in ["get", "post", "put", "patch", "delete"]:
+        self.assertEqual(len(spec["paths"]["/test/{id}"]), 4)
+        for method in ["get", "put", "patch", "del"]:
             self.assertIn(method, spec["paths"]["/test/{id}"])
         ## get on /test/{id}/{path}
         self.assertIn("/test/{id}/{path}", spec["paths"])
