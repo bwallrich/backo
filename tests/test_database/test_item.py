@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from hamcrest import (
     assert_that,
@@ -52,6 +52,35 @@ class TestDatabaseItem(unittest.TestCase):
             assert_that(
                 attribute.set_attribute_path.call_args_list,
                 contains_exactly(has_properties(args=contains_exactly(path))),
+            )
+
+    @patch("backo.database.connection.DatabaseConnection", autospec=True)
+    def test_set_default_connection(self, connection):
+        item_mapper = MagicMock(spec=ItemMapper)
+
+        attribute_mocks = [MagicMock(spec=DatabaseAttribute) for i in range(6)]
+
+        database_item = DatabaseItem(
+            item_mapper,
+            {
+                "name": attribute_mocks[0],
+                "nested": {
+                    "data": [
+                        [attribute_mocks[1], attribute_mocks[2]],
+                        attribute_mocks[3],
+                        {"nested_data": attribute_mocks[4]},
+                    ],
+                    "time": attribute_mocks[5],
+                },
+            },
+        )
+
+        database_item.set_default_connection(connection)
+
+        for attribute in attribute_mocks:
+            assert_that(
+                attribute.set_default_connection.call_args_list,
+                contains_exactly(has_properties(args=contains_exactly(connection))),
             )
 
     def test_search_request_simple_item(self):

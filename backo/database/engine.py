@@ -28,6 +28,19 @@ class DatabaseEngine:
         """
         self.database_connection = database_connection
         self.database_item = database_item
+        self.database_item.set_default_connection(self.database_connection)
+
+    def _execute_search(self, request):
+        return request.connection.execute_search(request)
+
+    def _execute_create(self, request):
+        return request.connection.execute_create(request)
+
+    def _execute_delete(self, request):
+        return request.connection.execute_delete(request)
+
+    def _execute_update(self, request):
+        return request.connection.execute_update(request)
 
     def _execute_list_requests(self, requests_list, responses, request_method):
         for i in range(len(requests_list)):
@@ -86,7 +99,7 @@ class DatabaseEngine:
         root_request, attribute_requests = self.database_item.search_request(_id)
 
         base_response, attributes_responses = self._execute_requests(
-            root_request, attribute_requests, self.database_connection.execute_search
+            root_request, attribute_requests, self._execute_search
         )
         item = self.database_item.load(base_response, attributes_responses)
         item["_id"] = _id
@@ -98,7 +111,7 @@ class DatabaseEngine:
         )
 
         base_response, attributes_responses = self._execute_requests(
-            base_request, attributes_requests, self.database_connection.execute_create
+            base_request, attributes_requests, self._execute_create
         )
 
         return self.database_item.created_id(base_response)
@@ -107,7 +120,7 @@ class DatabaseEngine:
         base_request, attribute_requests = self.database_item.delete_request(_id)
 
         base_response, attributes_responses = self._execute_requests(
-            base_request, attribute_requests, self.database_connection.execute_delete
+            base_request, attribute_requests, self._execute_delete
         )
 
     def save(self, _id, item_value):
@@ -116,5 +129,5 @@ class DatabaseEngine:
         )
 
         base_response, attributes_responses = self._execute_requests(
-            base_request, attribute_requests, self.database_connection.execute_update
+            base_request, attribute_requests, self._execute_update
         )

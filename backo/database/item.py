@@ -24,6 +24,10 @@ class ItemMapper:
 
 
 class DatabaseAttribute:
+    def set_default_connection(self, connection):
+        if self.connection is None:
+            self.connection = connection
+
     def set_attribute_path(self, attribute_path):
         self.attribute_path = attribute_path
 
@@ -109,6 +113,19 @@ class DatabaseItem:
                 self._set_attribute_paths(attribute, current_path + [key])
         else:
             attributes.set_attribute_path(current_path)
+
+    def set_default_connection(self, connection):
+        self._set_default_connection(self.model, connection)
+
+    def _set_default_connection(self, attributes, connection):
+        if isinstance(attributes, list):
+            for attribute in attributes:
+                self._set_default_connection(attribute, connection)
+        elif isinstance(attributes, dict):
+            for attribute in attributes.values():
+                self._set_default_connection(attribute, connection)
+        else:
+            attributes.set_default_connection(connection)
 
     def _request_list(
         self, base_request, request_list, attributes_list, _id, request_method
