@@ -20,12 +20,6 @@ from hamcrest import (
 from backo.database.engine import DatabaseEngine
 from backo.database.connection import DatabaseConnection
 from backo.error import NotFoundError
-from backo.database.request import (
-    DatabaseSearchRequest,
-    DatabaseCreateRequest,
-    DatabaseDeleteRequest,
-    DatabaseUpdateRequest,
-)
 
 
 @patch("backo.database.item.DatabaseItem", autospec=True)
@@ -42,11 +36,12 @@ class TestDatabaseEngine(unittest.TestCase):
 
         engine = DatabaseEngine(connection.return_value, database_item.return_value)
 
-        assert_that(database_item.return_value.set_default_connection.call_args_list,
-                    contains_exactly(
-                        has_properties(args=contains_exactly(connection.return_value))
-                        )
-                    )
+        assert_that(
+            database_item.return_value.set_default_connection.call_args_list,
+            contains_exactly(
+                has_properties(args=contains_exactly(connection.return_value))
+            ),
+        )
 
     def test_search(self, connection, database_item):
         """Tests LdapSearchEngine.search method for an existing item.
@@ -70,11 +65,10 @@ class TestDatabaseEngine(unittest.TestCase):
 
         mock_responses = [MagicMock() for _ in range(9)]  # Database specific type
         mock_queries = [
-            MagicMock(spec=DatabaseSearchRequest, response=mock_responses[i],
-                      connection=connection.return_value)
+            MagicMock(response=mock_responses[i], connection=connection.return_value)
             for i in range(9)
         ]
-        
+
         database_item.return_value.search_request.return_value = (
             mock_queries[0],
             {
@@ -119,13 +113,9 @@ class TestDatabaseEngine(unittest.TestCase):
         )
         for mock_request in mock_queries[4:]:
             assert_that(
-                    mock_request.connection.execute_search.call_args_list,
-                    contains_exactly(
-                        has_properties(
-                            args=contains_exactly(mock_request)
-                            )
-                        )
-                    )
+                mock_request.connection.execute_search.call_args_list,
+                contains_exactly(has_properties(args=contains_exactly(mock_request))),
+            )
 
         assert_that(
             database_item.return_value.load.call_args_list,
@@ -180,7 +170,7 @@ class TestDatabaseEngine(unittest.TestCase):
         engine = DatabaseEngine(connection.return_value, database_item.return_value)
 
         database_item.return_value.search_request.return_value = (
-            MagicMock(spec=DatabaseSearchRequest, connection=connection.return_value),
+            MagicMock(connection=connection.return_value),
             {},
         )
         connection.return_value.execute_search.side_effect = NotFoundError(
@@ -199,7 +189,7 @@ class TestDatabaseEngine(unittest.TestCase):
 
         mock_responses = [MagicMock() for _ in range(9)]  # Database specific type
         mock_queries = [
-            MagicMock(spec=DatabaseCreateRequest, response=mock_responses[i], connection=connection.return_value)
+            MagicMock(response=mock_responses[i], connection=connection.return_value)
             for i in range(9)
         ]
 
@@ -258,14 +248,9 @@ class TestDatabaseEngine(unittest.TestCase):
         )
         for mock_request in mock_queries[4:]:
             assert_that(
-                    mock_request.connection.execute_create.call_args_list,
-                    contains_exactly(
-                        has_properties(
-                            args=contains_exactly(mock_request)
-                            )
-                        )
-                    )
-
+                mock_request.connection.execute_create.call_args_list,
+                contains_exactly(has_properties(args=contains_exactly(mock_request))),
+            )
 
         assert_that(
             database_item.return_value.created_id.call_args_list,
@@ -281,7 +266,7 @@ class TestDatabaseEngine(unittest.TestCase):
 
         mock_responses = [MagicMock() for _ in range(9)]  # Database specific type
         mock_queries = [
-            MagicMock(spec=DatabaseDeleteRequest, response=mock_responses[i], connection=connection.return_value)
+            MagicMock(response=mock_responses[i], connection=connection.return_value)
             for i in range(9)
         ]
 
@@ -329,15 +314,9 @@ class TestDatabaseEngine(unittest.TestCase):
         )
         for mock_request in mock_queries[4:]:
             assert_that(
-                    mock_request.connection.execute_delete.call_args_list,
-                    contains_exactly(
-                        has_properties(
-                            args=contains_exactly(mock_request)
-                            )
-                        )
-                    )
-
-
+                mock_request.connection.execute_delete.call_args_list,
+                contains_exactly(has_properties(args=contains_exactly(mock_request))),
+            )
 
     def test_save(self, connection, database_item):
         """Tests LdapSearchEngine.save method for an existing item."""
@@ -346,7 +325,7 @@ class TestDatabaseEngine(unittest.TestCase):
 
         mock_responses = [MagicMock() for _ in range(9)]  # Database specific type
         mock_queries = [
-            MagicMock(spec=DatabaseUpdateRequest, response=mock_responses[i], connection=connection.return_value)
+            MagicMock(response=mock_responses[i], connection=connection.return_value)
             for i in range(9)
         ]
 
@@ -404,12 +383,6 @@ class TestDatabaseEngine(unittest.TestCase):
         )
         for mock_request in mock_queries[4:]:
             assert_that(
-                    mock_request.connection.execute_update.call_args_list,
-                    contains_exactly(
-                        has_properties(
-                            args=contains_exactly(mock_request)
-                            )
-                        )
-                    )
-
-
+                mock_request.connection.execute_update.call_args_list,
+                contains_exactly(has_properties(args=contains_exactly(mock_request))),
+            )
