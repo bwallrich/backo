@@ -199,6 +199,76 @@ class TestDatabaseItem(unittest.TestCase):
             ),
         )
 
+    def test_search_multiple_request_attribute(self):
+        item_mapper = MagicMock(spec=ItemMapper)
+
+        attribute_requests = [MagicMock(spec=DatabaseSearchRequest) for _ in range(5)]
+        attribute_mocks = [
+            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
+            for i in range(2)
+        ]
+        attribute_mocks[0].search_request.return_value = {
+            "request1": attribute_requests[0],
+            "request2": attribute_requests[1],
+        }
+        attribute_mocks[1].search_request.return_value = [
+            attribute_requests[2],
+            {"req1": attribute_requests[3], "req2": attribute_requests[4]},
+        ]
+
+        database_item = DatabaseItem(
+            item_mapper,
+            {"foo": attribute_mocks[0], "nested": {"bar": attribute_mocks[1]}},
+        )
+
+        search_requests = database_item.search_request("mock_id")
+
+        assert_that(
+            item_mapper.search_request.call_args_list,
+            contains_exactly(has_properties(args=contains_exactly("mock_id"))),
+        )
+        for attribute in attribute_mocks:
+            assert_that(
+                attribute.search_request.call_args_list,
+                contains_exactly(
+                    has_properties(
+                        args=contains_exactly(
+                            item_mapper.search_request.return_value, "mock_id"
+                        )
+                    )
+                ),
+            )
+
+        assert_that(
+            search_requests,
+            contains_exactly(
+                item_mapper.search_request.return_value,
+                has_entries(
+                    {
+                        "foo": has_entries(
+                            {
+                                "request1": attribute_requests[0],
+                                "request2": attribute_requests[1],
+                            }
+                        ),
+                        "nested": has_entries(
+                            {
+                                "bar": contains_exactly(
+                                    attribute_requests[2],
+                                    has_entries(
+                                        {
+                                            "req1": attribute_requests[3],
+                                            "req2": attribute_requests[4],
+                                        }
+                                    ),
+                                )
+                            }
+                        ),
+                    }
+                ),
+            ),
+        )
+
     def test_create_request_simple_item(self):
         item_mapper = MagicMock(spec=ItemMapper)
 
@@ -375,6 +445,94 @@ class TestDatabaseItem(unittest.TestCase):
             ),
         )
 
+    def test_create_multiple_request_attribute(self):
+        item_mapper = MagicMock(spec=ItemMapper)
+
+        attribute_requests = [MagicMock(spec=DatabaseCreateRequest) for _ in range(5)]
+        attribute_mocks = [
+            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
+            for i in range(2)
+        ]
+        attribute_mocks[0].create_request.return_value = {
+            "request1": attribute_requests[0],
+            "request2": attribute_requests[1],
+        }
+        attribute_mocks[1].create_request.return_value = [
+            attribute_requests[2],
+            {"req1": attribute_requests[3], "req2": attribute_requests[4]},
+        ]
+
+        database_item = DatabaseItem(
+            item_mapper,
+            {"foo": attribute_mocks[0], "nested": {"bar": attribute_mocks[1]}},
+        )
+
+        create_requests = database_item.create_request(
+            {"foo": "foo_value", "nested": {"bar": ["bar_value_1", "bar_value_2"]}}
+        )
+
+        assert_that(
+            item_mapper.create_request.call_args_list,
+            contains_exactly(
+                has_properties(
+                    args=contains_exactly(
+                        has_entries(
+                            {
+                                "foo": "foo_value",
+                                "nested": has_entries(
+                                    {"bar": ["bar_value_1", "bar_value_2"]}
+                                ),
+                            }
+                        )
+                    )
+                )
+            ),
+        )
+        for attribute, value in zip(
+            attribute_mocks,
+            ["foo_value", contains_exactly("bar_value_1", "bar_value_2")],
+        ):
+            assert_that(
+                attribute.create_request.call_args_list,
+                contains_exactly(
+                    has_properties(
+                        args=contains_exactly(
+                            item_mapper.create_request.return_value, value
+                        )
+                    )
+                ),
+            )
+
+        assert_that(
+            create_requests,
+            contains_exactly(
+                item_mapper.create_request.return_value,
+                has_entries(
+                    {
+                        "foo": has_entries(
+                            {
+                                "request1": attribute_requests[0],
+                                "request2": attribute_requests[1],
+                            }
+                        ),
+                        "nested": has_entries(
+                            {
+                                "bar": contains_exactly(
+                                    attribute_requests[2],
+                                    has_entries(
+                                        {
+                                            "req1": attribute_requests[3],
+                                            "req2": attribute_requests[4],
+                                        }
+                                    ),
+                                )
+                            }
+                        ),
+                    }
+                ),
+            ),
+        )
+
     def test_delete_request_simple_item(self):
         item_mapper = MagicMock(spec=ItemMapper)
 
@@ -486,6 +644,76 @@ class TestDatabaseItem(unittest.TestCase):
                             ],
                             "time": attribute_requests[5],
                         },
+                    }
+                ),
+            ),
+        )
+
+    def test_delete_multiple_request_attribute(self):
+        item_mapper = MagicMock(spec=ItemMapper)
+
+        attribute_requests = [MagicMock(spec=DatabaseDeleteRequest) for _ in range(5)]
+        attribute_mocks = [
+            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
+            for i in range(2)
+        ]
+        attribute_mocks[0].delete_request.return_value = {
+            "request1": attribute_requests[0],
+            "request2": attribute_requests[1],
+        }
+        attribute_mocks[1].delete_request.return_value = [
+            attribute_requests[2],
+            {"req1": attribute_requests[3], "req2": attribute_requests[4]},
+        ]
+
+        database_item = DatabaseItem(
+            item_mapper,
+            {"foo": attribute_mocks[0], "nested": {"bar": attribute_mocks[1]}},
+        )
+
+        delete_requests = database_item.delete_request("mock_id")
+
+        assert_that(
+            item_mapper.delete_request.call_args_list,
+            contains_exactly(has_properties(args=contains_exactly("mock_id"))),
+        )
+        for attribute in attribute_mocks:
+            assert_that(
+                attribute.delete_request.call_args_list,
+                contains_exactly(
+                    has_properties(
+                        args=contains_exactly(
+                            item_mapper.delete_request.return_value, "mock_id"
+                        )
+                    )
+                ),
+            )
+
+        assert_that(
+            delete_requests,
+            contains_exactly(
+                item_mapper.delete_request.return_value,
+                has_entries(
+                    {
+                        "foo": has_entries(
+                            {
+                                "request1": attribute_requests[0],
+                                "request2": attribute_requests[1],
+                            }
+                        ),
+                        "nested": has_entries(
+                            {
+                                "bar": contains_exactly(
+                                    attribute_requests[2],
+                                    has_entries(
+                                        {
+                                            "req1": attribute_requests[3],
+                                            "req2": attribute_requests[4],
+                                        }
+                                    ),
+                                )
+                            }
+                        ),
                     }
                 ),
             ),
@@ -670,6 +898,96 @@ class TestDatabaseItem(unittest.TestCase):
             ),
         )
 
+    def test_update_multiple_request_attribute(self):
+        item_mapper = MagicMock(spec=ItemMapper)
+
+        attribute_requests = [MagicMock(spec=DatabaseUpdateRequest) for _ in range(5)]
+        attribute_mocks = [
+            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
+            for i in range(2)
+        ]
+        attribute_mocks[0].update_request.return_value = {
+            "request1": attribute_requests[0],
+            "request2": attribute_requests[1],
+        }
+        attribute_mocks[1].update_request.return_value = [
+            attribute_requests[2],
+            {"req1": attribute_requests[3], "req2": attribute_requests[4]},
+        ]
+
+        database_item = DatabaseItem(
+            item_mapper,
+            {"foo": attribute_mocks[0], "nested": {"bar": attribute_mocks[1]}},
+        )
+
+        update_requests = database_item.update_request(
+            "mock_id",
+            {"foo": "foo_value", "nested": {"bar": ["bar_value_1", "bar_value_2"]}},
+        )
+
+        assert_that(
+            item_mapper.update_request.call_args_list,
+            contains_exactly(
+                has_properties(
+                    args=contains_exactly(
+                        "mock_id",
+                        has_entries(
+                            {
+                                "foo": "foo_value",
+                                "nested": has_entries(
+                                    {"bar": ["bar_value_1", "bar_value_2"]}
+                                ),
+                            }
+                        ),
+                    )
+                )
+            ),
+        )
+        for attribute, value in zip(
+            attribute_mocks,
+            ["foo_value", contains_exactly("bar_value_1", "bar_value_2")],
+        ):
+            assert_that(
+                attribute.update_request.call_args_list,
+                contains_exactly(
+                    has_properties(
+                        args=contains_exactly(
+                            item_mapper.update_request.return_value, "mock_id", value
+                        )
+                    )
+                ),
+            )
+
+        assert_that(
+            update_requests,
+            contains_exactly(
+                item_mapper.update_request.return_value,
+                has_entries(
+                    {
+                        "foo": has_entries(
+                            {
+                                "request1": attribute_requests[0],
+                                "request2": attribute_requests[1],
+                            }
+                        ),
+                        "nested": has_entries(
+                            {
+                                "bar": contains_exactly(
+                                    attribute_requests[2],
+                                    has_entries(
+                                        {
+                                            "req1": attribute_requests[3],
+                                            "req2": attribute_requests[4],
+                                        }
+                                    ),
+                                )
+                            }
+                        ),
+                    }
+                ),
+            ),
+        )
+
     def test_load_simple_item(self):
         """Tests DatabaseItem.load method for a simple item, without references.
 
@@ -818,5 +1136,83 @@ class TestDatabaseItem(unittest.TestCase):
                         }
                     ),
                 }
+            ),
+        )
+
+    def test_load_item_multiple_request_attribute(self):
+        base_response = MagicMock()
+        item_mapper = MagicMock(spec=ItemMapper)
+        item_mapper.load.return_value = {}
+
+        attribute_responses = [MagicMock() for _ in range(5)]
+        attribute_mocks = [
+            MagicMock(spec=DatabaseAttribute, request=attribute_responses[i])
+            for i in range(2)
+        ]
+
+        database_item = DatabaseItem(
+            item_mapper,
+            {"foo": attribute_mocks[0], "nested": {"bar": attribute_mocks[1]}},
+        )
+        attribute_mocks[0].load.return_value = "foo_value"
+        attribute_mocks[1].load.return_value = ["bar_value_1", "bar_value_2"]
+
+        item = database_item.load(
+            base_response,
+            {
+                "foo": {
+                    "request1": attribute_responses[0],
+                    "request2": attribute_responses[1],
+                },
+                "nested": {
+                    "bar": [
+                        attribute_responses[2],
+                        {
+                            "req1": attribute_responses[3],
+                            "req2": attribute_responses[4],
+                        },
+                    ]
+                },
+            },
+        )
+
+        assert_that(
+            item_mapper.load.call_args_list,
+            contains_exactly(has_properties(args=contains_exactly(base_response))),
+        )
+
+        for attribute, response in zip(
+            attribute_mocks,
+            [
+                has_entries(
+                    {
+                        "request1": attribute_responses[0],
+                        "request2": attribute_responses[1],
+                    }
+                ),
+                contains_exactly(
+                    attribute_responses[2],
+                    has_entries(
+                        {"req1": attribute_responses[3], "req2": attribute_responses[4]}
+                    ),
+                ),
+            ],
+        ):
+            assert_that(
+                attribute.load.call_args_list,
+                contains_exactly(
+                    has_properties(args=contains_exactly(base_response, response))
+                ),
+            )
+
+        assert_that(
+            item,
+            has_entries(
+                {
+                    "foo": "foo_value",
+                    "nested": has_entries(
+                        {"bar": contains_exactly("bar_value_1", "bar_value_2")}
+                    ),
+                },
             ),
         )
