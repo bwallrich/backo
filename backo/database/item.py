@@ -47,20 +47,44 @@ class DatabaseAttribute:
         pass
 
 
+def _set_requests_connection(requests, connection):
+    if isinstance(requests, list):
+        for request in requests:
+            _set_requests_connection(request, connection)
+    elif isinstance(requests, dict):
+        for request in requests.values():
+            _set_requests_connection(request, connection)
+    else:
+        requests.connection = connection
+
+
+def _requests_with_connection(requests, connection):
+    _set_requests_connection(requests, connection)
+    return requests
+
+
 def _search_request(attribute, base_request, _id):
-    return attribute.search_request(base_request, _id)
+    return _requests_with_connection(
+        attribute.search_request(base_request, _id), attribute.connection
+    )
 
 
 def _create_request(attribute, base_request, value):
-    return attribute.create_request(base_request, value)
+    return _requests_with_connection(
+        attribute.create_request(base_request, value), attribute.connection
+    )
 
 
 def _delete_request(attribute, base_request, _id):
-    return attribute.delete_request(base_request, _id)
+    return _requests_with_connection(
+        attribute.delete_request(base_request, _id), attribute.connection
+    )
 
 
 def _update_request(attribute, base_request, _id, value):
-    return attribute.update_request(base_request, _id, value)
+    return _requests_with_connection(
+        attribute.update_request(base_request, _id, value), attribute.connection
+    )
 
 
 class DatabaseItem:
@@ -115,6 +139,7 @@ class DatabaseItem:
             attributes.set_attribute_path(current_path)
 
     def set_default_connection(self, connection):
+        self.connection = connection
         self._set_default_connection(self.model, connection)
 
     def _set_default_connection(self, attributes, connection):
@@ -254,6 +279,7 @@ class DatabaseItem:
         # Builds request required by the `item_mapper` to perform the `base`
         # initialization of the `DatabaseItem` instance associated to an `_id`
         base_request = self.item_mapper.search_request(_id)
+        base_request.connection = self.connection
 
         #  Builds additional requests required to initialize all attributes of
         #  the `DatabaseItem`. Each attribute is allowed to either modify the
@@ -278,6 +304,7 @@ class DatabaseItem:
         # Builds request required by the `item_mapper` to create the `item` with
         # value `item_value` and initialize its _id
         base_request = self.item_mapper.create_request(item_value)
+        base_request.connection = self.connection
 
         #  Builds additional requests required to create all attributes of the
         #  `DatabaseItem`. Each attribute is allowed to either modify the
@@ -302,6 +329,7 @@ class DatabaseItem:
         # Builds request required by the `item_mapper` to delete the item
         # corresponding to _id
         base_request = self.item_mapper.delete_request(_id)
+        base_request.connection = self.connection
 
         #  Builds additional requests required to delete all attributes of the
         #  `DatabaseItem`. Each attribute is allowed to either modify the
@@ -325,6 +353,7 @@ class DatabaseItem:
         # Builds request required by the `item_mapper` to create the `item` with
         # value `item_value` and initialize its _id
         base_request = self.item_mapper.update_request(_id, item_value)
+        base_request.connection = self.connection
 
         #  Builds additional requests required to create all attributes of the
         #  `DatabaseItem`. Each attribute is allowed to either modify the

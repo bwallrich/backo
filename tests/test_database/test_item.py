@@ -58,7 +58,9 @@ class TestDatabaseItem(unittest.TestCase):
     def test_set_default_connection(self, connection):
         item_mapper = MagicMock(spec=ItemMapper)
 
-        attribute_mocks = [MagicMock(spec=DatabaseAttribute) for i in range(6)]
+        attribute_mocks = [
+            MagicMock(spec=DatabaseAttribute, connection=None) for i in range(6)
+        ]
 
         database_item = DatabaseItem(
             item_mapper,
@@ -83,12 +85,21 @@ class TestDatabaseItem(unittest.TestCase):
                 contains_exactly(has_properties(args=contains_exactly(connection))),
             )
 
-    def test_search_request_simple_item(self):
+    @patch("backo.database.connection.DatabaseConnection", autospec=True)
+    def test_search_request_simple_item(self, connection):
+        base_request = MagicMock(spec=DatabaseSearchRequest, connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
+        item_mapper.search_request.return_value = base_request
 
-        attribute_requests = [MagicMock(spec=DatabaseSearchRequest) for _ in range(3)]
+        attribute_requests = [
+            MagicMock(spec=DatabaseSearchRequest, connection=None) for _ in range(3)
+        ]
         attribute_mocks = [
-            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
+            MagicMock(
+                spec=DatabaseAttribute,
+                request=attribute_requests[i],
+                connection=connection,
+            )
             for i in range(3)
         ]
         for i in range(3):
@@ -102,8 +113,16 @@ class TestDatabaseItem(unittest.TestCase):
                 "contact": attribute_mocks[2],
             },
         )
+        # Connection used for the base request
+        database_item.connection = connection
 
         search_requests = database_item.search_request("mock_id")
+
+        # As a side effect, the connection must have been set up on all requests
+        # returned in search_requests
+        assert_that(base_request, has_properties(connection=connection))
+        for request in attribute_requests:
+            assert_that(request, has_properties(connection=connection))
 
         assert_that(
             item_mapper.search_request.call_args_list,
@@ -135,12 +154,19 @@ class TestDatabaseItem(unittest.TestCase):
             ),
         )
 
-    def test_search_request_with_complex_nested_attributes(self):
+    @patch("backo.database.connection.DatabaseConnection", autospec=True)
+    def test_search_request_with_complex_nested_attributes(self, connection):
+        base_request = MagicMock(spec=DatabaseSearchRequest, connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
+        item_mapper.search_request.return_value = base_request
 
         attribute_requests = [MagicMock(spec=DatabaseSearchRequest) for _ in range(6)]
         attribute_mocks = [
-            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
+            MagicMock(
+                spec=DatabaseAttribute,
+                request=attribute_requests[i],
+                connection=connection,
+            )
             for i in range(6)
         ]
         for i in range(6):
@@ -160,8 +186,16 @@ class TestDatabaseItem(unittest.TestCase):
                 },
             },
         )
+        # Connection used for the base request
+        database_item.connection = connection
 
         search_requests = database_item.search_request("mock_id")
+
+        # As a side effect, the connection must have been set up on all requests
+        # returned in search_requests
+        assert_that(base_request, has_properties(connection=connection))
+        for request in attribute_requests:
+            assert_that(request, has_properties(connection=connection))
 
         assert_that(
             item_mapper.search_request.call_args_list,
@@ -199,12 +233,19 @@ class TestDatabaseItem(unittest.TestCase):
             ),
         )
 
-    def test_search_multiple_request_attribute(self):
+    @patch("backo.database.connection.DatabaseConnection", autospec=True)
+    def test_search_multiple_request_attribute(self, connection):
+        base_request = MagicMock(spec=DatabaseSearchRequest, connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
+        item_mapper.search_request.return_value = base_request
 
         attribute_requests = [MagicMock(spec=DatabaseSearchRequest) for _ in range(5)]
         attribute_mocks = [
-            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
+            MagicMock(
+                spec=DatabaseAttribute,
+                request=attribute_requests[i],
+                connection=connection,
+            )
             for i in range(2)
         ]
         attribute_mocks[0].search_request.return_value = {
@@ -220,8 +261,16 @@ class TestDatabaseItem(unittest.TestCase):
             item_mapper,
             {"foo": attribute_mocks[0], "nested": {"bar": attribute_mocks[1]}},
         )
+        # Connection used for the base request
+        database_item.connection = connection
 
         search_requests = database_item.search_request("mock_id")
+
+        # As a side effect, the connection must have been set up on all requests
+        # returned in search_requests
+        assert_that(base_request, has_properties(connection=connection))
+        for request in attribute_requests:
+            assert_that(request, has_properties(connection=connection))
 
         assert_that(
             item_mapper.search_request.call_args_list,
@@ -269,12 +318,21 @@ class TestDatabaseItem(unittest.TestCase):
             ),
         )
 
-    def test_create_request_simple_item(self):
+    @patch("backo.database.connection.DatabaseConnection", autospec=True)
+    def test_create_request_simple_item(self, connection):
+        base_request = MagicMock(spec=DatabaseSearchRequest, connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
+        item_mapper.create_request.return_value = base_request
 
-        attribute_requests = [MagicMock(spec=DatabaseCreateRequest) for _ in range(3)]
+        attribute_requests = [
+            MagicMock(spec=DatabaseCreateRequest, connection=None) for _ in range(3)
+        ]
         attribute_mocks = [
-            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
+            MagicMock(
+                spec=DatabaseAttribute,
+                request=attribute_requests[i],
+                connection=connection,
+            )
             for i in range(3)
         ]
         for i in range(3):
@@ -288,10 +346,18 @@ class TestDatabaseItem(unittest.TestCase):
                 "contact": attribute_mocks[2],
             },
         )
+        # Connection used for the base request
+        database_item.connection = connection
 
         create_requests = database_item.create_request(
             {"login": "new_login", "name": "new_name", "contact": "new_contact"}
         )
+
+        # As a side effect, the connection must have been set up on all requests
+        # returned in search_requests
+        assert_that(base_request, has_properties(connection=connection))
+        for request in attribute_requests:
+            assert_that(request, has_properties(connection=connection))
 
         assert_that(
             item_mapper.create_request.call_args_list,
@@ -337,12 +403,19 @@ class TestDatabaseItem(unittest.TestCase):
             ),
         )
 
-    def test_create_request_with_complex_nested_attributes(self):
+    @patch("backo.database.connection.DatabaseConnection", autospec=True)
+    def test_create_request_with_complex_nested_attributes(self, connection):
+        base_request = MagicMock(spec=DatabaseSearchRequest, connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
+        item_mapper.create_request.return_value = base_request
 
         attribute_requests = [MagicMock(spec=DatabaseSearchRequest) for _ in range(6)]
         attribute_mocks = [
-            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
+            MagicMock(
+                spec=DatabaseAttribute,
+                request=attribute_requests[i],
+                connection=connection,
+            )
             for i in range(6)
         ]
         for i in range(6):
@@ -362,6 +435,8 @@ class TestDatabaseItem(unittest.TestCase):
                 },
             },
         )
+        # Connection used for the base request
+        database_item.connection = connection
 
         create_requests = database_item.create_request(
             {
@@ -376,6 +451,12 @@ class TestDatabaseItem(unittest.TestCase):
                 },
             }
         )
+
+        # As a side effect, the connection must have been set up on all requests
+        # returned in search_requests
+        assert_that(base_request, has_properties(connection=connection))
+        for request in attribute_requests:
+            assert_that(request, has_properties(connection=connection))
 
         assert_that(
             item_mapper.create_request.call_args_list,
@@ -445,12 +526,19 @@ class TestDatabaseItem(unittest.TestCase):
             ),
         )
 
-    def test_create_multiple_request_attribute(self):
+    @patch("backo.database.connection.DatabaseConnection", autospec=True)
+    def test_create_multiple_request_attribute(self, connection):
+        base_request = MagicMock(spec=DatabaseSearchRequest, connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
+        item_mapper.create_request.return_value = base_request
 
         attribute_requests = [MagicMock(spec=DatabaseCreateRequest) for _ in range(5)]
         attribute_mocks = [
-            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
+            MagicMock(
+                spec=DatabaseAttribute,
+                request=attribute_requests[i],
+                connection=connection,
+            )
             for i in range(2)
         ]
         attribute_mocks[0].create_request.return_value = {
@@ -466,10 +554,18 @@ class TestDatabaseItem(unittest.TestCase):
             item_mapper,
             {"foo": attribute_mocks[0], "nested": {"bar": attribute_mocks[1]}},
         )
+        # Connection used for the base request
+        database_item.connection = connection
 
         create_requests = database_item.create_request(
             {"foo": "foo_value", "nested": {"bar": ["bar_value_1", "bar_value_2"]}}
         )
+
+        # As a side effect, the connection must have been set up on all requests
+        # returned in search_requests
+        assert_that(base_request, has_properties(connection=connection))
+        for request in attribute_requests:
+            assert_that(request, has_properties(connection=connection))
 
         assert_that(
             item_mapper.create_request.call_args_list,
@@ -533,12 +629,21 @@ class TestDatabaseItem(unittest.TestCase):
             ),
         )
 
-    def test_delete_request_simple_item(self):
+    @patch("backo.database.connection.DatabaseConnection", autospec=True)
+    def test_delete_request_simple_item(self, connection):
+        base_request = MagicMock(spec=DatabaseSearchRequest, connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
+        item_mapper.delete_request.return_value = base_request
 
-        attribute_requests = [MagicMock(spec=DatabaseDeleteRequest) for _ in range(3)]
+        attribute_requests = [
+            MagicMock(spec=DatabaseDeleteRequest, connection=None) for _ in range(3)
+        ]
         attribute_mocks = [
-            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
+            MagicMock(
+                spec=DatabaseAttribute,
+                request=attribute_requests[i],
+                connection=connection,
+            )
             for i in range(3)
         ]
         for i in range(3):
@@ -552,8 +657,16 @@ class TestDatabaseItem(unittest.TestCase):
                 "contact": attribute_mocks[2],
             },
         )
+        # Connection used for the base request
+        database_item.connection = connection
 
         delete_requests = database_item.delete_request("mock_id")
+
+        # As a side effect, the connection must have been set up on all requests
+        # returned in search_requests
+        assert_that(base_request, has_properties(connection=connection))
+        for request in attribute_requests:
+            assert_that(request, has_properties(connection=connection))
 
         assert_that(
             item_mapper.delete_request.call_args_list,
@@ -585,12 +698,19 @@ class TestDatabaseItem(unittest.TestCase):
             ),
         )
 
-    def test_delete_request_with_complex_nested_attributes(self):
+    @patch("backo.database.connection.DatabaseConnection", autospec=True)
+    def test_delete_request_with_complex_nested_attributes(self, connection):
+        base_request = MagicMock(spec=DatabaseSearchRequest, connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
+        item_mapper.delete_request.return_value = base_request
 
         attribute_requests = [MagicMock(spec=DatabaseSearchRequest) for _ in range(6)]
         attribute_mocks = [
-            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
+            MagicMock(
+                spec=DatabaseAttribute,
+                request=attribute_requests[i],
+                connection=connection,
+            )
             for i in range(6)
         ]
         for i in range(6):
@@ -610,8 +730,16 @@ class TestDatabaseItem(unittest.TestCase):
                 },
             },
         )
+        # Connection used for the base request
+        database_item.connection = connection
 
         delete_requests = database_item.delete_request("mock_id")
+
+        # As a side effect, the connection must have been set up on all requests
+        # returned in search_requests
+        assert_that(base_request, has_properties(connection=connection))
+        for request in attribute_requests:
+            assert_that(request, has_properties(connection=connection))
 
         assert_that(
             item_mapper.delete_request.call_args_list,
@@ -649,12 +777,19 @@ class TestDatabaseItem(unittest.TestCase):
             ),
         )
 
-    def test_delete_multiple_request_attribute(self):
+    @patch("backo.database.connection.DatabaseConnection", autospec=True)
+    def test_delete_multiple_request_attribute(self, connection):
+        base_request = MagicMock(spec=DatabaseSearchRequest, connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
+        item_mapper.delete_request.return_value = base_request
 
         attribute_requests = [MagicMock(spec=DatabaseDeleteRequest) for _ in range(5)]
         attribute_mocks = [
-            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
+            MagicMock(
+                spec=DatabaseAttribute,
+                request=attribute_requests[i],
+                connection=connection,
+            )
             for i in range(2)
         ]
         attribute_mocks[0].delete_request.return_value = {
@@ -670,8 +805,16 @@ class TestDatabaseItem(unittest.TestCase):
             item_mapper,
             {"foo": attribute_mocks[0], "nested": {"bar": attribute_mocks[1]}},
         )
+        # Connection used for the base request
+        database_item.connection = connection
 
         delete_requests = database_item.delete_request("mock_id")
+
+        # As a side effect, the connection must have been set up on all requests
+        # returned in search_requests
+        assert_that(base_request, has_properties(connection=connection))
+        for request in attribute_requests:
+            assert_that(request, has_properties(connection=connection))
 
         assert_that(
             item_mapper.delete_request.call_args_list,
@@ -719,12 +862,22 @@ class TestDatabaseItem(unittest.TestCase):
             ),
         )
 
-    def test_update_request_simple_item(self):
+    @patch("backo.database.connection.DatabaseConnection", autospec=True)
+    def test_update_request_simple_item(self, connection):
+        base_request = MagicMock(spec=DatabaseSearchRequest, connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
+        item_mapper.update_request.return_value = base_request
 
-        attribute_requests = [MagicMock(spec=DatabaseUpdateRequest) for _ in range(3)]
+        attribute_requests = [
+            MagicMock(spec=DatabaseUpdateRequest, connection=connection)
+            for _ in range(3)
+        ]
         attribute_mocks = [
-            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
+            MagicMock(
+                spec=DatabaseAttribute,
+                request=attribute_requests[i],
+                connection=connection,
+            )
             for i in range(3)
         ]
         for i in range(3):
@@ -738,10 +891,18 @@ class TestDatabaseItem(unittest.TestCase):
                 "contact": attribute_mocks[2],
             },
         )
+        # Connection used for the base request
+        database_item.connection = connection
 
         update_requests = database_item.update_request(
             "mock_id", {"login": "up_login", "name": "up_name", "contact": "up_contact"}
         )
+
+        # As a side effect, the connection must have been set up on all requests
+        # returned in search_requests
+        assert_that(base_request, has_properties(connection=connection))
+        for request in attribute_requests:
+            assert_that(request, has_properties(connection=connection))
 
         assert_that(
             item_mapper.update_request.call_args_list,
@@ -788,12 +949,19 @@ class TestDatabaseItem(unittest.TestCase):
             ),
         )
 
-    def test_update_request_with_complex_nested_attributes(self):
+    @patch("backo.database.connection.DatabaseConnection", autospec=True)
+    def test_update_request_with_complex_nested_attributes(self, connection):
+        base_request = MagicMock(spec=DatabaseSearchRequest, connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
+        item_mapper.update_request.return_value = base_request
 
         attribute_requests = [MagicMock(spec=DatabaseUpdateRequest) for _ in range(6)]
         attribute_mocks = [
-            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
+            MagicMock(
+                spec=DatabaseAttribute,
+                request=attribute_requests[i],
+                connection=connection,
+            )
             for i in range(6)
         ]
         for i in range(6):
@@ -813,6 +981,8 @@ class TestDatabaseItem(unittest.TestCase):
                 },
             },
         )
+        # Connection used for the base request
+        database_item.connection = connection
 
         update_requests = database_item.update_request(
             "mock_id",
@@ -828,6 +998,12 @@ class TestDatabaseItem(unittest.TestCase):
                 },
             },
         )
+
+        # As a side effect, the connection must have been set up on all requests
+        # returned in search_requests
+        assert_that(base_request, has_properties(connection=connection))
+        for request in attribute_requests:
+            assert_that(request, has_properties(connection=connection))
 
         assert_that(
             item_mapper.update_request.call_args_list,
@@ -898,12 +1074,19 @@ class TestDatabaseItem(unittest.TestCase):
             ),
         )
 
-    def test_update_multiple_request_attribute(self):
+    @patch("backo.database.connection.DatabaseConnection", autospec=True)
+    def test_update_multiple_request_attribute(self, connection):
+        base_request = MagicMock(spec=DatabaseSearchRequest, connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
+        item_mapper.update_request.return_value = base_request
 
         attribute_requests = [MagicMock(spec=DatabaseUpdateRequest) for _ in range(5)]
         attribute_mocks = [
-            MagicMock(spec=DatabaseAttribute, request=attribute_requests[i])
+            MagicMock(
+                spec=DatabaseAttribute,
+                request=attribute_requests[i],
+                connection=connection,
+            )
             for i in range(2)
         ]
         attribute_mocks[0].update_request.return_value = {
@@ -919,11 +1102,19 @@ class TestDatabaseItem(unittest.TestCase):
             item_mapper,
             {"foo": attribute_mocks[0], "nested": {"bar": attribute_mocks[1]}},
         )
+        # Connection used for the base request
+        database_item.connection = connection
 
         update_requests = database_item.update_request(
             "mock_id",
             {"foo": "foo_value", "nested": {"bar": ["bar_value_1", "bar_value_2"]}},
         )
+
+        # As a side effect, the connection must have been set up on all requests
+        # returned in search_requests
+        assert_that(base_request, has_properties(connection=connection))
+        for request in attribute_requests:
+            assert_that(request, has_properties(connection=connection))
 
         assert_that(
             item_mapper.update_request.call_args_list,
