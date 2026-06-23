@@ -9,7 +9,9 @@ from hamcrest import (
     has_properties,
 )
 
-from backo.database.item import DatabaseItem, DatabaseAttribute, ItemMapper
+from backo.database.item import DatabaseItem
+from backo.database.attribute import DatabaseAttribute
+from backo.database.mapper import ItemMapper
 
 
 class TestDatabaseItem(unittest.TestCase):

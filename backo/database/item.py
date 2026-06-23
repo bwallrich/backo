@@ -1,49 +1,5 @@
-from abc import ABC, abstractmethod
 from typing import Any
-
-
-class ItemMapper:
-    def created_id(self, create_response) -> str:
-        raise NotImplementedError("This ItemMapper does not support item creation")
-
-    def search_request(self, _id):
-        raise NotImplementedError("This ItemMapper does not support item search")
-
-    def create_request(self, item_value):
-        raise NotImplementedError("This ItemMapper does not support item creation")
-
-    def delete_request(self, _id):
-        raise NotImplementedError("This ItemMapper does not support item deletion")
-
-    def update_request(self, _id, item_value):
-        raise NotImplementedError("This ItemMapper does not support item update")
-
-    def load(self, _base_response):
-        return {}
-
-
-class DatabaseAttribute:
-    def set_default_connection(self, connection):
-        if self.connection is None:
-            self.connection = connection
-
-    def set_attribute_path(self, attribute_path):
-        self.attribute_path = attribute_path
-
-    def search_request(self, base_request, _id):
-        pass
-
-    def create_request(self, base_request, value):
-        pass
-
-    def update_request(self, base_request, _id, value):
-        pass
-
-    def delete_request(self, base_request, _id):
-        pass
-
-    def load(self, base_response, attribute_response):
-        pass
+from .mapper import ItemMapper
 
 
 def _set_requests_connection(requests, connection):
@@ -124,6 +80,7 @@ class DatabaseItem:
         self.item_mapper = item_mapper
         self.model = model
         self._set_attribute_paths(self.model, [])
+        self.connection = None
 
     def _set_attribute_paths(self, attributes, current_path):
         if isinstance(attributes, list):
