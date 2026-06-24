@@ -1,3 +1,6 @@
+"""Implementation of the DatabaseItem
+"""
+
 from typing import Any
 from .mapper import ItemMapper
 
@@ -44,7 +47,7 @@ def _update_request(attribute, base_request, _id, value):
 
 class DatabaseItem:
     """A DatabaseItem specifies how data should be loaded from the database to
-    produce a valid JSON that could be provided to load a backo Item.
+    produce a valid JSON-like dict that could be provided to load a backo Item.
 
     Even if its structure might look similar to the associated backo Item, it is
     not a duplication of information contained in the backo Item, as the purpose
@@ -57,11 +60,12 @@ class DatabaseItem:
 
     def __init__(self, item_mapper: ItemMapper, model: dict[str, Any]):
         """
-        The `item_mapper` specifies how a unique backo `_id` can be built from the
-        external database, and how the item can be queried later in the
-        database.
+        The `item_mapper` specifies how to build base requests for each
+        operation. Each attribute of the model is then allowed to modify the
+        base request en retrieve data from its response, in addition to their
+        own requests.
 
-        `model` is a dict mapping JSON fields to specification of database
+        The `model` is a dict mapping JSON fields to specification of database
         attributes. Here is a simple example for LDAP:
         ```
         {
@@ -71,15 +75,20 @@ class DatabaseItem:
         ```
         With this example, the DatabaseItem will load() the JSON-like dict by
         loading values of `name` and `description` fields from the `uid` and
-        `description` attributes of the LDAP response obtained from the result
-        of the search performed using the search_request() parameters.
+        `description` attributes of the LDAP entry associated to the item. The
+        `item_mapper` (e.g. `MapByDN`) defined how to retrieve the entry itself.
 
         :param item_mapper: Specifies how to map database entries to backo `_id`s.
         :param model: Dictionnary of database attributes
         """
         self.item_mapper = item_mapper
         self.model = model
+
+        # Informs each attribute of its path within the model
         self._set_attribute_paths(self.model, [])
+
+        # It is set by the DatabaseEngine using
+        # set_default_connection
         self.connection = None
 
     def _set_attribute_paths(self, attributes, current_path):
@@ -95,6 +104,10 @@ class DatabaseItem:
             attributes.set_attribute_path(current_path)
 
     def set_default_connection(self, connection):
+        """Sets the connection that will be used to perform base requests and
+        attribute requests, unless the attribute is already associated to a
+        specific connection.
+        """
         self.connection = connection
         self._set_default_connection(self.model, connection)
 
@@ -229,7 +242,7 @@ class DatabaseItem:
         Responses obtained by the DatabaseEngine will then be passed to the
         load() method of the DatabaseItem.
 
-        :param _id: Backo ID of the item to search
+        :param _id: ID of the item to search
         """
 
         # Builds request required by the `item_mapper` to perform the `base`
@@ -238,8 +251,8 @@ class DatabaseItem:
         base_request.connection = self.connection
 
         #  Builds additional requests required to initialize all attributes of
-        #  the `DatabaseItem`. Each attribute is allowed to either modify the
-        #  `base_request`, build a new request or do nothing.
+        #  the `model`. Each attribute is allowed to either modify the
+        #  `base_request`, build new requests or do nothing.
         model_requests = {}
         self._request_dict(
             base_request, model_requests, self.model, _id, _search_request
@@ -247,14 +260,14 @@ class DatabaseItem:
         return base_request, model_requests
 
     def create_request(self, item_value):
-        """Builds a set of search requests that will be able to load all the
+        """Builds a set of create requests that will be able to load all the
         attributes required to load the item represented by `_id`.
 
         Responses obtained by the DatabaseEngine will then be passed to the
         created_id() method of the DatabaseItem.
 
         :param item_value: JSON-like dict with values of attributes of the new
-        item
+        item. Its structure must be compatible with the model.
         """
 
         # Builds request required by the `item_mapper` to create the `item` with
@@ -263,7 +276,7 @@ class DatabaseItem:
         base_request.connection = self.connection
 
         #  Builds additional requests required to create all attributes of the
-        #  `DatabaseItem`. Each attribute is allowed to either modify the
+        #  `model`. Each attribute is allowed to either modify the
         #  `base_request`, build a new request or do nothing.
         model_requests = {}
         self._request_dict_with_values(
@@ -279,7 +292,7 @@ class DatabaseItem:
         """Builds a set of delete requests that will be able to delete all the
         attributes of the item represented by `_id` (and the item itself).
 
-        :param _id: Backo ID of the item to delete
+        :param _id: ID of the item to delete
         """
 
         # Builds request required by the `item_mapper` to delete the item
@@ -301,9 +314,9 @@ class DatabaseItem:
         attributes of the item represented by `_id` with values from
         `item_value`.
 
-        :param _id: Backo ID of the item to update
+        :param _id: ID of the item to update
         :param item_value: JSON-like dict with values of attributes of the new
-        item
+        item. Its structure must be compatible with the model.
         """
 
         # Builds request required by the `item_mapper` to create the `item` with
@@ -312,7 +325,7 @@ class DatabaseItem:
         base_request.connection = self.connection
 
         #  Builds additional requests required to create all attributes of the
-        #  `DatabaseItem`. Each attribute is allowed to either modify the
+        #  `model`. Each attribute is allowed to either modify the
         #  `base_request`, build a new request or do nothing.
         model_requests = {}
         self._request_dict_with_id_and_values(
@@ -326,42 +339,42 @@ class DatabaseItem:
         return base_request, model_requests
 
     def _load_list(
-        self, root_request_response, attributes_responses, item_list, attributes_list
+        self, base_request_response, attributes_responses, item_list, attributes_list
     ):
-        for i in range(len(attributes_list)):
-            if isinstance(attributes_list[i], dict):
+        for attribute, response in zip(attributes_list, attributes_responses):
+            if isinstance(attribute, dict):
                 item_value = {}
                 self._load_dict(
-                    root_request_response,
-                    attributes_responses[i],
+                    base_request_response,
+                    response,
                     item_value,
-                    attributes_list[i],
+                    attribute,
                 )
                 item_list.append(item_value)
-            elif isinstance(attributes_list[i], list):
+            elif isinstance(attribute, list):
                 item_value = []
                 self._load_list(
-                    root_request_response,
-                    attributes_responses[i],
+                    base_request_response,
+                    response,
                     item_value,
-                    attributes_list[i],
+                    attribute,
                 )
                 item_list.append(item_value)
             else:
                 item_list.append(
-                    attributes_list[i].load(
-                        root_request_response, attributes_responses[i]
+                    attribute.load(
+                        base_request_response, response
                     )
                 )
 
     def _load_dict(
-        self, root_request_response, attributes_responses, item_node, attributes_node
+        self, base_request_response, attributes_responses, item_node, attributes_node
     ):
         for key, attribute in attributes_node.items():
             if isinstance(attribute, dict):
                 item_node[key] = {}
                 self._load_dict(
-                    root_request_response,
+                    base_request_response,
                     attributes_responses[key],
                     item_node[key],
                     attribute,
@@ -369,17 +382,17 @@ class DatabaseItem:
             elif isinstance(attribute, list):
                 item_node[key] = []
                 self._load_list(
-                    root_request_response,
+                    base_request_response,
                     attributes_responses[key],
                     item_node[key],
                     attribute,
                 )
             else:
                 item_node[key] = attributes_node[key].load(
-                    root_request_response, attributes_responses[key]
+                    base_request_response, attributes_responses[key]
                 )
 
-    def load(self, root_request_response, attribute_responses):
+    def load(self, base_request_response, attribute_responses):
         """Loads the item in a JSON-like dict from the database response.
 
         The response as been obtained by the DatabaseEngine from the request provided by
@@ -391,10 +404,13 @@ class DatabaseItem:
         Notice the `_id` is not yet included in the result, as it only includes
         values retrieved using the `model`.
         """
-        item = self.item_mapper.load(root_request_response)
+        item = self.item_mapper.load(base_request_response)
         # TODO: model is not necessarily a dict
-        self._load_dict(root_request_response, attribute_responses, item, self.model)
+        self._load_dict(base_request_response, attribute_responses, item, self.model)
         return item
 
     def created_id(self, base_create_response):
+        """Returns the value that should be used as _id from the response of the
+        create operation.
+        """
         return self.item_mapper.created_id(base_create_response)

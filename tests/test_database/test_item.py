@@ -1,3 +1,6 @@
+"""Tests features of the DatabaseItem
+"""
+
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -15,7 +18,15 @@ from backo.database.mapper import ItemMapper
 
 
 class TestDatabaseItem(unittest.TestCase):
+    """Tests each feature of the database items, depending on the complexity of
+    the model.
+    """
+
     def test_init_database_item(self):
+        """Tests the initialization process of the DatabaseItem.
+
+        The path of each attribute in the model must be set on all attributes.
+        """
         item_mapper = MagicMock(spec=ItemMapper)
 
         attribute_mocks = [MagicMock(spec=DatabaseAttribute) for i in range(6)]
@@ -52,6 +63,9 @@ class TestDatabaseItem(unittest.TestCase):
 
     @patch("backo.database.connection.DatabaseConnection", autospec=True)
     def test_set_default_connection(self, connection):
+        """Tests the set_default_connection methods sets the default connection
+        of all attributes of the model.
+        """
         item_mapper = MagicMock(spec=ItemMapper)
 
         attribute_mocks = [
@@ -83,6 +97,9 @@ class TestDatabaseItem(unittest.TestCase):
 
     @patch("backo.database.connection.DatabaseConnection", autospec=True)
     def test_search_request_simple_item(self, connection):
+        """Tests the validity of built search requests for a model without
+        nested attributes.
+        """
         base_request = MagicMock(connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
         item_mapper.search_request.return_value = base_request
@@ -150,6 +167,9 @@ class TestDatabaseItem(unittest.TestCase):
 
     @patch("backo.database.connection.DatabaseConnection", autospec=True)
     def test_search_request_with_complex_nested_attributes(self, connection):
+        """Tests the validity of built search requests for a model with
+        attributes nested in dicts and lists.
+        """
         base_request = MagicMock(connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
         item_mapper.search_request.return_value = base_request
@@ -229,6 +249,9 @@ class TestDatabaseItem(unittest.TestCase):
 
     @patch("backo.database.connection.DatabaseConnection", autospec=True)
     def test_search_multiple_request_attribute(self, connection):
+        """Tests the validity of built search requests for a model with
+        attributes that require multiple requests nested in dicts and lists.
+        """
         base_request = MagicMock(connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
         item_mapper.search_request.return_value = base_request
@@ -314,6 +337,9 @@ class TestDatabaseItem(unittest.TestCase):
 
     @patch("backo.database.connection.DatabaseConnection", autospec=True)
     def test_create_request_simple_item(self, connection):
+        """Tests the validity of built create requests for a model without
+        nested attributes.
+        """
         base_request = MagicMock(connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
         item_mapper.create_request.return_value = base_request
@@ -397,6 +423,9 @@ class TestDatabaseItem(unittest.TestCase):
 
     @patch("backo.database.connection.DatabaseConnection", autospec=True)
     def test_create_request_with_complex_nested_attributes(self, connection):
+        """Tests the validity of built create requests for a model with
+        attributes nested in dicts and lists.
+        """
         base_request = MagicMock(connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
         item_mapper.create_request.return_value = base_request
@@ -520,6 +549,9 @@ class TestDatabaseItem(unittest.TestCase):
 
     @patch("backo.database.connection.DatabaseConnection", autospec=True)
     def test_create_multiple_request_attribute(self, connection):
+        """Tests the validity of built create requests for a model with
+        attributes that require multiple requests nested in dicts and lists.
+        """
         base_request = MagicMock(connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
         item_mapper.create_request.return_value = base_request
@@ -623,6 +655,9 @@ class TestDatabaseItem(unittest.TestCase):
 
     @patch("backo.database.connection.DatabaseConnection", autospec=True)
     def test_delete_request_simple_item(self, connection):
+        """Tests the validity of built delete requests for a model without
+        nested attributes.
+        """
         base_request = MagicMock(connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
         item_mapper.delete_request.return_value = base_request
@@ -690,6 +725,9 @@ class TestDatabaseItem(unittest.TestCase):
 
     @patch("backo.database.connection.DatabaseConnection", autospec=True)
     def test_delete_request_with_complex_nested_attributes(self, connection):
+        """Tests the validity of built delete requests for a model with
+        attributes nested in dicts and lists.
+        """
         base_request = MagicMock(connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
         item_mapper.delete_request.return_value = base_request
@@ -769,6 +807,9 @@ class TestDatabaseItem(unittest.TestCase):
 
     @patch("backo.database.connection.DatabaseConnection", autospec=True)
     def test_delete_multiple_request_attribute(self, connection):
+        """Tests the validity of built delete requests for a model with
+        attributes that require multiple requests nested in dicts and lists.
+        """
         base_request = MagicMock(connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
         item_mapper.delete_request.return_value = base_request
@@ -854,6 +895,9 @@ class TestDatabaseItem(unittest.TestCase):
 
     @patch("backo.database.connection.DatabaseConnection", autospec=True)
     def test_update_request_simple_item(self, connection):
+        """Tests the validity of built update requests for a model without
+        nested attributes.
+        """
         base_request = MagicMock(connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
         item_mapper.update_request.return_value = base_request
@@ -938,6 +982,9 @@ class TestDatabaseItem(unittest.TestCase):
 
     @patch("backo.database.connection.DatabaseConnection", autospec=True)
     def test_update_request_with_complex_nested_attributes(self, connection):
+        """Tests the validity of built update requests for a model with
+        attributes nested in dicts and lists.
+        """
         base_request = MagicMock(connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
         item_mapper.update_request.return_value = base_request
@@ -1063,6 +1110,9 @@ class TestDatabaseItem(unittest.TestCase):
 
     @patch("backo.database.connection.DatabaseConnection", autospec=True)
     def test_update_multiple_request_attribute(self, connection):
+        """Tests the validity of built update requests for a model with
+        attributes that require multiple requests nested in dicts and lists.
+        """
         base_request = MagicMock(connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
         item_mapper.update_request.return_value = base_request
@@ -1167,9 +1217,7 @@ class TestDatabaseItem(unittest.TestCase):
         )
 
     def test_load_simple_item(self):
-        """Tests DatabaseItem.load method for a simple item, without references.
-
-        The item must be loaded from the mocked LDAP response.
+        """Tests database item loading for a model without nested attributes.
         """
 
         root_response = MagicMock()
@@ -1231,9 +1279,8 @@ class TestDatabaseItem(unittest.TestCase):
         )
 
     def test_load_item_with_complex_nested_attributes(self):
-        """Tests DatabaseItem.load method for a simple item, without references.
-
-        The item must be loaded from the mocked LDAP response.
+        """Tests database item loading for a model with attributes nested in
+        dicts and lists.
         """
 
         root_response = MagicMock()
@@ -1318,6 +1365,10 @@ class TestDatabaseItem(unittest.TestCase):
         )
 
     def test_load_item_multiple_request_attribute(self):
+        """Tests database item loading for  a model with
+        attributes that require multiple requests nested in dicts and lists.
+        """
+
         base_response = MagicMock()
         item_mapper = MagicMock(spec=ItemMapper)
         item_mapper.load.return_value = {}
