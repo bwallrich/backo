@@ -1,5 +1,4 @@
-"""Implementation of the DatabaseItem
-"""
+"""Implementation of the DatabaseItem"""
 
 from typing import Any
 from .mapper import ItemMapper
@@ -361,11 +360,7 @@ class DatabaseItem:
                 )
                 item_list.append(item_value)
             else:
-                item_list.append(
-                    attribute.load(
-                        base_request_response, response
-                    )
-                )
+                item_list.append(attribute.load(base_request_response, response))
 
     def _load_dict(
         self, base_request_response, attributes_responses, item_node, attributes_node
