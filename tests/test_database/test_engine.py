@@ -34,7 +34,7 @@ class TestDatabaseEngine(unittest.TestCase):
         properly initialized by the DatabaseEngine.
         """
 
-        engine = DatabaseEngine(connection.return_value, database_item.return_value)
+        DatabaseEngine(connection.return_value, database_item.return_value)
 
         assert_that(
             database_item.return_value.set_default_connection.call_args_list,
