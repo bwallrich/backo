@@ -69,6 +69,55 @@ class TestDatabaseItemUpdate(unittest.TestCase):
         )
 
     @patch("backo.database.connection.DatabaseConnection", autospec=True)
+    def test_update_request_with_none_request(self, connection):
+        """Tests the validity of built update requests for a single attribute
+        model that return no request."""
+        base_request = MagicMock(connection=None)
+        item_mapper = MagicMock(spec=ItemMapper)
+        item_mapper.update_request.return_value = base_request
+
+        attribute_mock = MagicMock(
+            spec=DatabaseAttribute,
+            connection=connection,
+        )
+        attribute_mock.update_request.return_value = None
+
+        database_item = DatabaseItem(item_mapper, attribute_mock)
+        # Connection used for the base request
+        database_item.connection = connection
+
+        update_requests = database_item.update_request("mock_id", "new_value")
+
+        # As a side effect, the connection must have been set up on all requests
+        # returned in search_requests
+        assert_that(base_request, has_properties(connection=connection))
+
+        assert_that(
+            item_mapper.update_request.call_args_list,
+            contains_exactly(
+                has_properties(args=contains_exactly("mock_id", "new_value"))
+            ),
+        )
+        assert_that(
+            attribute_mock.update_request.call_args_list,
+            contains_exactly(
+                has_properties(
+                    args=contains_exactly(
+                        item_mapper.update_request.return_value, "mock_id", "new_value"
+                    )
+                )
+            ),
+        )
+
+        assert_that(
+            update_requests,
+            contains_exactly(
+                item_mapper.update_request.return_value, None
+            ),
+        )
+
+
+    @patch("backo.database.connection.DatabaseConnection", autospec=True)
     def test_update_request_simple_list_model(self, connection):
         """Tests the validity of built update requests for a list model."""
         base_request = MagicMock(connection=None)

@@ -10,7 +10,7 @@ def _set_requests_connection(requests, connection):
     elif isinstance(requests, dict):
         for request in requests.values():
             _set_requests_connection(request, connection)
-    else:
+    elif requests is not None:
         requests.connection = connection
 
 

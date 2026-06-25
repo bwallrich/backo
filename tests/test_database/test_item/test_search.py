@@ -68,6 +68,54 @@ class TestDatabaseItemSearch(unittest.TestCase):
         )
 
     @patch("backo.database.connection.DatabaseConnection", autospec=True)
+    def test_search_request_with_none_request(self, connection):
+        """Tests the validity of built search requests for a single attribute
+        model that return no request."""
+        base_request = MagicMock(connection=None)
+        item_mapper = MagicMock(spec=ItemMapper)
+        item_mapper.search_request.return_value = base_request
+
+        attribute_mock = MagicMock(
+            spec=DatabaseAttribute,
+            connection=connection,
+        )
+
+        attribute_mock.search_request.return_value = None
+
+        database_item = DatabaseItem(item_mapper, attribute_mock)
+        # Connection used for the base request
+        database_item.connection = connection
+
+        search_requests = database_item.search_request("mock_id")
+
+        # As a side effect, the connection must have been set up on all requests
+        # returned in search_requests
+        assert_that(base_request, has_properties(connection=connection))
+
+        assert_that(
+            item_mapper.search_request.call_args_list,
+            contains_exactly(has_properties(args=contains_exactly("mock_id"))),
+        )
+        assert_that(
+            attribute_mock.search_request.call_args_list,
+            contains_exactly(
+                has_properties(
+                    args=contains_exactly(
+                        item_mapper.search_request.return_value, "mock_id"
+                    )
+                )
+            ),
+        )
+
+        assert_that(
+            search_requests,
+            contains_exactly(
+                item_mapper.search_request.return_value, None
+            ),
+        )
+
+
+    @patch("backo.database.connection.DatabaseConnection", autospec=True)
     def test_search_request_simple_list_model(self, connection):
         """Tests the validity of built search requests for a list model."""
         base_request = MagicMock(connection=None)
