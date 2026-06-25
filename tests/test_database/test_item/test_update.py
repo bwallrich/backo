@@ -1,5 +1,4 @@
-"""DatabaseItem update operation tests
-"""
+"""DatabaseItem update operation tests"""
 
 import unittest
 from unittest.mock import MagicMock, patch
@@ -20,10 +19,128 @@ class TestDatabaseItemUpdate(unittest.TestCase):
     """Tests update requests building depending on the complexity of the model."""
 
     @patch("backo.database.connection.DatabaseConnection", autospec=True)
-    def test_update_request_simple_item(self, connection):
-        """Tests the validity of built update requests for a model without
-        nested attributes.
-        """
+    def test_update_request_single_attribute_model(self, connection):
+        """Tests the validity of built update requests for a single attribute model."""
+        base_request = MagicMock(connection=None)
+        item_mapper = MagicMock(spec=ItemMapper)
+        item_mapper.update_request.return_value = base_request
+
+        attribute_request = MagicMock(connection=connection)
+        attribute_mock = MagicMock(
+            spec=DatabaseAttribute,
+            request=attribute_request,
+            connection=connection,
+        )
+        attribute_mock.update_request.return_value = attribute_request
+
+        database_item = DatabaseItem(item_mapper, attribute_mock)
+        # Connection used for the base request
+        database_item.connection = connection
+
+        update_requests = database_item.update_request("mock_id", "new_value")
+
+        # As a side effect, the connection must have been set up on all requests
+        # returned in search_requests
+        assert_that(base_request, has_properties(connection=connection))
+        assert_that(attribute_request, has_properties(connection=connection))
+
+        assert_that(
+            item_mapper.update_request.call_args_list,
+            contains_exactly(
+                has_properties(args=contains_exactly("mock_id", "new_value"))
+            ),
+        )
+        assert_that(
+            attribute_mock.update_request.call_args_list,
+            contains_exactly(
+                has_properties(
+                    args=contains_exactly(
+                        item_mapper.update_request.return_value, "mock_id", "new_value"
+                    )
+                )
+            ),
+        )
+
+        assert_that(
+            update_requests,
+            contains_exactly(
+                item_mapper.update_request.return_value, attribute_request
+            ),
+        )
+
+    @patch("backo.database.connection.DatabaseConnection", autospec=True)
+    def test_update_request_simple_list_model(self, connection):
+        """Tests the validity of built update requests for a list model."""
+        base_request = MagicMock(connection=None)
+        item_mapper = MagicMock(spec=ItemMapper)
+        item_mapper.update_request.return_value = base_request
+
+        attribute_requests = [MagicMock(connection=connection) for _ in range(3)]
+        attribute_mocks = [
+            MagicMock(
+                spec=DatabaseAttribute,
+                request=attribute_requests[i],
+                connection=connection,
+            )
+            for i in range(3)
+        ]
+        for i in range(3):
+            attribute_mocks[i].update_request.return_value = attribute_requests[i]
+
+        database_item = DatabaseItem(item_mapper, attribute_mocks)
+        # Connection used for the base request
+        database_item.connection = connection
+
+        update_requests = database_item.update_request(
+            "mock_id", ["up_login", "up_name", "up_contact"]
+        )
+
+        # As a side effect, the connection must have been set up on all requests
+        # returned in search_requests
+        assert_that(base_request, has_properties(connection=connection))
+        for request in attribute_requests:
+            assert_that(request, has_properties(connection=connection))
+
+        assert_that(
+            item_mapper.update_request.call_args_list,
+            contains_exactly(
+                has_properties(
+                    args=contains_exactly(
+                        "mock_id",
+                        contains_exactly(
+                            "up_login",
+                            "up_name",
+                            "up_contact",
+                        ),
+                    )
+                )
+            ),
+        )
+        for attribute, value in zip(
+            attribute_mocks, ["up_login", "up_name", "up_contact"]
+        ):
+            assert_that(
+                attribute.update_request.call_args_list,
+                contains_exactly(
+                    has_properties(
+                        args=contains_exactly(
+                            item_mapper.update_request.return_value, "mock_id", value
+                        )
+                    )
+                ),
+            )
+
+        assert_that(
+            update_requests,
+            contains_exactly(
+                item_mapper.update_request.return_value,
+                contains_exactly(*attribute_requests),
+            ),
+        )
+
+    @patch("backo.database.connection.DatabaseConnection", autospec=True)
+    def test_update_request_simple_dict_model(self, connection):
+        """Tests the validity of built update requests for a dict model."""
         base_request = MagicMock(connection=None)
         item_mapper = MagicMock(spec=ItemMapper)
         item_mapper.update_request.return_value = base_request

@@ -1,5 +1,4 @@
-"""DatabaseItem load tests
-"""
+"""DatabaseItem load tests"""
 
 import unittest
 from unittest.mock import MagicMock
@@ -9,6 +8,7 @@ from hamcrest import (
     contains_exactly,
     has_entries,
     has_properties,
+    equal_to,
 )
 
 from backo.database.item import DatabaseItem
@@ -19,8 +19,84 @@ from backo.database.mapper import ItemMapper
 class TestDatabaseItemLoad(unittest.TestCase):
     """Tests item loading depending on the complexity of the model."""
 
-    def test_load_simple_item(self):
-        """Tests database item loading for a model without nested attributes."""
+    def test_load_single_attribute_model(self):
+        """Tests database item loading for a single attribute model."""
+
+        root_response = MagicMock()
+        mock_item_mapper = MagicMock(spec=ItemMapper)
+        mock_item_mapper.load.return_value = None
+
+        attribute_response = MagicMock()
+        attribute_mock = MagicMock(spec=DatabaseAttribute, response=attribute_response)
+        database_item = DatabaseItem(mock_item_mapper, attribute_mock)
+
+        attribute_mock.load.return_value = "John Doe"
+
+        # Real call to the method under test
+        item = database_item.load(root_response, attribute_response)
+
+        assert_that(
+            mock_item_mapper.load.call_args_list,
+            contains_exactly(has_properties(args=contains_exactly(root_response))),
+        )
+
+        assert_that(
+            attribute_mock.load.call_args_list,
+            contains_exactly(
+                has_properties(args=contains_exactly(root_response, attribute_response))
+            ),
+        )
+
+        assert_that(
+            item,
+            equal_to("John Doe"),
+        )
+
+    def test_load_simple_list_model(self):
+        """Tests database item loading for a list model."""
+
+        root_response = MagicMock()
+        mock_item_mapper = MagicMock(spec=ItemMapper)
+        mock_item_mapper.load.return_value = []
+
+        attribute_responses = [MagicMock() for _ in range(3)]
+        attribute_mocks = [
+            MagicMock(spec=DatabaseAttribute, response=attribute_responses[i])
+            for i in range(3)
+        ]
+        database_item = DatabaseItem(mock_item_mapper, attribute_mocks)
+
+        attribute_mocks[0].load.return_value = "jdoe"
+        attribute_mocks[1].load.return_value = "John Doe"
+        attribute_mocks[2].load.return_value = ["mail1@example.org", "mail2@jdoe.fr"]
+
+        # Real call to the method under test
+        item = database_item.load(root_response, attribute_responses)
+
+        assert_that(
+            mock_item_mapper.load.call_args_list,
+            contains_exactly(has_properties(args=contains_exactly(root_response))),
+        )
+
+        for attribute, response in zip(attribute_mocks, attribute_responses):
+            assert_that(
+                attribute.load.call_args_list,
+                contains_exactly(
+                    has_properties(args=contains_exactly(root_response, response))
+                ),
+            )
+
+        assert_that(
+            item,
+            contains_exactly(
+                "jdoe",
+                "John Doe",
+                contains_exactly("mail1@example.org", "mail2@jdoe.fr"),
+            ),
+        )
+
+    def test_load_simple_dict_model(self):
+        """Tests database item loading for a dict model."""
 
         root_response = MagicMock()
         mock_item_mapper = MagicMock(spec=ItemMapper)
@@ -63,9 +139,7 @@ class TestDatabaseItemLoad(unittest.TestCase):
             assert_that(
                 attribute.load.call_args_list,
                 contains_exactly(
-                    has_properties(
-                        args=contains_exactly(root_response, response)
-                    )
+                    has_properties(args=contains_exactly(root_response, response))
                 ),
             )
 
@@ -141,9 +215,7 @@ class TestDatabaseItemLoad(unittest.TestCase):
             assert_that(
                 attribute.load.call_args_list,
                 contains_exactly(
-                    has_properties(
-                        args=contains_exactly(root_response, response)
-                    )
+                    has_properties(args=contains_exactly(root_response, response))
                 ),
             )
 

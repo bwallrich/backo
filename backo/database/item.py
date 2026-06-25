@@ -1,6 +1,5 @@
 """Implementation of the DatabaseItem"""
 
-from typing import Any
 from .mapper import ItemMapper
 
 
@@ -57,7 +56,7 @@ class DatabaseItem:
     DatabaseItem specifies how to retrieve them from a specific database.
     """
 
-    def __init__(self, item_mapper: ItemMapper, model: dict[str, Any]):
+    def __init__(self, item_mapper: ItemMapper, model):
         """
         The `item_mapper` specifies how to build base requests for each
         operation. Each attribute of the model is then allowed to modify the
@@ -252,10 +251,20 @@ class DatabaseItem:
         #  Builds additional requests required to initialize all attributes of
         #  the `model`. Each attribute is allowed to either modify the
         #  `base_request`, build new requests or do nothing.
-        model_requests = {}
-        self._request_dict(
-            base_request, model_requests, self.model, _id, _search_request
-        )
+        model_requests = None
+        if isinstance(self.model, dict):
+            model_requests = {}
+            self._request_dict(
+                base_request, model_requests, self.model, _id, _search_request
+            )
+        elif isinstance(self.model, list):
+            model_requests = []
+            self._request_list(
+                base_request, model_requests, self.model, _id, _search_request
+            )
+        else:
+            model_requests = _search_request(self.model, base_request, _id)
+
         return base_request, model_requests
 
     def create_request(self, item_value):
@@ -277,14 +286,21 @@ class DatabaseItem:
         #  Builds additional requests required to create all attributes of the
         #  `model`. Each attribute is allowed to either modify the
         #  `base_request`, build a new request or do nothing.
-        model_requests = {}
-        self._request_dict_with_values(
-            base_request,
-            model_requests,
-            self.model,
-            item_value,
-            _create_request,
-        )
+        model_requests = None
+        if isinstance(self.model, dict):
+            model_requests = {}
+            self._request_dict_with_values(
+                base_request, model_requests, self.model, item_value, _create_request
+            )
+        elif isinstance(self.model, list):
+            model_requests = []
+            self._request_list_with_values(
+                base_request, model_requests, self.model, item_value, _create_request
+            )
+        else:
+            model_requests = _create_request(self.model, base_request,
+                                             item_value)
+
         return base_request, model_requests
 
     def delete_request(self, _id):
@@ -302,10 +318,20 @@ class DatabaseItem:
         #  Builds additional requests required to delete all attributes of the
         #  `DatabaseItem`. Each attribute is allowed to either modify the
         #  `base_request`, build a new request or do nothing.
-        model_requests = {}
-        self._request_dict(
-            base_request, model_requests, self.model, _id, _delete_request
-        )
+        model_requests = None
+        if isinstance(self.model, dict):
+            model_requests = {}
+            self._request_dict(
+                base_request, model_requests, self.model, _id, _delete_request
+            )
+        elif isinstance(self.model, list):
+            model_requests = []
+            self._request_list(
+                base_request, model_requests, self.model, _id, _delete_request
+            )
+        else:
+            model_requests = _delete_request(self.model, base_request, _id)
+
         return base_request, model_requests
 
     def update_request(self, _id, item_value):
@@ -326,15 +352,21 @@ class DatabaseItem:
         #  Builds additional requests required to create all attributes of the
         #  `model`. Each attribute is allowed to either modify the
         #  `base_request`, build a new request or do nothing.
-        model_requests = {}
-        self._request_dict_with_id_and_values(
-            base_request,
-            model_requests,
-            self.model,
-            _id,
-            item_value,
-            _update_request,
-        )
+        model_requests = None
+        if isinstance(self.model, dict):
+            model_requests = {}
+            self._request_dict_with_id_and_values(
+                base_request, model_requests, self.model, _id, item_value, _update_request
+            )
+        elif isinstance(self.model, list):
+            model_requests = []
+            self._request_list_with_id_and_values(
+                base_request, model_requests, self.model, _id, item_value, _update_request
+            )
+        else:
+            model_requests = _update_request(self.model, base_request,
+                                             _id, item_value)
+
         return base_request, model_requests
 
     def _load_list(
@@ -400,8 +432,13 @@ class DatabaseItem:
         values retrieved using the `model`.
         """
         item = self.item_mapper.load(base_request_response)
-        # TODO: model is not necessarily a dict
-        self._load_dict(base_request_response, attribute_responses, item, self.model)
+
+        if isinstance(self.model, list):
+            self._load_list(base_request_response, attribute_responses, item, self.model)
+        elif isinstance(self.model, dict):
+            self._load_dict(base_request_response, attribute_responses, item, self.model)
+        else:
+            item = self.model.load(base_request_response, attribute_responses)
         return item
 
     def created_id(self, base_create_response):

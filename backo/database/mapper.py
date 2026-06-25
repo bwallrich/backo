@@ -82,10 +82,6 @@ class ItemMapper:
         """Loads the base JSON-like dict representation of an item from the
         response of the base request.
 
-        By default, returns an empty dict. This method must be overriden as
-        required.
-
         Database attributes will then increment this representation as required.
         The item can also be completely loaded from the base_response.
         """
-        return {}
