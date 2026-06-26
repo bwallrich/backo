@@ -79,12 +79,12 @@ class DatabaseItem:
         if isinstance(self.model, dict):
             model_requests = {}
             _request_dict(
-                base_request, model_requests, self.model, _id, _search_request
+                base_request, model_requests, self.model, _search_request, _id
             )
         elif isinstance(self.model, list):
             model_requests = []
             _request_list(
-                base_request, model_requests, self.model, _id, _search_request
+                base_request, model_requests, self.model, _search_request, _id
             )
         else:
             model_requests = _search_request(self.model, base_request, _id)
@@ -145,12 +145,12 @@ class DatabaseItem:
         if isinstance(self.model, dict):
             model_requests = {}
             _request_dict(
-                base_request, model_requests, self.model, _id, _delete_request
+                base_request, model_requests, self.model, _delete_request, _id
             )
         elif isinstance(self.model, list):
             model_requests = []
             _request_list(
-                base_request, model_requests, self.model, _id, _delete_request
+                base_request, model_requests, self.model, _delete_request, _id
             )
         else:
             model_requests = _delete_request(self.model, base_request, _id)
@@ -178,23 +178,23 @@ class DatabaseItem:
         model_requests = None
         if isinstance(self.model, dict):
             model_requests = {}
-            _request_dict_with_id_and_values(
+            _request_dict_with_values(
                 base_request,
                 model_requests,
                 self.model,
-                _id,
                 item_value,
                 _update_request,
+                _id,
             )
         elif isinstance(self.model, list):
             model_requests = []
-            _request_list_with_id_and_values(
+            _request_list_with_values(
                 base_request,
                 model_requests,
                 self.model,
-                _id,
                 item_value,
                 _update_request,
+                _id,
             )
         else:
             model_requests = _update_request(self.model, base_request, _id, item_value)
@@ -216,13 +216,9 @@ class DatabaseItem:
         item = self.item_mapper.load(base_request_response)
 
         if isinstance(self.model, list):
-            _load_list(
-                base_request_response, attribute_responses, item, self.model
-            )
+            _load_list(base_request_response, attribute_responses, item, self.model)
         elif isinstance(self.model, dict):
-            _load_dict(
-                base_request_response, attribute_responses, item, self.model
-            )
+            _load_dict(base_request_response, attribute_responses, item, self.model)
         else:
             item = self.model.load(base_request_response, attribute_responses)
         return item
@@ -320,152 +316,98 @@ def _set_model_connection(attributes, connection):
         attributes.set_default_connection(connection)
 
 
-def _request_list(base_request, request_list, attributes_list, _id, request_method):
+def _request_list(base_request, request_list, attributes_list, request_method, *args):
     """Appends items to the request list using request_method, processing nested
     structures as required.
 
-    request_method is called as request_method(attribute, base_request, _id)
+    request_method is called as request_method(attribute, base_request, *args)
     when reaching a leaf attribute.
     """
     for attribute in attributes_list:
         if isinstance(attribute, list):
             requests = []
-            _request_list(base_request, requests, attribute, _id, request_method)
+            _request_list(base_request, requests, attribute, request_method, *args)
             request_list.append(requests)
         elif isinstance(attribute, dict):
             requests = {}
-            _request_dict(base_request, requests, attribute, _id, request_method)
+            _request_dict(base_request, requests, attribute, request_method, *args)
             request_list.append(requests)
         else:
-            request_list.append(request_method(attribute, base_request, _id))
+            request_list.append(request_method(attribute, base_request, *args))
 
 
-def _request_dict(base_request, request_dict, attributes_dict, _id, request_method):
+def _request_dict(base_request, request_dict, attributes_dict, request_method, *args):
     """Builds entries in the request_dict using request_method, processing
     nested structures as required.
 
-    request_method is called as request_method(attribute, base_request, _id)
+    request_method is called as request_method(attribute, base_request, *args)
     when reaching a leaf attribute.
     """
     for key, attribute in attributes_dict.items():
         if isinstance(attribute, list):
             requests = []
-            _request_list(base_request, requests, attribute, _id, request_method)
+            _request_list(base_request, requests, attribute, request_method, *args)
             request_dict[key] = requests
         elif isinstance(attribute, dict):
             requests = {}
-            _request_dict(base_request, requests, attribute, _id, request_method)
+            _request_dict(base_request, requests, attribute, request_method, *args)
             request_dict[key] = requests
         else:
-            request_dict[key] = request_method(attribute, base_request, _id)
+            request_dict[key] = request_method(attribute, base_request, *args)
 
 
 def _request_list_with_values(
-    base_request, request_list, attributes_list, values, request_method
+    base_request, request_list, attributes_list, values, request_method, *args
 ):
     """Appends items to the request_list using request_method, processing nested
     structures as required.
 
-    request_method is called as request_method(attribute, base_request, value)
-    when reaching a leaf attribute. `value` is the item at the same index as
-    attribute in the `attributes_list`.
+    request_method is called as request_method(attribute, base_request, *args,
+    value) when reaching a leaf attribute. `value` is the item at the same index
+    as attribute in the `attributes_list`.
     """
     for attribute, value in zip(attributes_list, values):
         if isinstance(attribute, list):
             requests = []
             _request_list_with_values(
-                base_request, requests, attribute, value, request_method
+                base_request, requests, attribute, value, request_method, *args
             )
             request_list.append(requests)
         elif isinstance(attribute, dict):
             requests = {}
             _request_dict_with_values(
-                base_request, requests, attribute, value, request_method
+                base_request, requests, attribute, value, request_method, *args
             )
             request_list.append(requests)
         else:
-            request_list.append(request_method(attribute, base_request, value))
+            request_list.append(request_method(attribute, base_request, *args, value))
 
 
 def _request_dict_with_values(
-    base_request, request_dict, attributes_dict, values, request_method
+    base_request, request_dict, attributes_dict, values, request_method, *args
 ):
     """Builds entries in the request_dict using request_method, processing
     nested structures as required.
 
-    request_method is called as request_method(attribute, base_request, value)
-    when reaching a leaf attribute. `value` is the item at the same index as
-    attribute in the `attributes_list`.
+    request_method is called as request_method(attribute, base_request, *args,
+    value) when reaching a leaf attribute. `value` is the item at the same index
+    as attribute in the `attributes_list`.
     """
     for (key, attribute), value in zip(attributes_dict.items(), values.values()):
         if isinstance(attribute, list):
             requests = []
             _request_list_with_values(
-                base_request, requests, attribute, value, request_method
+                base_request, requests, attribute, value, request_method, *args
             )
             request_dict[key] = requests
         elif isinstance(attribute, dict):
             requests = {}
             _request_dict_with_values(
-                base_request, requests, attribute, value, request_method
+                base_request, requests, attribute, value, request_method, *args
             )
             request_dict[key] = requests
         else:
-            request_dict[key] = request_method(attribute, base_request, value)
-
-
-def _request_list_with_id_and_values(
-    base_request, request_list, attributes_list, _id, values, request_method
-):
-    """Appends items to the request_list using request_method, processing nested
-    structures as required.
-
-    request_method is called as request_method(attribute, base_request, _id,
-    value) when reaching a leaf attribute. `value` is the item at the same index
-    as attribute in the `attributes_list`.
-    """
-    for attribute, value in zip(attributes_list, values):
-        if isinstance(attribute, list):
-            requests = []
-            _request_list_with_id_and_values(
-                base_request, requests, attribute, _id, value, request_method
-            )
-            request_list.append(requests)
-        elif isinstance(attribute, dict):
-            requests = {}
-            _request_dict_with_id_and_values(
-                base_request, requests, attribute, _id, value, request_method
-            )
-            request_list.append(requests)
-        else:
-            request_list.append(request_method(attribute, base_request, _id, value))
-
-
-def _request_dict_with_id_and_values(
-    base_request, request_dict, attributes_dict, _id, values, request_method
-):
-    """Builds entries in the request_dict using request_method, processing
-    nested structures as required.
-
-    request_method is called as request_method(attribute, base_request, _id,
-    value) when reaching a leaf attribute. `value` is the item at the same index
-    as attribute in the `attributes_list`.
-    """
-    for (key, attribute), value in zip(attributes_dict.items(), values.values()):
-        if isinstance(attribute, list):
-            requests = []
-            _request_list_with_id_and_values(
-                base_request, requests, attribute, _id, value, request_method
-            )
-            request_dict[key] = requests
-        elif isinstance(attribute, dict):
-            requests = {}
-            _request_dict_with_id_and_values(
-                base_request, requests, attribute, _id, value, request_method
-            )
-            request_dict[key] = requests
-        else:
-            request_dict[key] = request_method(attribute, base_request, _id, value)
+            request_dict[key] = request_method(attribute, base_request, *args, value)
 
 
 def _load_list(base_request_response, attributes_responses, item_list, attributes_list):
