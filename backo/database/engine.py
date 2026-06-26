@@ -31,63 +31,6 @@ class DatabaseEngine:
         self.database_item = database_item
         self.database_item.set_default_connection(self.database_connection)
 
-    def _execute_search(self, request):
-        return request.connection.execute_search(request)
-
-    def _execute_create(self, request):
-        return request.connection.execute_create(request)
-
-    def _execute_delete(self, request):
-        return request.connection.execute_delete(request)
-
-    def _execute_update(self, request):
-        return request.connection.execute_update(request)
-
-    def _execute_list_requests(self, requests_list, responses, request_method):
-        for request in requests_list:
-            if isinstance(request, dict):
-                response = {}
-                self._execute_nested_requests(request, response, request_method)
-                responses.append(response)
-            elif isinstance(request, list):
-                response = []
-                self._execute_list_requests(request, response, request_method)
-                responses.append(response)
-            elif request is not None:
-                responses.append(request_method(request))
-            else:
-                responses.append(None)
-
-    def _execute_nested_requests(self, requests_dict, responses, request_method):
-        for key, value in requests_dict.items():
-            if isinstance(value, dict):
-                responses[key] = {}
-                self._execute_nested_requests(value, responses[key], request_method)
-            elif isinstance(value, list):
-                responses[key] = []
-                self._execute_list_requests(value, responses[key], request_method)
-            elif value is not None:
-                responses[key] = request_method(value)
-            else:
-                responses[key] = None
-
-    def _execute_requests(self, base_request, attributes_requests, request_method):
-        base_response = request_method(base_request)
-        attribute_responses = None
-        if isinstance(attributes_requests, dict):
-            attribute_responses = {}
-            self._execute_nested_requests(
-                attributes_requests, attribute_responses, request_method
-            )
-        elif isinstance(attributes_requests, list):
-            attribute_responses = []
-            self._execute_list_requests(
-                attributes_requests, attribute_responses, request_method
-            )
-        elif attributes_requests is not None:
-            attribute_responses = request_method(attributes_requests)
-        return base_response, attribute_responses
-
     def search(self, _id):
         """Search the database for an item with the given `_id`.
 
@@ -100,8 +43,8 @@ class DatabaseEngine:
         """
         base_request, attribute_requests = self.database_item.search_request(_id)
 
-        base_response, attributes_responses = self._execute_requests(
-            base_request, attribute_requests, self._execute_search
+        base_response, attributes_responses = _execute_requests(
+            base_request, attribute_requests, _execute_search
         )
         item = self.database_item.load(base_response, attributes_responses)
         item["_id"] = _id
@@ -125,8 +68,8 @@ class DatabaseEngine:
             item_value
         )
 
-        base_response, _ = self._execute_requests(
-            base_request, attributes_requests, self._execute_create
+        base_response, _ = _execute_requests(
+            base_request, attributes_requests, _execute_create
         )
 
         return self.database_item.created_id(base_response)
@@ -142,9 +85,7 @@ class DatabaseEngine:
         """
         base_request, attribute_requests = self.database_item.delete_request(_id)
 
-        self._execute_requests(
-            base_request, attribute_requests, self._execute_delete
-        )
+        _execute_requests(base_request, attribute_requests, _execute_delete)
 
     def save(self, _id, item_value):
         """Updates the item associated to `_id` with the provided values.
@@ -164,6 +105,92 @@ class DatabaseEngine:
             _id, item_value
         )
 
-        self._execute_requests(
-            base_request, attribute_requests, self._execute_update
-        )
+        _execute_requests(base_request, attribute_requests, _execute_update)
+
+
+def _execute_search(request):
+    """Execute the search request using its own connection, that was set by the
+    encapsulating DatabaseItem.
+    """
+    return request.connection.execute_search(request)
+
+
+def _execute_create(request):
+    """Execute the create request using its own connection, that was set by the
+    encapsulating DatabaseItem.
+    """
+    return request.connection.execute_create(request)
+
+
+def _execute_delete(request):
+    """Execute the delete request using its own connection, that was set by the
+    encapsulating DatabaseItem.
+    """
+    return request.connection.execute_delete(request)
+
+
+def _execute_update(request):
+    """Execute the update request using its own connection, that was set by the
+    encapsulating DatabaseItem.
+    """
+    return request.connection.execute_update(request)
+
+
+def _execute_list_requests(requests_list, responses, request_method):
+    """Execute the list of requests using the request_method, processing the
+    nested structure as required.
+
+    Responses are appended to the responses list so responses have the same
+    shape as requests_list upon return.
+    """
+    for request in requests_list:
+        if isinstance(request, dict):
+            response = {}
+            _execute_dict_requests(request, response, request_method)
+            responses.append(response)
+        elif isinstance(request, list):
+            response = []
+            _execute_list_requests(request, response, request_method)
+            responses.append(response)
+        elif request is not None:
+            responses.append(request_method(request))
+        else:
+            responses.append(None)
+
+
+def _execute_dict_requests(requests_dict, responses, request_method):
+    """Execute the dict of requests using the request_method, processing the
+    nested structure as required.
+
+    Responses are inserted into the responses dict so responses have the same
+    shape as requests_dict upon return.
+    """
+    for key, value in requests_dict.items():
+        if isinstance(value, dict):
+            responses[key] = {}
+            _execute_dict_requests(value, responses[key], request_method)
+        elif isinstance(value, list):
+            responses[key] = []
+            _execute_list_requests(value, responses[key], request_method)
+        elif value is not None:
+            responses[key] = request_method(value)
+        else:
+            responses[key] = None
+
+
+def _execute_requests(base_request, attributes_requests, request_method):
+    """Execute the base and attribute requests using request_method and returns
+    responses as a tuple. Responses to attribute requests are returned in a
+    structure with the same shape as attributes_requests.
+    """
+    base_response = request_method(base_request)
+    attribute_responses = None
+    if isinstance(attributes_requests, dict):
+        attribute_responses = {}
+        _execute_dict_requests(attributes_requests, attribute_responses, request_method)
+    elif isinstance(attributes_requests, list):
+        attribute_responses = []
+        _execute_list_requests(attributes_requests, attribute_responses, request_method)
+    elif attributes_requests is not None:
+        attribute_responses = request_method(attributes_requests)
+    return base_response, attribute_responses
