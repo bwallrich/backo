@@ -3,46 +3,6 @@
 from .mapper import ItemMapper
 
 
-def _set_requests_connection(requests, connection):
-    if isinstance(requests, list):
-        for request in requests:
-            _set_requests_connection(request, connection)
-    elif isinstance(requests, dict):
-        for request in requests.values():
-            _set_requests_connection(request, connection)
-    elif requests is not None:
-        requests.connection = connection
-
-
-def _requests_with_connection(requests, connection):
-    _set_requests_connection(requests, connection)
-    return requests
-
-
-def _search_request(attribute, base_request, _id):
-    return _requests_with_connection(
-        attribute.search_request(base_request, _id), attribute.connection
-    )
-
-
-def _create_request(attribute, base_request, value):
-    return _requests_with_connection(
-        attribute.create_request(base_request, value), attribute.connection
-    )
-
-
-def _delete_request(attribute, base_request, _id):
-    return _requests_with_connection(
-        attribute.delete_request(base_request, _id), attribute.connection
-    )
-
-
-def _update_request(attribute, base_request, _id, value):
-    return _requests_with_connection(
-        attribute.update_request(base_request, _id, value), attribute.connection
-    )
-
-
 class DatabaseItem:
     """A DatabaseItem specifies how data should be loaded from the database to
     produce a valid JSON-like dict that could be provided to load a backo Item.
@@ -83,23 +43,11 @@ class DatabaseItem:
         self.model = model
 
         # Informs each attribute of its path within the model
-        self._set_attribute_paths(self.model, [])
+        _set_attribute_paths(self.model, [])
 
         # It is set by the DatabaseEngine using
         # set_default_connection
         self.connection = None
-
-    def _set_attribute_paths(self, attributes, current_path):
-        if isinstance(attributes, list):
-            i = 0
-            for attribute in attributes:
-                self._set_attribute_paths(attribute, current_path + [i])
-                i += 1
-        elif isinstance(attributes, dict):
-            for key, attribute in attributes.items():
-                self._set_attribute_paths(attribute, current_path + [key])
-        else:
-            attributes.set_attribute_path(current_path)
 
     def set_default_connection(self, connection):
         """Sets the connection that will be used to perform base requests and
@@ -107,131 +55,7 @@ class DatabaseItem:
         specific connection.
         """
         self.connection = connection
-        self._set_default_connection(self.model, connection)
-
-    def _set_default_connection(self, attributes, connection):
-        if isinstance(attributes, list):
-            for attribute in attributes:
-                self._set_default_connection(attribute, connection)
-        elif isinstance(attributes, dict):
-            for attribute in attributes.values():
-                self._set_default_connection(attribute, connection)
-        else:
-            attributes.set_default_connection(connection)
-
-    def _request_list(
-        self, base_request, request_list, attributes_list, _id, request_method
-    ):
-        for attribute in attributes_list:
-            if isinstance(attribute, list):
-                requests = []
-                self._request_list(
-                    base_request, requests, attribute, _id, request_method
-                )
-                request_list.append(requests)
-            elif isinstance(attribute, dict):
-                requests = {}
-                self._request_dict(
-                    base_request, requests, attribute, _id, request_method
-                )
-                request_list.append(requests)
-            else:
-                request_list.append(request_method(attribute, base_request, _id))
-
-    def _request_dict(
-        self, base_request, request_dict, attributes_dict, _id, request_method
-    ):
-        for key, attribute in attributes_dict.items():
-            if isinstance(attribute, list):
-                requests = []
-                self._request_list(
-                    base_request, requests, attribute, _id, request_method
-                )
-                request_dict[key] = requests
-            elif isinstance(attribute, dict):
-                requests = {}
-                self._request_dict(
-                    base_request, requests, attribute, _id, request_method
-                )
-                request_dict[key] = requests
-            else:
-                request_dict[key] = request_method(attribute, base_request, _id)
-
-    def _request_list_with_values(
-        self, base_request, request_list, attributes_list, values, request_method
-    ):
-        for attribute, value in zip(attributes_list, values):
-            if isinstance(attribute, list):
-                requests = []
-                self._request_list_with_values(
-                    base_request, requests, attribute, value, request_method
-                )
-                request_list.append(requests)
-            elif isinstance(attribute, dict):
-                requests = {}
-                self._request_dict_with_values(
-                    base_request, requests, attribute, value, request_method
-                )
-                request_list.append(requests)
-            else:
-                request_list.append(request_method(attribute, base_request, value))
-
-    def _request_dict_with_values(
-        self, base_request, request_dict, attributes_dict, values, request_method
-    ):
-        for (key, attribute), value in zip(attributes_dict.items(), values.values()):
-            if isinstance(attribute, list):
-                requests = []
-                self._request_list_with_values(
-                    base_request, requests, attribute, value, request_method
-                )
-                request_dict[key] = requests
-            elif isinstance(attribute, dict):
-                requests = {}
-                self._request_dict_with_values(
-                    base_request, requests, attribute, value, request_method
-                )
-                request_dict[key] = requests
-            else:
-                request_dict[key] = request_method(attribute, base_request, value)
-
-    def _request_list_with_id_and_values(
-        self, base_request, request_list, attributes_list, _id, values, request_method
-    ):
-        for attribute, value in zip(attributes_list, values):
-            if isinstance(attribute, list):
-                requests = []
-                self._request_list_with_id_and_values(
-                    base_request, requests, attribute, _id, value, request_method
-                )
-                request_list.append(requests)
-            elif isinstance(attribute, dict):
-                requests = {}
-                self._request_dict_with_id_and_values(
-                    base_request, requests, attribute, _id, value, request_method
-                )
-                request_list.append(requests)
-            else:
-                request_list.append(request_method(attribute, base_request, _id, value))
-
-    def _request_dict_with_id_and_values(
-        self, base_request, request_dict, attributes_dict, _id, values, request_method
-    ):
-        for (key, attribute), value in zip(attributes_dict.items(), values.values()):
-            if isinstance(attribute, list):
-                requests = []
-                self._request_list_with_id_and_values(
-                    base_request, requests, attribute, _id, value, request_method
-                )
-                request_dict[key] = requests
-            elif isinstance(attribute, dict):
-                requests = {}
-                self._request_dict_with_id_and_values(
-                    base_request, requests, attribute, _id, value, request_method
-                )
-                request_dict[key] = requests
-            else:
-                request_dict[key] = request_method(attribute, base_request, _id, value)
+        _set_model_connection(self.model, connection)
 
     def search_request(self, _id):
         """Builds a set of search requests that will be able to load all the
@@ -254,12 +78,12 @@ class DatabaseItem:
         model_requests = None
         if isinstance(self.model, dict):
             model_requests = {}
-            self._request_dict(
+            _request_dict(
                 base_request, model_requests, self.model, _id, _search_request
             )
         elif isinstance(self.model, list):
             model_requests = []
-            self._request_list(
+            _request_list(
                 base_request, model_requests, self.model, _id, _search_request
             )
         else:
@@ -289,17 +113,16 @@ class DatabaseItem:
         model_requests = None
         if isinstance(self.model, dict):
             model_requests = {}
-            self._request_dict_with_values(
+            _request_dict_with_values(
                 base_request, model_requests, self.model, item_value, _create_request
             )
         elif isinstance(self.model, list):
             model_requests = []
-            self._request_list_with_values(
+            _request_list_with_values(
                 base_request, model_requests, self.model, item_value, _create_request
             )
         else:
-            model_requests = _create_request(self.model, base_request,
-                                             item_value)
+            model_requests = _create_request(self.model, base_request, item_value)
 
         return base_request, model_requests
 
@@ -321,12 +144,12 @@ class DatabaseItem:
         model_requests = None
         if isinstance(self.model, dict):
             model_requests = {}
-            self._request_dict(
+            _request_dict(
                 base_request, model_requests, self.model, _id, _delete_request
             )
         elif isinstance(self.model, list):
             model_requests = []
-            self._request_list(
+            _request_list(
                 base_request, model_requests, self.model, _id, _delete_request
             )
         else:
@@ -355,69 +178,28 @@ class DatabaseItem:
         model_requests = None
         if isinstance(self.model, dict):
             model_requests = {}
-            self._request_dict_with_id_and_values(
-                base_request, model_requests, self.model, _id, item_value, _update_request
+            _request_dict_with_id_and_values(
+                base_request,
+                model_requests,
+                self.model,
+                _id,
+                item_value,
+                _update_request,
             )
         elif isinstance(self.model, list):
             model_requests = []
-            self._request_list_with_id_and_values(
-                base_request, model_requests, self.model, _id, item_value, _update_request
+            _request_list_with_id_and_values(
+                base_request,
+                model_requests,
+                self.model,
+                _id,
+                item_value,
+                _update_request,
             )
         else:
-            model_requests = _update_request(self.model, base_request,
-                                             _id, item_value)
+            model_requests = _update_request(self.model, base_request, _id, item_value)
 
         return base_request, model_requests
-
-    def _load_list(
-        self, base_request_response, attributes_responses, item_list, attributes_list
-    ):
-        for attribute, response in zip(attributes_list, attributes_responses):
-            if isinstance(attribute, dict):
-                item_value = {}
-                self._load_dict(
-                    base_request_response,
-                    response,
-                    item_value,
-                    attribute,
-                )
-                item_list.append(item_value)
-            elif isinstance(attribute, list):
-                item_value = []
-                self._load_list(
-                    base_request_response,
-                    response,
-                    item_value,
-                    attribute,
-                )
-                item_list.append(item_value)
-            else:
-                item_list.append(attribute.load(base_request_response, response))
-
-    def _load_dict(
-        self, base_request_response, attributes_responses, item_node, attributes_node
-    ):
-        for key, attribute in attributes_node.items():
-            if isinstance(attribute, dict):
-                item_node[key] = {}
-                self._load_dict(
-                    base_request_response,
-                    attributes_responses[key],
-                    item_node[key],
-                    attribute,
-                )
-            elif isinstance(attribute, list):
-                item_node[key] = []
-                self._load_list(
-                    base_request_response,
-                    attributes_responses[key],
-                    item_node[key],
-                    attribute,
-                )
-            else:
-                item_node[key] = attributes_node[key].load(
-                    base_request_response, attributes_responses[key]
-                )
 
     def load(self, base_request_response, attribute_responses):
         """Loads the item in a JSON-like dict from the database response.
@@ -434,9 +216,13 @@ class DatabaseItem:
         item = self.item_mapper.load(base_request_response)
 
         if isinstance(self.model, list):
-            self._load_list(base_request_response, attribute_responses, item, self.model)
+            _load_list(
+                base_request_response, attribute_responses, item, self.model
+            )
         elif isinstance(self.model, dict):
-            self._load_dict(base_request_response, attribute_responses, item, self.model)
+            _load_dict(
+                base_request_response, attribute_responses, item, self.model
+            )
         else:
             item = self.model.load(base_request_response, attribute_responses)
         return item
@@ -446,3 +232,299 @@ class DatabaseItem:
         create operation.
         """
         return self.item_mapper.created_id(base_create_response)
+
+
+# Recursion algorithms
+
+
+def _requests_with_connection(requests, connection):
+    """request_method wrapper to set the connection on all requests.
+
+    requests is a nested structure of requests.
+    """
+    _set_requests_connection(requests, connection)
+    return requests
+
+
+def _set_requests_connection(requests, connection):
+    """Sets connection on each request of a nested request structure."""
+    if isinstance(requests, list):
+        for request in requests:
+            _set_requests_connection(request, connection)
+    elif isinstance(requests, dict):
+        for request in requests.values():
+            _set_requests_connection(request, connection)
+    elif requests is not None:
+        requests.connection = connection
+
+
+def _search_request(attribute, base_request, _id):
+    """Builds search requests as attribute.search_request(base_request, _id) and
+    sets connection on all requests.
+    """
+    return _requests_with_connection(
+        attribute.search_request(base_request, _id), attribute.connection
+    )
+
+
+def _create_request(attribute, base_request, value):
+    """Builds create requests as attribute.create_request(base_request, value)
+    and sets connection on all requests.
+    """
+    return _requests_with_connection(
+        attribute.create_request(base_request, value), attribute.connection
+    )
+
+
+def _delete_request(attribute, base_request, _id):
+    """Builds delete requests as attribute.delete_request(base_request, _id) and
+    sets connection on all requests.
+    """
+    return _requests_with_connection(
+        attribute.delete_request(base_request, _id), attribute.connection
+    )
+
+
+def _update_request(attribute, base_request, _id, value):
+    """Builds update requests as attribute.update_request(base_request, _id,
+    value) and sets connection on all requests.
+    """
+    return _requests_with_connection(
+        attribute.update_request(base_request, _id, value), attribute.connection
+    )
+
+
+def _set_attribute_paths(attributes, current_path):
+    """Sets attribute path on each attribute of a model."""
+    if isinstance(attributes, list):
+        i = 0
+        for attribute in attributes:
+            _set_attribute_paths(attribute, current_path + [i])
+            i += 1
+    elif isinstance(attributes, dict):
+        for key, attribute in attributes.items():
+            _set_attribute_paths(attribute, current_path + [key])
+    else:
+        attributes.set_attribute_path(current_path)
+
+
+def _set_model_connection(attributes, connection):
+    """Sets connection on each attribute of a model."""
+    if isinstance(attributes, list):
+        for attribute in attributes:
+            _set_model_connection(attribute, connection)
+    elif isinstance(attributes, dict):
+        for attribute in attributes.values():
+            _set_model_connection(attribute, connection)
+    else:
+        attributes.set_default_connection(connection)
+
+
+def _request_list(base_request, request_list, attributes_list, _id, request_method):
+    """Appends items to the request list using request_method, processing nested
+    structures as required.
+
+    request_method is called as request_method(attribute, base_request, _id)
+    when reaching a leaf attribute.
+    """
+    for attribute in attributes_list:
+        if isinstance(attribute, list):
+            requests = []
+            _request_list(base_request, requests, attribute, _id, request_method)
+            request_list.append(requests)
+        elif isinstance(attribute, dict):
+            requests = {}
+            _request_dict(base_request, requests, attribute, _id, request_method)
+            request_list.append(requests)
+        else:
+            request_list.append(request_method(attribute, base_request, _id))
+
+
+def _request_dict(base_request, request_dict, attributes_dict, _id, request_method):
+    """Builds entries in the request_dict using request_method, processing
+    nested structures as required.
+
+    request_method is called as request_method(attribute, base_request, _id)
+    when reaching a leaf attribute.
+    """
+    for key, attribute in attributes_dict.items():
+        if isinstance(attribute, list):
+            requests = []
+            _request_list(base_request, requests, attribute, _id, request_method)
+            request_dict[key] = requests
+        elif isinstance(attribute, dict):
+            requests = {}
+            _request_dict(base_request, requests, attribute, _id, request_method)
+            request_dict[key] = requests
+        else:
+            request_dict[key] = request_method(attribute, base_request, _id)
+
+
+def _request_list_with_values(
+    base_request, request_list, attributes_list, values, request_method
+):
+    """Appends items to the request_list using request_method, processing nested
+    structures as required.
+
+    request_method is called as request_method(attribute, base_request, value)
+    when reaching a leaf attribute. `value` is the item at the same index as
+    attribute in the `attributes_list`.
+    """
+    for attribute, value in zip(attributes_list, values):
+        if isinstance(attribute, list):
+            requests = []
+            _request_list_with_values(
+                base_request, requests, attribute, value, request_method
+            )
+            request_list.append(requests)
+        elif isinstance(attribute, dict):
+            requests = {}
+            _request_dict_with_values(
+                base_request, requests, attribute, value, request_method
+            )
+            request_list.append(requests)
+        else:
+            request_list.append(request_method(attribute, base_request, value))
+
+
+def _request_dict_with_values(
+    base_request, request_dict, attributes_dict, values, request_method
+):
+    """Builds entries in the request_dict using request_method, processing
+    nested structures as required.
+
+    request_method is called as request_method(attribute, base_request, value)
+    when reaching a leaf attribute. `value` is the item at the same index as
+    attribute in the `attributes_list`.
+    """
+    for (key, attribute), value in zip(attributes_dict.items(), values.values()):
+        if isinstance(attribute, list):
+            requests = []
+            _request_list_with_values(
+                base_request, requests, attribute, value, request_method
+            )
+            request_dict[key] = requests
+        elif isinstance(attribute, dict):
+            requests = {}
+            _request_dict_with_values(
+                base_request, requests, attribute, value, request_method
+            )
+            request_dict[key] = requests
+        else:
+            request_dict[key] = request_method(attribute, base_request, value)
+
+
+def _request_list_with_id_and_values(
+    base_request, request_list, attributes_list, _id, values, request_method
+):
+    """Appends items to the request_list using request_method, processing nested
+    structures as required.
+
+    request_method is called as request_method(attribute, base_request, _id,
+    value) when reaching a leaf attribute. `value` is the item at the same index
+    as attribute in the `attributes_list`.
+    """
+    for attribute, value in zip(attributes_list, values):
+        if isinstance(attribute, list):
+            requests = []
+            _request_list_with_id_and_values(
+                base_request, requests, attribute, _id, value, request_method
+            )
+            request_list.append(requests)
+        elif isinstance(attribute, dict):
+            requests = {}
+            _request_dict_with_id_and_values(
+                base_request, requests, attribute, _id, value, request_method
+            )
+            request_list.append(requests)
+        else:
+            request_list.append(request_method(attribute, base_request, _id, value))
+
+
+def _request_dict_with_id_and_values(
+    base_request, request_dict, attributes_dict, _id, values, request_method
+):
+    """Builds entries in the request_dict using request_method, processing
+    nested structures as required.
+
+    request_method is called as request_method(attribute, base_request, _id,
+    value) when reaching a leaf attribute. `value` is the item at the same index
+    as attribute in the `attributes_list`.
+    """
+    for (key, attribute), value in zip(attributes_dict.items(), values.values()):
+        if isinstance(attribute, list):
+            requests = []
+            _request_list_with_id_and_values(
+                base_request, requests, attribute, _id, value, request_method
+            )
+            request_dict[key] = requests
+        elif isinstance(attribute, dict):
+            requests = {}
+            _request_dict_with_id_and_values(
+                base_request, requests, attribute, _id, value, request_method
+            )
+            request_dict[key] = requests
+        else:
+            request_dict[key] = request_method(attribute, base_request, _id, value)
+
+
+def _load_list(base_request_response, attributes_responses, item_list, attributes_list):
+    """Loads a list of values into item_list from base_request_response and
+    attributes_responses, processing nested structures as required.
+
+    Value of the list are loaded from lead attributes so that the item at index
+    i is loaded as attribute.load(base_request_response, response) where
+    attribute=attributes_list[i] and response=attributes_responses[i].
+    """
+    for attribute, response in zip(attributes_list, attributes_responses):
+        if isinstance(attribute, dict):
+            item_value = {}
+            _load_dict(
+                base_request_response,
+                response,
+                item_value,
+                attribute,
+            )
+            item_list.append(item_value)
+        elif isinstance(attribute, list):
+            item_value = []
+            _load_list(
+                base_request_response,
+                response,
+                item_value,
+                attribute,
+            )
+            item_list.append(item_value)
+        else:
+            item_list.append(attribute.load(base_request_response, response))
+
+
+def _load_dict(base_request_response, attributes_responses, item_dict, attributes_node):
+    """Loads a dict of values into item_dict from base_request_response and
+    attributes_responses, processing nested structures as required.
+
+    Value of the dict are loaded from lead attributes so that the item at key is
+    loaded as attribute.load(base_request_response, response) where
+    attribute=attributes_list[key] and response=attributes_responses[key].
+    """
+    for key, attribute in attributes_node.items():
+        if isinstance(attribute, dict):
+            item_dict[key] = {}
+            _load_dict(
+                base_request_response,
+                attributes_responses[key],
+                item_dict[key],
+                attribute,
+            )
+        elif isinstance(attribute, list):
+            item_dict[key] = []
+            _load_list(
+                base_request_response,
+                attributes_responses[key],
+                item_dict[key],
+                attribute,
+            )
+        else:
+            item_dict[key] = attributes_node[key].load(
+                base_request_response, attributes_responses[key]
+            )
