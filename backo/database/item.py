@@ -393,21 +393,23 @@ def _request_dict_with_values(
     value) when reaching a leaf attribute. `value` is the item at the same index
     as attribute in the `attributes_list`.
     """
-    for (key, attribute), value in zip(attributes_dict.items(), values.values()):
+    for key, attribute in attributes_dict.items():
         if isinstance(attribute, list):
             requests = []
             _request_list_with_values(
-                base_request, requests, attribute, value, request_method, *args
+                base_request, requests, attribute, values[key], request_method, *args
             )
             request_dict[key] = requests
         elif isinstance(attribute, dict):
             requests = {}
             _request_dict_with_values(
-                base_request, requests, attribute, value, request_method, *args
+                base_request, requests, attribute, values[key], request_method, *args
             )
             request_dict[key] = requests
         else:
-            request_dict[key] = request_method(attribute, base_request, *args, value)
+            request_dict[key] = request_method(
+                attribute, base_request, *args, values[key]
+            )
 
 
 def _load_list(base_request_response, attributes_responses, item_list, attributes_list):
