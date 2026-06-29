@@ -1,7 +1,8 @@
 """Provides the specification of the ItemMapper interface."""
 
+
 class ItemMapper:
-    """ Base requests handling to support each database operations.
+    """Base requests handling to support each database operations.
 
     Each ItemMapper implementation is specific to a database type, but several
     ItemMappers might be defined for each database, depending on how data is
@@ -77,6 +78,18 @@ class ItemMapper:
         :return: A delete request. Its type is implementation dependent.
         """
         raise NotImplementedError("This ItemMapper does not support item update")
+
+    def select_request(self, item_filter):
+        """Builds a request that can be used as a base request to select items
+        matching the specified filter. The request does not need to return
+        exactly the list of items matching the filter, but must ensure all items
+        in the database matching the filter can be loaded from the response.
+        This means a request returning all items will be a valid response for
+        any filter.
+
+        :param item_filter: Stricto item filter
+        """
+        raise NotImplementedError("This ItemMapper does not support select")
 
     def load(self, _base_response):
         """Loads the base JSON-like dict representation of an item from the

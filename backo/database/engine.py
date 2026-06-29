@@ -107,6 +107,13 @@ class DatabaseEngine:
 
         _execute_requests(base_request, attribute_requests, _execute_update)
 
+    def select(self, item_filter):
+        base_request, attribute_requests = self.database_item.select_request(
+            item_filter
+        )
+
+        _execute_requests(base_request, attribute_requests, _execute_select)
+
 
 def _execute_search(request):
     """Execute the search request using its own connection, that was set by the
@@ -134,6 +141,13 @@ def _execute_update(request):
     encapsulating DatabaseItem.
     """
     return request.connection.execute_update(request)
+
+
+def _execute_select(request):
+    """Execute the select request using its own connection, that was set by the
+    encapsulating DatabaseItem.
+    """
+    return request.connection.execute_select(request)
 
 
 def _execute_list_requests(requests_list, responses, request_method):

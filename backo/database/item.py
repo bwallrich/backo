@@ -201,6 +201,31 @@ class DatabaseItem:
 
         return base_request, model_requests
 
+    def select_request(self, item_filter):
+        # Builds request required by the `item_mapper` to perform the `base`
+        # selection of `DatabaseItem` instances
+        base_request = self.item_mapper.select_request(item_filter)
+        base_request.connection = self.connection
+
+        #  Builds additional requests required to initialize all attributes of
+        #  the `model`. Each attribute is allowed to either modify the
+        #  `base_request`, build new requests or do nothing.
+        model_requests = None
+        if isinstance(self.model, dict):
+            model_requests = {}
+            _request_dict_with_values(
+                base_request, model_requests, self.model, item_filter, _select_request
+            )
+        elif isinstance(self.model, list):
+            model_requests = []
+            _request_list_with_values(
+                base_request, model_requests, self.model, item_filter, _select_request
+            )
+        else:
+            model_requests = _select_request(self.model, base_request, item_filter)
+
+        return base_request, model_requests
+
     def load(self, base_request_response, attribute_responses):
         """Loads the item in a JSON-like dict from the database response.
 
@@ -287,6 +312,15 @@ def _update_request(attribute, base_request, _id, value):
     """
     return _requests_with_connection(
         attribute.update_request(base_request, _id, value), attribute.connection
+    )
+
+
+def _select_request(attribute, base_request, item_filter):
+    """Builds select requests as attribute.select_request(base_request,
+    item_filter) and sets connection on all requests.
+    """
+    return _requests_with_connection(
+        attribute.select_request(base_request, item_filter), attribute.connection
     )
 
 

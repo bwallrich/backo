@@ -186,6 +186,9 @@ class DatabaseAttribute:
         :param _id: ID of the item to delete.
         """
 
+    def select_request(self, base_request, _id):
+        pass
+
     def load(self, base_response, attribute_response):
         """Returns the value of the attribute computed from specified database
         responses.

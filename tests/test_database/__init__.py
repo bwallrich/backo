@@ -11,5 +11,6 @@ from .test_item import (
     TestDatabaseItemCreate,
     TestDatabaseItemUpdate,
     TestDatabaseItemDelete,
+    TestDatabaseItemSelect,
     TestDatabaseItemLoad,
 )
