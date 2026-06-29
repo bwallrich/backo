@@ -390,25 +390,36 @@ def _request_dict_with_values(
     nested structures as required.
 
     request_method is called as request_method(attribute, base_request, *args,
-    value) when reaching a leaf attribute. `value` is the item at the same index
-    as attribute in the `attributes_list`.
+    value) when reaching a leaf attribute. `value` is the value associated to
+    the same key as the `attribute` in `attributes_dict`. If no such value
+    exist, the `request_method` is called with None as `value`.
     """
     for key, attribute in attributes_dict.items():
         if isinstance(attribute, list):
             requests = []
             _request_list_with_values(
-                base_request, requests, attribute, values[key], request_method, *args
+                base_request,
+                requests,
+                attribute,
+                values.get(key),
+                request_method,
+                *args,
             )
             request_dict[key] = requests
         elif isinstance(attribute, dict):
             requests = {}
             _request_dict_with_values(
-                base_request, requests, attribute, values[key], request_method, *args
+                base_request,
+                requests,
+                attribute,
+                values.get(key),
+                request_method,
+                *args,
             )
             request_dict[key] = requests
         else:
             request_dict[key] = request_method(
-                attribute, base_request, *args, values[key]
+                attribute, base_request, *args, values.get(key)
             )
 
 

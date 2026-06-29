@@ -115,9 +115,7 @@ class TestDatabaseItemCreate(unittest.TestCase):
 
         assert_that(
             create_requests,
-            contains_exactly(
-                item_mapper.create_request.return_value, None
-            ),
+            contains_exactly(item_mapper.create_request.return_value, None),
         )
 
     @patch("backo.database.connection.DatabaseConnection", autospec=True)
@@ -250,6 +248,94 @@ class TestDatabaseItemCreate(unittest.TestCase):
         )
         for attribute, value in zip(
             attribute_mocks, ["new_login", "new_name", "new_contact"]
+        ):
+            assert_that(
+                attribute.create_request.call_args_list,
+                contains_exactly(
+                    has_properties(
+                        args=contains_exactly(
+                            item_mapper.create_request.return_value, value
+                        )
+                    )
+                ),
+            )
+
+        assert_that(
+            create_requests,
+            contains_exactly(
+                item_mapper.create_request.return_value,
+                has_entries(
+                    {
+                        "login": attribute_requests[0],
+                        "name": attribute_requests[1],
+                        "contact": attribute_requests[2],
+                    }
+                ),
+            ),
+        )
+
+    @patch("backo.database.connection.DatabaseConnection", autospec=True)
+    def test_create_with_missing_dict_value(self, connection):
+        """Tests the validity of built create requests for a dict model."""
+        base_request = MagicMock(connection=None)
+        item_mapper = MagicMock(spec=ItemMapper)
+        item_mapper.create_request.return_value = base_request
+
+        attribute_requests = [MagicMock(connection=None) for _ in range(3)]
+        attribute_mocks = [
+            MagicMock(
+                spec=DatabaseAttribute,
+                request=attribute_requests[i],
+                connection=connection,
+            )
+            for i in range(3)
+        ]
+        for i in range(3):
+            attribute_mocks[i].create_request.return_value = attribute_requests[i]
+
+        database_item = DatabaseItem(
+            item_mapper,
+            {
+                "login": attribute_mocks[0],
+                "name": attribute_mocks[1],
+                "contact": attribute_mocks[2],
+            },
+        )
+        # Connection used for the base request
+        database_item.connection = connection
+
+        create_requests = database_item.create_request(
+            # Missing value for contact
+            {"login": "new_login", "name": "new_name"}
+        )
+
+        # As a side effect, the connection must have been set up on all requests
+        # returned in search_requests
+        assert_that(base_request, has_properties(connection=connection))
+        for request in attribute_requests:
+            assert_that(request, has_properties(connection=connection))
+
+        assert_that(
+            item_mapper.create_request.call_args_list,
+            contains_exactly(
+                has_properties(
+                    args=contains_exactly(
+                        has_entries(
+                            {
+                                "login": "new_login",
+                                "name": "new_name",
+                            }
+                        )
+                    )
+                )
+            ),
+        )
+        for attribute, value in zip(
+            # The contact attribute should still be created with None. In a
+            # real use case, the real attribute will decide what to do with
+            # missing value.
+            attribute_mocks,
+            ["new_login", "new_name", None],
         ):
             assert_that(
                 attribute.create_request.call_args_list,
