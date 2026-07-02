@@ -33,4 +33,5 @@ disable =
     dangerous-default-value,
     super-init-not-called, # Bug ?
     raising-format-tuple,
+    singleton-comparison,
     protected-access # must be removed

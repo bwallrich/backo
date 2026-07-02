@@ -1,0 +1,4 @@
+"""Module for all collections"""
+
+{% for collection in collections %}from .{{ collection.name }} import {{ collection.name }}
+{% endfor %}

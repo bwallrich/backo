@@ -26,7 +26,7 @@ def must(value, o) -> bool:  # pylint: disable=unused-argument
     return bool(re.match(r"^\$.*", value))
 
 
-class Patch(Dict):  # pylint: disable=too-many-instance-attributes
+class Patch(Dict):  # pylint: disable=too-few-public-methods
     """
     A Object for patching
     """

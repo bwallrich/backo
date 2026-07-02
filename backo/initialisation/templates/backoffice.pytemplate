@@ -1,0 +1,140 @@
+"""
+backoffice : The main application
+"""
+
+# linter is lost with different modules with the same name
+# pylint: disable=no-name-in-module
+
+import json
+import sys
+from functools import wraps
+from datetime import datetime, timezone, timedelta
+import jwt
+from flask import Flask, request, jsonify, make_response, Response
+
+# Avoid CORS issues 
+# --------------------------
+# from flask_cors import CORS
+
+from backo import Backoffice, current_user, log_system, LogLevel
+
+# Import all collections
+{% for collection in collections %}from collections_set import {{ collection.name }}
+{% endfor %}
+
+
+# Set log system (for debug)
+log_system.add_handler(log_system.set_streamhandler()) # output to stderr
+log = log_system.get_or_create_logger("{{ name }}", LogLevel.INFO)
+
+
+# set the flask application route
+flask = Flask("{{ name }}")
+flask.secret_key = "super secret key" # Not a bad idea to change it.
+
+# Avoid CORS issues 
+# --------------------------
+# CORS( self.flask, origins=["*"])
+
+
+# -----------------------------------------
+# The login route
+# -----------------------------------------
+@flask.route("/login", methods=["POST"])
+def log_in():
+    """check the login and if OK return a jwt token populated with the user data for current_user"""
+    d = request.json
+    login = d["login"]
+    password = d["password"]
+    #
+    # Do what you want to autenticate here
+    #
+
+    token = jwt.encode(
+        {
+            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+            "user": {
+                "_id": '666',
+                "login": 'sysadmin_from_hell',
+                "roles": [ 'administrator' ],
+            },
+        },
+        "myappsecretkey",
+        algorithm="HS256",
+    )
+    response = make_response(json.dumps({"login": "ok"}))
+    response.set_cookie("jwt_token", token)
+    return response
+
+
+# -----------------------------------------
+# The token verification and set current User
+# -----------------------------------------
+def check_user_token() -> None | Response:
+    """
+    Decode the jwt token and set current_user.
+    """
+    token = request.cookies.get("jwt_token")
+    if not token:
+        return jsonify({"message": "Token is missing!"}), 401
+    try:
+        data = jwt.decode(token, "myappsecretkey", algorithms=["HS256"])
+    except:  # pylint: disable=bare-except
+        return jsonify({"message": "Token is invalid!"}), 401
+    current_user.set(data["user"])
+    return None
+
+
+# -----------------------------------------
+# The token verification and set current User
+# -----------------------------------------
+def token_required(f):
+    """check if the token is required (a wrapper to check_user_token)"""
+
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        error_message = check_user_token()
+        if error_message is not None:
+            return error_message
+        return f(*args, **kwargs)
+
+    return decorated
+
+
+# -----------------------------------------
+# The logout route
+# -----------------------------------------
+@flask.route("/logout")
+@token_required
+def logout():
+    """The logout
+    clear the jwt in cookie
+    """
+    current_user.logout()
+    response = make_response(json.dumps({"logout": True}))
+    response.delete_cookie("jwt_token")
+    return response
+
+
+# -----------------------------------------
+# Backoffice creation
+# -----------------------------------------
+my_backoffice = Backoffice("{{ name }}")
+{% for collection in collections %}my_backoffice.register_collection({{ collection.name }})
+{% endfor %}
+
+
+# To check if you have some syntax issue
+my_backoffice.check_syntax()
+my_backoffice.build_routes(flask, "", check_user_token)
+
+
+# ------------------------------------
+# Clean the database
+# ------------------------------------
+# {% for collection in collections %}{{ collection.name }}.drop()
+# {% endfor %}
+
+
+if __name__ == "__main__":
+    flask.run(host="0.0.0.0", port=5000)

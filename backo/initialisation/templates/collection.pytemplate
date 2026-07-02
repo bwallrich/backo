@@ -1,0 +1,150 @@
+"""Books module"""
+
+# pylint: disable=unused-argument, logging-fstring-interpolation
+
+from datetime import datetime
+from backo import (
+    Int,
+    Bool,
+    Dict,
+    String,
+    Collection,
+    Item,
+    current_user,
+    DBMongoConnector,
+    log_system,
+    LogLevel,
+    Ref,
+    Action,
+    Selection,
+)
+
+log = log_system.get_or_create_logger("{{ name }}", LogLevel.INFO)
+
+
+# ------------------------------------------------
+# ITEM
+# ------------------------------------------------
+
+# --------------------
+# Description of "what is a {{ name }}"
+# --------------------
+{{ name }}_item = Item({
+        {% for field in fields %}"{{ field.name }}": {{ field.type }}({% if field.required is true %} required=True {% endif %}),
+        {% endfor %}
+    }
+)
+
+# ------------------------------------------------
+# COLLECTION
+# ------------------------------------------------
+connector = DBMongoConnector(
+    connection_string="mongodb://localhost:27017/{{ app_name }}", collection="{{ name }}"
+)
+
+
+def can_create(right_name: str, {{ name }}: Item) -> bool:
+    """Check if can create a {{ name }}"""
+    log.debug(f"can create a {{ name }} by {current_user.login} ? ")
+    # if current_user.has_role([ "ADMIN" ]):
+    #     return True
+    # return False
+    return True
+
+
+def can_modify(right_name: str, {{ name }}: Item) -> bool:
+    """Check if can modify a {{ name }}"""
+    log.debug(f"can modify a {{ name }} by {current_user.login} ? ")
+    return True
+
+
+def can_delete(right_name: str, {{ name }}: Item) -> bool:
+    """Check if can delete a {{ name }}"""
+    log.debug(f"can delete a {{ name }} by {current_user.login} ? ")
+    return True
+
+
+{{ name }} = Collection(
+    "{{ name }}",
+    {{ name }}_item,
+    connector,
+    can_create=can_create,
+    can_modify=can_modify,
+    can_delete=can_delete,
+)
+
+
+# ------------------------------------------------
+# ACTIONS
+# ------------------------------------------------
+{% for action in actions %}
+#
+# Definition of the action {{ action.name }}
+# ------------------------------------------------
+def {{ action.function_name }}(action: Action, {{ name }}_item: Item) -> None:
+    """Execute the action on {{ name }}_item """
+    #
+    # Insert here your code
+    #
+    # {{ name }}_item.blabla = action.blabla
+    # {{ name }}_item.save()
+    pass
+
+def can_see_action_{{ action.name }}(right_name: str, {{ name }}_item: Item) -> bool:
+    """Tel the action {{ action.name }} is a nonsense for this object
+    :param right_name: The name of the right (here="see")
+    :type right_name: str
+    :param {{ name }}_item: the item
+    :type {{ name }}_item: Item
+    :return: True if this action is available
+    :rtype: bool
+    """
+    return True
+
+
+def can_{{ action.name }}(right_name: str, {{ name }}_item: Item) -> bool:
+    """Tel if current_user can execute the action {{ action.name }}
+
+    :param right_name: The name of the right (here="execute")
+    :type right_name: str
+    :param {{ name }}_item: The item
+    :type {{ name }}_item: Item
+    :return: True if he can
+    :rtype: bool
+    """
+    # if current_user.has_role("EMPLOYEE"):
+    #    return True
+    return True
+
+
+action_{{ action.name }} = Action({
+        {% for field in action.fields %}"{{ field.name }}": {{ field.type }}({% if field.required is true %} required=True {% endif %}),
+        {% endfor %}},
+    {{ action.function_name }},
+    can_execute=can_{{ action.name }},
+    can_see=can_see_action_{{ action.name }},
+)
+{% endfor %}
+
+# Add the action to the {{ name }} collection
+# ------------------------------------------------
+{% for action in actions %}{{ name }}.register_action("{{ action.name }}", action_{{ action.name }})
+{% endfor %}
+
+# ------------------------------------------------
+# SELECTIONS
+# ------------------------------------------------
+{% for selection in selections %}
+
+# --------- Selection {{ selection.name }}
+# ------------------------------------------------
+selection_{{ selection.name }}=Selection(
+    {{ selection.paths }},
+    filter={}
+){% endfor %}
+
+# Register selections into the {{ name }} collection
+# ------------------------------------------------
+{% for selection in selections %}{{ name }}.register_selection("{{ selection.name }}", selection_{{ selection.name }})
+{% endfor %}
+

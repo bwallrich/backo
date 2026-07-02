@@ -44,3 +44,6 @@ omit = [
     # omit stricto
     "*/stricto/*"
     ]
+
+[project.scripts]
+backo_init = "backo:backo_init"
