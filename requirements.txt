@@ -6,5 +6,5 @@ requests
 pyjwt
 deepdiff
 python-magic
-questionary,
+questionary
 stricto>=0.2.3
