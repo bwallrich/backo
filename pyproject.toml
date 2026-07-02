@@ -19,9 +19,10 @@ dependencies = [
   "requests",
   "pyyaml",
   "deepdiff",
+  "questionary",
   "python-magic",
   "pymongo",
-  "stricto>=0.2.2"
+  "stricto>=0.2.3"
 ]
 
 [dependency-groups]
@@ -39,11 +40,16 @@ Issues = "https://github.com/backo-stricto/backo/issues"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
 [tool.coverage.run]
 omit = [
     # omit stricto
     "*/stricto/*"
     ]
 
+[tool.hatch.build.targets.sdist]
+exclude = [
+  "htmlcov",
+]
 [project.scripts]
 backo_init = "backo:backo_init"

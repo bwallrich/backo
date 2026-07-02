@@ -427,8 +427,7 @@ class File(Dict):
         return me.delete_content()
 
     def check_constraints(self, value):
-        """check all specifics constraint
-        """
+        """check all specifics constraint"""
         Dict.check_constraints(self, value)  # pylint: disable=duplicate-code
 
         # check the max size

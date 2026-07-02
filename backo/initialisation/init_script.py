@@ -25,7 +25,7 @@ TYPE_AS_STRING = [t.__name__ for t in ALL_TYPES]
 TYPE_AS_STRING.sort()
 
 
-def dir_path(path):
+def writable_path(path):
     """check if the path is valid
 
     Args:
@@ -37,9 +37,30 @@ def dir_path(path):
     Returns:
         _type_: _description_
     """
-    if os.path.isdir(path):
-        return path
-    raise argparse.ArgumentTypeError(f"readable_dir:{path} is not a valid path")
+    if not os.path.isdir(path):
+        raise argparse.ArgumentTypeError(f"{path} is not a valid path")
+    if not os.access(path, os.W_OK):
+        raise argparse.ArgumentTypeError(f"{path} is not a writable path")
+    return path
+
+
+def readable_path(path):
+    """check if the path is valid
+
+    Args:
+        path (_type_): _description_
+
+    Raises:
+        argparse.ArgumentTypeError: _description_
+
+    Returns:
+        _type_: _description_
+    """
+    if not os.path.isdir(path):
+        raise argparse.ArgumentTypeError(f"{path} is not a valid path")
+    if not os.access(path, os.R_OK):
+        raise argparse.ArgumentTypeError(f"{path} is not readable")
+    return path
 
 
 # Setup argument parser
@@ -47,7 +68,14 @@ parser = argparse.ArgumentParser(description="Backo: initialisation tool.")
 parser.add_argument("--expert", dest="expert", action="store_true")  # on/off flag
 parser.add_argument("--dry_run", dest="dry", action="store_true")  # on/off flag
 parser.add_argument(
-    "repo", metavar="directory", type=dir_path, nargs="?", help="directory"
+    "-t",
+    "--template_dir",
+    dest="template_dir",
+    type=writable_path,
+    help="The source of template",
+)  # on/off flag
+parser.add_argument(
+    "repo", metavar="directory", type=readable_path, nargs="?", help="directory"
 )
 
 args = parser.parse_args()
@@ -66,7 +94,7 @@ class Init:
     def validate(self, v):
         """Validation of the user entry.
         It use obj.check(v) for that
-        
+
         Args:
             v (Any): the value to check
 
@@ -76,7 +104,7 @@ class Init:
         try:
             self._current_object.check(v)
             return True
-        except Exception as e: # pylint: disable= broad-exception-caught
+        except Exception as e:  # pylint: disable= broad-exception-caught
             return str(e)
 
     def display_path(self, path: str):
@@ -97,7 +125,9 @@ class Init:
             desc = schema.get("path")
         return desc
 
-    def ask_field(self, obj: GenericType, schema: dict) -> None:  # pylint: disable=too-many-locals, too-many-branches
+    def ask_field( # pylint: disable=too-many-locals, too-many-branches
+        self, obj: GenericType, schema: dict
+    ) -> None:
         """Main loop.
 
         Ask for a value. If a Dict or a List, go further.
@@ -166,10 +196,14 @@ class Init:
             )
             v = question.ask()
         elif "Int" in types:
-            question = questionary.text(message=desc, default=my_default, validate=self.validate)
+            question = questionary.text(
+                message=desc, default=my_default, validate=self.validate
+            )
             v = int(question.ask())
         elif "Float" in types:
-            question = questionary.text(message=desc, default=my_default, validate=self.validate)
+            question = questionary.text(
+                message=desc, default=my_default, validate=self.validate
+            )
             v = float(question.ask())
         else:
             if union is None:
@@ -179,7 +213,10 @@ class Init:
                 )
             else:
                 question = questionary.select(
-                    message=desc, default=my_default, choices=union, validate=self.validate
+                    message=desc,
+                    default=my_default,
+                    choices=union,
+                    validate=self.validate,
                 )
             v = question.ask()
 
@@ -261,8 +298,7 @@ DB_MODEL = Dict(
 
 
 def backo_init() -> None:
-    """Main run define in pyproject.toml
-    """
+    """Main run define in pyproject.toml"""
     # Parse command line arguments
     my_db = DB_MODEL.copy()
     # initiator.display_path( my_db.path_name() )
@@ -311,14 +347,21 @@ def backo_init() -> None:
     }
 
     # Initialiser l'environnement avec un dossier de templates
-    env = Environment(loader=FileSystemLoader("templates"))
+    template_dir = args.template_dir if args.template_dir is not None else "templates"
+    env = Environment(loader=FileSystemLoader(template_dir))
 
     ## Building collections
 
     ## Building collection_set directory
-    d = os.path.join(args.repo, "collections_set")
+    repo_dir = args.repo if args.repo is not None else "."
+
+    d = os.path.join(repo_dir, "collections_set")
     if not os.path.exists(d):
         os.makedirs(d)
+    if not os.path.isdir(d):
+        raise FileExistsError(f"{d} is not a directory")
+    if not os.access(d, os.W_OK):
+        raise FileExistsError(f"{d} is not a writable directory")
 
     template = env.get_template("collection.pytemplate")
     for collection in temp["collections"]:
@@ -336,7 +379,7 @@ def backo_init() -> None:
 
     template = env.get_template("backoffice.pytemplate")
     rendered = template.render(temp)
-    filename = os.path.join(args.repo, "backoffice.py")
+    filename = os.path.join(repo_dir, "backoffice.py")
     with open(filename, mode="w", encoding="utf-8") as outfile:
         outfile.write(rendered)
 
