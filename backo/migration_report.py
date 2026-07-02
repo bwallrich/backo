@@ -31,11 +31,13 @@ class MigrationReport(Dict):  # pylint: disable=too-many-instance-attributes
 
         super().__init__(
             {
-                "no_changes": Dict({"_ids": List(String()), "total": Int(default=0)}),
+                "no_changes": Dict(
+                    {"_ids": List(String(), default=[]), "total": Int(default=0)}
+                ),
                 "changes": Dict(
                     {
-                        "_ids": List(String()),
-                        "diff": List(FreeDict()),
+                        "_ids": List(String(), default=[]),
+                        "diff": List(FreeDict(), default=[]),
                         "total": Int(default=0),
                     }
                 ),

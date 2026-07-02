@@ -13,9 +13,6 @@ import questionary
 from jinja2 import Environment, FileSystemLoader
 
 
-warnings.filterwarnings("ignore")
-
-
 # used for developpement
 sys.path.insert(1, "../../../stricto")
 
@@ -65,8 +62,7 @@ def readable_path(path):
 
 # Setup argument parser
 parser = argparse.ArgumentParser(description="Backo: initialisation tool.")
-parser.add_argument("--expert", dest="expert", action="store_true")  # on/off flag
-parser.add_argument("--dry_run", dest="dry", action="store_true")  # on/off flag
+parser.add_argument("--expert", dest="expert", action="store_true", help="Will ask for actions and selections")  # on/off flag
 parser.add_argument(
     "-t",
     "--template_dir",
@@ -77,8 +73,6 @@ parser.add_argument(
 parser.add_argument(
     "repo", metavar="directory", type=readable_path, nargs="?", help="directory"
 )
-
-args = parser.parse_args()
 
 
 class Init:
@@ -125,7 +119,7 @@ class Init:
             desc = schema.get("path")
         return desc
 
-    def ask_field( # pylint: disable=too-many-locals, too-many-branches
+    def ask_field(  # pylint: disable=too-many-locals, too-many-branches
         self, obj: GenericType, schema: dict
     ) -> None:
         """Main loop.
@@ -216,169 +210,187 @@ class Init:
                     message=desc,
                     default=my_default,
                     choices=union,
-                    validate=self.validate,
                 )
             v = question.ask()
 
         obj.set(v)
 
 
-initiator = Init("Backo")
-
-
-FIELD_MODEL = Dict(
-    {
-        "name": String(
-            require=True, description="Name of the field", regexp=r"[A-z_-]+"
-        ),
-        "type": String(
-            require=True,
-            union=TYPE_AS_STRING,
-            default="String",
-            description="type of the field",
-        ),
-        "required": Bool(default=False, description="is the field required"),
-        "default": String(description="a default value", can_read=args.expert),
-    },
-    description="field",
-)
-
-SELECTION_MODEL = Dict(
-    {
-        "name": String(
-            require=True, description="Name of the selection", regexp=r"[A-z_-]+"
-        ),
-        "paths": List(
-            String(required=True, description="path", regexp=r"^\$\..+"),
-            description="paths list",
-        ),
-    },
-    description="selection",
-)
-
-ACTION_MODEL = Dict(
-    {
-        "name": String(
-            require=True, description="Name of the action", regexp=r"[A-z_-]+"
-        ),
-        "fields": List(FIELD_MODEL, default=[], description="action fields list"),
-        "function_name": String(
-            required=True, description="name of the function", regexp=r"[A-z_-]+"
-        ),
-    },
-    description="selection",
-)
-
-COLLECTION_MODEL = Dict(
-    {
-        "name": String(
-            require=True, description="Name of the collection", regexp=r"[A-z_-]+"
-        ),
-        "fields": List(FIELD_MODEL, default=[], description="fields list"),
-        "selections": List(
-            SELECTION_MODEL, default=[], description="selections", can_read=args.expert
-        ),
-        "actions": List(
-            ACTION_MODEL, default=[], description="actions", can_read=args.expert
-        ),
-    },
-    description="collection",
-)
-
-DB_MODEL = Dict(
-    {
-        "name": String(
-            require=True, description="Name of the application", regexp=r"[A-z_-]+"
-        ),
-        "collections": List(
-            COLLECTION_MODEL, default=[], description="the collections list"
-        ),
-    }
-)
-
-
-def backo_init() -> None:
+def backo_init() -> None: # pylint: disable=too-many-locals, too-many-statements
     """Main run define in pyproject.toml"""
+
+    # Avoid warning with questionary
+    warnings.filterwarnings("ignore")
+
     # Parse command line arguments
-    my_db = DB_MODEL.copy()
-    # initiator.display_path( my_db.path_name() )
-    # initiator.ask_field( my_db, DB_MODEL.get_schema() )
-    temp = my_db.get_encoded()
+    args = parser.parse_args()
 
-    print("----------------------------------------")
-    print("Your configuration")
-    print("----------------------------------------")
-    print(json.dumps(temp, indent=2))
-    print("----------------------------------------")
-    resp = questionary.confirm(
-        message="Is this configuration ok ?",
-        default=True,
-    ).ask()
-    if resp is False:
-        sys.exit()
+    field_model = Dict(
+        {
+            "name": String(
+                require=True, description="Name of the field", regexp=r"[A-z_-]+"
+            ),
+            "type": String(
+                require=True,
+                union=TYPE_AS_STRING,
+                default="String",
+                description="type of the field",
+            ),
+            "required": Bool(default=False, description="is the field required"),
+            "default": String(description="a default value", can_read=args.expert),
+        },
+        description="field",
+    )
 
-    temp = {
-        "name": "myApp",
-        "collections": [
-            {
-                "name": "bd",
-                "fields": [
-                    {"name": "title", "type": "String", "required": True},
-                    {"name": "pages", "type": "Int", "required": False},
-                ],
-                "selections": [
-                    {"name": "suv", "paths": ["$.name", "$.title"]},
-                ],
-                "actions": [
-                    {
-                        "name": "toto",
-                        "fields": [
-                            {"name": "login", "type": "String", "required": True}
-                        ],
-                        "function_name": "test",
-                    },
-                ],
-            },
-            {
-                "name": "readers",
-                "fields": [{"name": "login", "type": "String", "required": True}],
-            },
-        ],
-    }
+    selection_model = Dict(
+        {
+            "name": String(
+                require=True, description="Name of the selection", regexp=r"[A-z_-]+"
+            ),
+            "paths": List(
+                String(required=True, description="path", regexp=r"^\$\..+"),
+                description="paths list",
+            ),
+        },
+        description="selection",
+    )
+
+    action_model = Dict(
+        {
+            "name": String(
+                require=True, description="Name of the action", regexp=r"[A-z_-]+"
+            ),
+            "fields": List(field_model, default=[], description="action fields list"),
+            "function_name": String(
+                required=True, description="name of the function", regexp=r"[A-z_-]+"
+            ),
+        },
+        description="selection",
+    )
+
+    collection_model = Dict(
+        {
+            "name": String(
+                require=True, description="Name of the collection", regexp=r"[A-z_-]+"
+            ),
+            "fields": List(field_model, default=[], description="fields list"),
+            "selections": List(
+                selection_model,
+                default=[],
+                description="selections",
+                can_read=args.expert,
+            ),
+            "actions": List(
+                action_model, default=[], description="actions", can_read=args.expert
+            ),
+        },
+        description="collection",
+    )
+
+    db_model = Dict(
+        {
+            "name": String(
+                require=True, description="Name of the application", regexp=r"[A-z_-]+"
+            ),
+            "collections": List(
+                collection_model, default=[], description="the collections list"
+            ),
+        }
+    )
+
+    my_db_struct = db_model.copy()
+
+    initiator = Init("Backo")
+    initiator.display_path( my_db_struct.path_name() )
+    initiator.ask_field( my_db_struct, db_model.get_schema() )
+    db_json_struct = my_db_struct.get_encoded()
 
     # Initialiser l'environnement avec un dossier de templates
-    template_dir = args.template_dir if args.template_dir is not None else "templates"
-    env = Environment(loader=FileSystemLoader(template_dir))
+    template_dir = (
+        args.template_dir
+        if args.template_dir is not None
+        else os.path.join(os.path.dirname(__file__), "templates")
+    )
 
     ## Building collections
 
     ## Building collection_set directory
     repo_dir = args.repo if args.repo is not None else "."
 
-    d = os.path.join(repo_dir, "collections_set")
-    if not os.path.exists(d):
-        os.makedirs(d)
-    if not os.path.isdir(d):
-        raise FileExistsError(f"{d} is not a directory")
-    if not os.access(d, os.W_OK):
-        raise FileExistsError(f"{d} is not a writable directory")
+    questionary.print(f'{"\u2500"*40}', style="bold fg:yellow")
+    questionary.print("Your configuration", style="bold fg:yellow")
+
+    questionary.print(f'{"\u2500"*40}', style="bold fg:yellow")
+    questionary.print(json.dumps(db_json_struct, indent=2), style="fg:darkred")
+    questionary.print(f'{"\u2500"*40}', style="bold fg:yellow")
+    print(f"template source = {template_dir}")
+    print(f"destination = {repo_dir}")
+    questionary.print(f'{"\u2500"*40}', style="bold fg:yellow")
+    env = Environment(loader=FileSystemLoader(template_dir))
+
+    resp = questionary.confirm(
+        message="Is this configuration ok ?",
+        default=True,
+    ).ask()
+    if resp is False:
+        questionary.print("Ok. bye.", style="bold fg:yellow")
+        sys.exit()
+
+    # just for test
+    # -------------
+    # db_json_struct = {
+    #     "name": "myApp",
+    #     "collections": [
+    #         {
+    #             "name": "bd",
+    #             "fields": [
+    #                 {"name": "title", "type": "String", "required": True},
+    #                 {"name": "pages", "type": "Int", "required": False},
+    #             ],
+    #             "selections": [
+    #                 {"name": "suv", "paths": ["$.name", "$.title"]},
+    #             ],
+    #             "actions": [
+    #                 {
+    #                     "name": "toto",
+    #                     "fields": [
+    #                         {"name": "login", "type": "String", "required": True}
+    #                     ],
+    #                     "function_name": "test",
+    #                 },
+    #             ],
+    #         },
+    #         {
+    #             "name": "readers",
+    #             "fields": [{"name": "login", "type": "String", "required": True}],
+    #         },
+    #     ],
+    # }
+
+    destination_collection_directory = os.path.join(repo_dir, "collections_set")
+    if not os.path.exists(destination_collection_directory):
+        os.makedirs(destination_collection_directory)
+    if not os.path.isdir(destination_collection_directory):
+        raise FileExistsError(f"{destination_collection_directory} is not a directory")
+    if not os.access(destination_collection_directory, os.W_OK):
+        raise FileExistsError(f"{destination_collection_directory} is not a writable directory")
 
     template = env.get_template("collection.pytemplate")
-    for collection in temp["collections"]:
-        collection["app_name"] = temp["name"]
+    for collection in db_json_struct["collections"]:
+        collection["app_name"] = db_json_struct["name"]
         rendered = template.render(collection)
-        filename = os.path.join(d, f'{collection["name"]}.py')
+        filename = os.path.join(destination_collection_directory, f'{collection["name"]}.py')
         with open(filename, mode="w", encoding="utf-8") as outfile:
             outfile.write(rendered)
 
     template = env.get_template("__init__.pytemplate")
-    rendered = template.render(temp)
-    filename = os.path.join(d, "__init__.py")
+    rendered = template.render(db_json_struct)
+    filename = os.path.join(destination_collection_directory, "__init__.py")
     with open(filename, mode="w", encoding="utf-8") as outfile:
         outfile.write(rendered)
 
     template = env.get_template("backoffice.pytemplate")
-    rendered = template.render(temp)
+    rendered = template.render(db_json_struct)
     filename = os.path.join(repo_dir, "backoffice.py")
     with open(filename, mode="w", encoding="utf-8") as outfile:
         outfile.write(rendered)
